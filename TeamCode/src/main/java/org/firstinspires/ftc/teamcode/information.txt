@@ -1,0 +1,26 @@
+---------------------------------
+Updated: 09/08/2025
+Electronics Information
+
+drive base
+4 motors
+odometry pods
+laser
+control hub
+expansion hub
+power switch
+battery
+
+intake
+Servo (continous)
+color sensor
+
+spindex
+motor
+color sensor
+Servo (set position)
+
+shooter
+motor
+servo x2 (set position)
+---------------------------------
