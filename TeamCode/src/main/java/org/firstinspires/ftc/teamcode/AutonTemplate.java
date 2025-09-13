@@ -18,10 +18,7 @@ public class AutonTemplate extends OpMode {
 
     private AutoStates currentState = AutoStates.START_STATE;
 
-    //Motors
-
-
-    //Servos
+    //Mechanisms
 
 
     //Misc

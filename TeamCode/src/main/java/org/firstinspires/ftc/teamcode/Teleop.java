@@ -49,7 +49,6 @@ public class Teleop extends OpMode {
     }
 
     private void updateShooter() {
-
     }
 
     private void updateIntake() {
@@ -79,17 +78,14 @@ public class Teleop extends OpMode {
         myTelem.update();
     }
 
-    private void updateEverything() {
+
+    @Override
+    public void loop() {
         updateDrivebase();
         updateShooter();
         updateIntake();
         updateSpindex();
 
         updateSoftElectronics();
-    }
-
-    @Override
-    public void loop() {
-        updateEverything();
     }
 }
