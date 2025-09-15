@@ -9,6 +9,8 @@ public class Intake {
     private CRServo intakeServo;
     private ColorSensor intakeColor;
 
+    public static double intakePower = 0.0;
+
     public Intake(HardwareMap hardwareMap) {
         intakeServo = hardwareMap.get(CRServo.class, "intakeServo");
         intakeColor = hardwareMap.get(ColorSensor.class, "intakeColor");

@@ -1,7 +1,10 @@
 package org.firstinspires.ftc.teamcode.testPrograms;
 
-import static org.firstinspires.ftc.teamcode.Constants.*;
 
+
+import static org.firstinspires.ftc.teamcode.mechanisms.Intake.intakePower;
+
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;

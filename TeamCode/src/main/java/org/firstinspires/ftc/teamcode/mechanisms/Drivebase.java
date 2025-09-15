@@ -1,8 +1,13 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
+import static org.firstinspires.ftc.teamcode.Constants.currentRobot;
+
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.robotcore.hardware.IMU;
+
 
 public class Drivebase {
 
@@ -10,7 +15,8 @@ public class Drivebase {
     private DcMotor frontLeft, frontRight, backLeft, backRight;
 
     // IMU for field-centric control
-    private BNO055IMU imu;
+    private BNO055IMU imu_OLD;
+    private IMU imu;
 
     // Constructor
     public Drivebase(HardwareMap hardwareMap) {
@@ -33,17 +39,25 @@ public class Drivebase {
         backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // Initialize IMU
-        imu = hardwareMap.get(BNO055IMU.class, "imu");
+        imu_OLD = hardwareMap.get(BNO055IMU.class, "imu");
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.mode = BNO055IMU.SensorMode.IMU;
         parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
-        imu.initialize(parameters);
+        imu_OLD.initialize(parameters);
+
+        RevHubOrientationOnRobot.LogoFacingDirection logoDirection = currentRobot.logoDirection;
+        RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = currentRobot.usbDirection;
+        RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
+
+        imu = hardwareMap.get(IMU.class, "imu");
+        imu.initialize(new IMU.Parameters(orientationOnRobot));
+        imu.resetYaw();
     }
 
     // Field-centric drive
     public void drive(double drive, double strafe, double turn) {
         // Get current heading
-        double botHeading = imu.getAngularOrientation().firstAngle;
+        double botHeading = imu_OLD.getAngularOrientation().firstAngle;
 
         // Rotate joystick input to be field-centric
         double rotX = strafe * Math.cos(-botHeading) - drive * Math.sin(-botHeading);
@@ -75,6 +89,6 @@ public class Drivebase {
 
     // Reset IMU heading if needed
     public void resetHeading() {
-        imu.initialize(new BNO055IMU.Parameters());
+        imu_OLD.initialize(new BNO055IMU.Parameters());
     }
 }
