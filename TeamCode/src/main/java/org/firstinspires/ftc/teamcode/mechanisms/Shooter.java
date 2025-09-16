@@ -6,17 +6,20 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 public class Shooter {
 
-    private DcMotor shooterMotor;
+    private DcMotor shooterMotor1, shooterMotor2;
     private Servo shooterServo1, shooterServo2;
 
     public Shooter(HardwareMap hardwareMap) {
-        shooterMotor = hardwareMap.get(DcMotor.class, "shooterMotor");
+        shooterMotor1 = hardwareMap.get(DcMotor.class, "shooterMotor1");
+        shooterMotor2 = hardwareMap.get(DcMotor.class, "shooterMotor2");
         shooterServo1 = hardwareMap.get(Servo.class, "shooterServo1");
         shooterServo2 = hardwareMap.get(Servo.class, "shooterServo2");
 
         // Configure initial settings
-        shooterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        shooterMotor.setPower(0);
+        shooterMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        shooterMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        shooterMotor1.setPower(0);
+        shooterMotor2.setPower(0);
 
         shooterServo1.setPosition(0);
         shooterServo2.setPosition(0);
@@ -24,7 +27,8 @@ public class Shooter {
 
     // Methods to control shooter
     public void setMotorPower(double power) {
-        shooterMotor.setPower(power);
+        shooterMotor1.setPower(power);
+        shooterMotor2.setPower(power);
     }
 
     public void setServoPosition1(double pos1) {
@@ -36,6 +40,7 @@ public class Shooter {
     }
 
     public void stop() {
-        shooterMotor.setPower(0);
+        shooterMotor1.setPower(0);
+        shooterMotor2.setPower(0);
     }
 }
