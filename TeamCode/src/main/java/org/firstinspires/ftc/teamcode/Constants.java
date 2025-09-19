@@ -20,8 +20,8 @@ public class Constants {
 
     public static class V1Constants extends GeneralConstants {
         public V1Constants() {
-            logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.RIGHT; //Not Confirmed yet
-            usbDirection = RevHubOrientationOnRobot.UsbFacingDirection.FORWARD; //Not Confirmed yet
+            logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.RIGHT;
+            usbDirection = RevHubOrientationOnRobot.UsbFacingDirection.UP;
         }
     }
 
