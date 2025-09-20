@@ -6,35 +6,34 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class Intake {
 
-    private CRServo intakeServo;
-//    private ColorSensor intakeColor;
+    private CRServo right;
+    private CRServo left;
 
-    public static double intakePower = 0.0;
 
     public Intake(HardwareMap hardwareMap) {
-        intakeServo = hardwareMap.get(CRServo.class, "intakeServo");
-//        intakeColor = hardwareMap.get(ColorSensor.class, "intakeColor");
+        right = hardwareMap.get(CRServo.class, "right_feeder");
+        left = hardwareMap.get(CRServo.class, "left_feeder");
 
-        intakeServo.setPower(0);
+        right.setPower(0);
+        left.setPower(0);
     }
 
     // Control the continuous rotation servo
     public void setPower(double power) {
-        intakeServo.setPower(power);
+        right.setPower(power);
+        left.setPower(power);
     }
 
-    // Detects ball color: "Purple", "Green", or "Unknown"
-//    public String detectBallColor() {
-//        float r = intakeColor.red();
-//        float g = intakeColor.green();
-//        float b = intakeColor.blue();
-//
-//        if (r > 100 && b > 100 && g < 80) {
-//            return "Purple";
-//        } else if (g > 120 && r < 100 && b < 100) {
-//            return "Green";
-//        } else {
-//            return "Unknown";
-//        }
-//    }
+    public void stop() {
+        right.setPower(0);
+        left.setPower(0);
+    }
+
+    public double getRightPower() {
+        return right.getPower();
+    }
+
+    public double getLeftPower() {
+        return left.getPower();
+    }
 }

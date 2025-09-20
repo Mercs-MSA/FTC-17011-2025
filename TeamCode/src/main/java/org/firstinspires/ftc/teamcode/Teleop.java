@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode;
 
-import static org.firstinspires.ftc.teamcode.mechanisms.Intake.intakePower;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -10,14 +9,14 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.mechanisms.Drivebase;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
-import org.firstinspires.ftc.teamcode.mechanisms.Spindex;
 
 @Config
 @TeleOp
 public class Teleop extends OpMode {
+    private double intakePower = 0;
+
     private SoftElectronics softElectronics;
     private Drivebase drivebase;
-    private Spindex spindex;
     private Intake intake;
     private Shooter shooter;
 
@@ -35,7 +34,6 @@ public class Teleop extends OpMode {
 
         // Initialize Drivebase
         drivebase = new Drivebase(hardwareMap);
-        spindex = new Spindex(hardwareMap);
         intake = new Intake(hardwareMap);
         shooter = new Shooter(hardwareMap);
 
@@ -49,6 +47,7 @@ public class Teleop extends OpMode {
     }
 
     private void updateShooter() {
+
     }
 
     private void updateIntake() {
