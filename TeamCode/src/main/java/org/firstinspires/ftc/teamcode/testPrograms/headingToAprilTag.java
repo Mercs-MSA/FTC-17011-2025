@@ -70,7 +70,7 @@ public class headingToAprilTag extends OpMode {
 
 
         // Initialize SoftElectronics
-        softElectronics = new SoftElectronics(this.telemetry);
+        softElectronics = new SoftElectronics(hardwareMap, this.telemetry);
         myTelem = softElectronics.getTelemetry();
         myTelem.setMsTransmissionInterval(11);
 

@@ -1,12 +1,12 @@
 package org.firstinspires.ftc.teamcode;
 
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
-import static org.firstinspires.ftc.teamcode.Constants.currentRobot;
+import static org.firstinspires.ftc.teamcode.Constants.currentRobotConstants;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
@@ -19,14 +19,16 @@ public class SoftElectronics {
     private RevHubOrientationOnRobot.LogoFacingDirection logoDirection;
     private RevHubOrientationOnRobot orientationOnRobot;
 
-    public SoftElectronics(Telemetry opModeTelemetry) {
+    public SoftElectronics(HardwareMap hardwareMap, Telemetry opModeTelemetry) {
         dash = FtcDashboard.getInstance();
 
         telemetryA = new MultipleTelemetry(opModeTelemetry, dash.getTelemetry());
         telemetryA.update();
 
-        logoDirection = currentRobot.logoDirection;
-        usbDirection  = currentRobot.usbDirection;
+
+
+        logoDirection = currentRobotConstants.logoDirection;
+        usbDirection  = currentRobotConstants.usbDirection;
         orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
 
         imu = hardwareMap.get(IMU.class, "imu");

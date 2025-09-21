@@ -30,7 +30,7 @@ public class Teleop extends OpMode {
     @Override
     public void init() {
         // Initialize SoftElectronics
-        softElectronics = new SoftElectronics(this.telemetry);
+        softElectronics = new SoftElectronics(hardwareMap, this.telemetry);
         myTelem = softElectronics.getTelemetry();
 
         // Initialize Drivebase

@@ -1,12 +1,7 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
-import static org.firstinspires.ftc.teamcode.Constants.currentRobot;
-
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.hardware.bosch.BNO055IMU;
-import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.teamcode.SoftElectronics;
 
@@ -37,7 +32,7 @@ public class Drivebase {
         backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        softElectronics = new SoftElectronics(softElectronics.getTelemetry());
+        softElectronics = new SoftElectronics(hardwareMap, softElectronics.getTelemetry());
     }
 
     // Field-centric drive
