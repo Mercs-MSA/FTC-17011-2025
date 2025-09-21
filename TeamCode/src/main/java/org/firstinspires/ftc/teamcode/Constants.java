@@ -2,11 +2,10 @@ package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
-import org.firstinspires.ftc.teamcode.GeneralConstants.*;
 
 /*
  * README
- * Edit "currentRobot" to the designated robot constants before pushing code
+ * Edit "version" to the designated robot version before pushing code
  * Make sure to extend GeneralConstants.java
  * Place all common variables in GeneralConstants.java
  *
@@ -14,7 +13,30 @@ import org.firstinspires.ftc.teamcode.GeneralConstants.*;
 @Config
 public class Constants {
 
-    public static V1Constants currentRobot = new V1Constants();
+    public static enum VERSIONS {
+        V1(new V1Constants()),
+        V2(new V2Constants()),
+        V3(new V3Constants());
+
+        private final GeneralConstants constants;
+
+        VERSIONS(GeneralConstants constant) {
+            this.constants = constant;
+        }
+
+        public GeneralConstants getConstants() {
+            return constants;
+        }
+    };
+
+    //VERSION SELECTOR; USE THIS TO SWITCH ROBOT VERSION, CHANGE NOTHING ELSE
+    public static final VERSIONS version = VERSIONS.V1;
+
+
+
+
+    public static GeneralConstants currentRobotConstants = version.getConstants();
+
 
     public static class AlphaConstants extends GeneralConstants {}
 
@@ -22,6 +44,11 @@ public class Constants {
         public V1Constants() {
             logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.RIGHT;
             usbDirection = RevHubOrientationOnRobot.UsbFacingDirection.UP;
+
+            limelightTolerance = 2;
+
+            double yawServoForward;
+            double pitchServoZero;
         }
     }
 

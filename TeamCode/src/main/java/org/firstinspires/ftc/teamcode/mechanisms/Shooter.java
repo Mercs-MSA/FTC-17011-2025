@@ -4,43 +4,49 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import static org.firstinspires.ftc.teamcode.Constants.currentRobotConstants;
+
 public class Shooter {
 
-    private DcMotor shooterMotor1, shooterMotor2;
-    private Servo shooterServo1, shooterServo2;
+    private DcMotor shooterMotorLeft, shooterMotorRight;
+    private Servo shooterServoYaw, shooterServoPitch;
+
+    private enum ShooterState {TRACKING, SHOOTING}
 
     public Shooter(HardwareMap hardwareMap) {
-        shooterMotor1 = hardwareMap.get(DcMotor.class, "shooterMotor1");
-        shooterMotor2 = hardwareMap.get(DcMotor.class, "shooterMotor2");
-        shooterServo1 = hardwareMap.get(Servo.class, "shooterServo1");
-        shooterServo2 = hardwareMap.get(Servo.class, "shooterServo2");
+
+
+        shooterMotorLeft = hardwareMap.get(DcMotor.class, "shooterMotorLeft");
+        shooterMotorRight = hardwareMap.get(DcMotor.class, "shooterMotorRight");
+        shooterServoYaw = hardwareMap.get(Servo.class, "shooterServoYaw");
+        shooterServoPitch = hardwareMap.get(Servo.class, "shooterServoPitch");
 
         // Configure initial settings
-        shooterMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        shooterMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        shooterMotor1.setPower(0);
-        shooterMotor2.setPower(0);
+        shooterMotorLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        shooterMotorRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        shooterMotorLeft.setPower(0);
+        shooterMotorRight.setPower(0);
 
-        shooterServo1.setPosition(0);
-        shooterServo2.setPosition(0);
+        shooterServoYaw.setPosition(0);
+        shooterServoPitch.setPosition(0);
     }
 
     // Methods to control shooter
     public void setMotorPower(double power) {
-        shooterMotor1.setPower(power);
-        shooterMotor2.setPower(power);
+        shooterMotorLeft.setPower(power);
+        shooterMotorRight.setPower(power);
     }
 
     public void setServoPosition1(double pos1) {
-        shooterServo1.setPosition(pos1);
+        shooterServoYaw.setPosition(pos1);
     }
 
     public void setServoPosition2(double pos2) {
-        shooterServo1.setPosition(pos2);
+        shooterServoYaw.setPosition(pos2);
     }
 
     public void stop() {
-        shooterMotor1.setPower(0);
-        shooterMotor2.setPower(0);
+        shooterMotorLeft.setPower(0);
+        shooterMotorRight.setPower(0);
     }
 }
