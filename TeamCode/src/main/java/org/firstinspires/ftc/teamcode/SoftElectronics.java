@@ -34,23 +34,23 @@ public class SoftElectronics {
         imu.resetYaw();
     }
 
-    public double getYaw() {
+    public static double getYaw() {
         return imu.getRobotYawPitchRollAngles().getYaw();
     }
 
-    public void resetYaw() {
+    public static void resetYaw() {
         imu.resetYaw();
     }
 
-    public IMU getIMU() {
+    public static IMU getIMU() {
         return imu;
     }
 
-    public Telemetry getTelemetry() {
+    public static Telemetry getTelemetry() {
         return telemetryA;
     }
 
-    public FtcDashboard getDashboard() {
+    public static FtcDashboard getDashboard() {
         return dash;
     }
 }

@@ -5,8 +5,6 @@ import static org.firstinspires.ftc.teamcode.Constants.currentRobot;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.hardware.bosch.BNO055IMU;
-import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.teamcode.SoftElectronics;
 
@@ -14,9 +12,7 @@ import org.firstinspires.ftc.teamcode.SoftElectronics;
 public class Drivebase {
 
     // Declare motors
-    private DcMotor frontLeft, frontRight, backLeft, backRight;
-
-    private SoftElectronics softElectronics;
+    private static DcMotor frontLeft, frontRight, backLeft, backRight;
     // Constructor
     public Drivebase(HardwareMap hardwareMap) {
         // Initialize motors
@@ -37,13 +33,12 @@ public class Drivebase {
         backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        softElectronics = new SoftElectronics(softElectronics.getTelemetry());
     }
 
     // Field-centric drive
     public void drive(double drive, double strafe, double turn) {
         // Get current heading
-        double botHeading = softElectronics.getYaw();
+        double botHeading = SoftElectronics.getYaw();
 
         // Rotate joystick input to be field-centric
         double rotX = strafe * Math.cos(-botHeading) - drive * Math.sin(-botHeading);

@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class Intake {
 
-    private CRServo intakeServo;
+    private static CRServo intakeServo;
 //    private ColorSensor intakeColor;
 
     public static double intakePower = 0.0;
