@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode;
 
-import static org.firstinspires.ftc.teamcode.mechanisms.Intake.intakePower;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -26,6 +25,8 @@ public class Teleop extends OpMode {
     private double turn = gamepad1.right_stick_x;  // rotation
 
     private static Telemetry myTelem;
+
+    private double intakePower = 0.0;
 
     @Override
     public void init() {

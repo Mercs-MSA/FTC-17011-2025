@@ -23,7 +23,7 @@ public class Spindex {
     private static CRServo spindexTransferServo;
     private static Servo spindexGateServo;
 
-    public static int numOfArtifactsInRobot = 0;
+    private static int numOfArtifactsInRobot = 0;
 
     private static final double spindexGateOpenPosition = 0.0;
     private static final double spindexGateClosedPosition = 0.0;
