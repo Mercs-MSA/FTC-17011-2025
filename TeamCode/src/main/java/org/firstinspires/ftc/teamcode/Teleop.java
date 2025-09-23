@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode;
 
 
+import static org.firstinspires.ftc.teamcode.Constants.currentRobotConstants;
+
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -66,13 +68,17 @@ public class Teleop extends OpMode {
         double strafe = gamepad1.left_stick_x; // left/right
         double turn = gamepad1.right_stick_x;  // rotation
 
-        if (gamepad2.right_bumper) {
-            intakePower = 1.0;
-        } else if (gamepad2.left_bumper) {
-            intakePower = -1.0;
-        } else {
-            intakePower = 0.0;
+        intakePower = gamepad1.right_trigger - gamepad1.left_trigger;
+
+        if (gamepad1.a) {
+            spindex.runSpindexToColor(GeneralConstants.artifactColors.PURPLE);
         }
+
+        if (gamepad1.b) {
+            spindex.runSpindexToColor(GeneralConstants.artifactColors.GREEN);
+        }
+
+
     }
 
     private void updateSoftElectronics() {

@@ -34,9 +34,7 @@ public class Constants {
 
 
 
-
-    public static GeneralConstants currentRobotConstants = version.getConstants();
-
+    public static V1Constants currentRobotConstants = new V1Constants();
 
     public static class AlphaConstants extends GeneralConstants {}
 
