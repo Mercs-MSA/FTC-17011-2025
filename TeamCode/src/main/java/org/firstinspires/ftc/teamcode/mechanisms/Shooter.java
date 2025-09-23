@@ -4,14 +4,12 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import static org.firstinspires.ftc.teamcode.Constants.currentRobotConstants;
-
 public class Shooter {
 
     private DcMotor shooterMotorLeft, shooterMotorRight;
     private Servo shooterServoYaw, shooterServoPitch;
 
-    private enum ShooterState {TRACKING, SHOOTING}
+    private enum ShooterState {TRACKING, LOCKED, SHOOTING}
 
     public Shooter(HardwareMap hardwareMap) {
 
