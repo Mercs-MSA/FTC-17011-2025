@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.Constants;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
@@ -12,7 +12,6 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
  */
 @Config
 public class Constants {
-
     public static enum VERSIONS {
         V1(new V1Constants()),
         V2(new V2Constants()),
@@ -34,11 +33,7 @@ public class Constants {
 
 
 
-
     public static GeneralConstants currentRobotConstants = version.getConstants();
-
-
-    public static class AlphaConstants extends GeneralConstants {}
 
     public static class V1Constants extends GeneralConstants {
         public V1Constants() {
@@ -55,5 +50,6 @@ public class Constants {
     public static class V2Constants extends GeneralConstants {}
 
     public static class V3Constants extends GeneralConstants {}
-
 }
+
+

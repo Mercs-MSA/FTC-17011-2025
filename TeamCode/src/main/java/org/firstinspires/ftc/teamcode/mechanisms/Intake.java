@@ -17,4 +17,6 @@ public class Intake {
         intakeServo.setPower(power);
     }
 
+    public void stop() {intakeServo.setPower(0);}
+
 }

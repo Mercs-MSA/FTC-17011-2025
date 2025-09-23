@@ -20,9 +20,9 @@ public class Teleop extends OpMode {
     private Intake intake;
     private Shooter shooter;
 
-    private double drive = -gamepad1.left_stick_y; // forward/back
-    private double strafe = gamepad1.left_stick_x; // left/right
-    private double turn = gamepad1.right_stick_x;  // rotation
+    private double drive = 0; // forward/back
+    private double strafe = 0; // left/right
+    private double turn = 0;  // rotation
 
     private static Telemetry myTelem;
 
