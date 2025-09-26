@@ -1,6 +1,6 @@
 ---------------------------------
-Updated: 09/08/2025
 Electronics Information
+Updated: 09/08/2025
 
 drive base
 4 motors
@@ -24,3 +24,19 @@ shooter
 motor
 servo x2 (set position)
 ---------------------------------
+Gamepad Mapping
+Updated: 09/25/2025
+
+Gamepad 1:
+Left Bumper: Intake In
+Dpad Down: Intake Out
+
+Left Trigger: Motif + Rapid Fire
+Right Trigger: Rapid Fire
+Right Bumper: Single Shot
+
+Left Joystick: Drive
+Right Joystick: Turn
+
+A button: Prep Green
+B button: Prep Purple

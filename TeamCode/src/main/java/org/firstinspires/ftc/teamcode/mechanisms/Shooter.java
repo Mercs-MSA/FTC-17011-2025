@@ -9,6 +9,8 @@ public class Shooter {
     private DcMotor shooterMotorLeft, shooterMotorRight;
     private Servo shooterServoYaw, shooterServoPitch;
 
+
+
     private enum ShooterState {TRACKING, LOCKED, SHOOTING}
 
     public Shooter(HardwareMap hardwareMap) {
@@ -46,5 +48,13 @@ public class Shooter {
     public void stop() {
         shooterMotorLeft.setPower(0);
         shooterMotorRight.setPower(0);
+    }
+
+    public void runShooter() {
+
+    }
+
+    public void shootArtifact() {
+
     }
 }

@@ -51,27 +51,27 @@ public class Spindex {
         spindexTransferServo.setPower(0);
     }
 
-    private static void openSpindexGate() {
+    public void openSpindexGate() {
         spindexGateServo.setPosition(spindexGateOpenPosition);
     }
 
-    private static void closeSpindexGate () {
+    public void closeSpindexGate () {
         spindexGateServo.setPosition(spindexGateClosedPosition);
     }
 
-    public static void runSpindex() {
+    public void runSpindex() {
         spindexMotor.setPower(1);
     }
 
-    public static void stopSpindex() {
+    public void stopSpindex() {
         spindexMotor.setPower(0);
     }
 
-    public static void runTransferWheel() {
+    public void runTransferWheel() {
         spindexTransferServo.setPower(1);
     }
 
-    public static void stopTransferWheel() {
+    public void stopTransferWheel() {
         spindexTransferServo.setPower(0);
     }
 
@@ -107,7 +107,7 @@ public class Spindex {
 //        spindexMotor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
     }
 
-    public static GeneralConstants.artifactColors getColor(ColorRangeSensor colorSensor) {
+    public GeneralConstants.artifactColors getColor(ColorRangeSensor colorSensor) {
         float r = colorSensor.red();
         float g = colorSensor.green();
         float b = colorSensor.blue();
