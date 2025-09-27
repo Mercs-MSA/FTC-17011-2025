@@ -67,13 +67,18 @@ public abstract class Teleop extends OpMode {
 
     private void updateDrivebase() {
         // Field-centric driving
-
         if (singleShotState != STATES.STATE_INACTIVE || rapidFireState != STATES.STATE_INACTIVE || motifRapidFireState != STATES.STATE_INACTIVE) {
             drivebase.stop();
         } else {
             drivebase.drive(drive, strafe, turn);
         }
 
+        if (gamepad2.right_bumper) {
+            drivebase.setFrontRightPower(.3);
+            drivebase.setBackRightPower(.3);
+            drivebase.setFrontLeftPower(.3);
+            drivebase.setBackLeftPower(.3);
+        }
     }
 
     private void updateShooter() {

@@ -57,6 +57,19 @@ public class Drivebase {
         backRight.setPower(brPower / max);
     }
 
+    public void setFrontLeftPower(double power) {
+        frontLeft.setPower(power);
+    }
+    public void setBackLeftPower(double power) {
+        backLeft.setPower(power);
+    }
+    public void setFrontRightPower(double power) {
+        frontRight.setPower(power);
+    }
+    public void setBackRightPower(double power) {
+        backRight.setPower(power);
+    }
+
     // Stop all motors
     public void stop() {
         frontLeft.setPower(0);
