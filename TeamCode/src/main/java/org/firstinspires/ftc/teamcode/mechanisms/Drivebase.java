@@ -34,11 +34,6 @@ public class Drivebase {
     }
 
     // Field-centric drive
-<<<<<<< HEAD
-    public void drive(double drive, double strafe, double turn, boolean canDrive) {
-        // Get current heading
-        double botHeading = SoftElectronics.getYaw();
-=======
     public void drive(double drive, double strafe, double turn) {
 //        // Get current heading
 //        double botHeading = SoftElectronics.getYaw();
@@ -61,7 +56,6 @@ public class Drivebase {
 //        frontRight.setPower(frPower / max);
 //        backLeft.setPower(blPower / max);
 //        backRight.setPower(brPower / max);
->>>>>>> a52d9ef7e3fd0cfbecafff127a414b7fe76622b2
 
         // Combine the joystick requests for each axis-motion to determine each wheel's power.
         // Set up a variable for each drive wheel to save the power level for telemetry.
@@ -78,19 +72,6 @@ public class Drivebase {
         backRight.setPower(backRightPower);
     }
 
-<<<<<<< HEAD
-        if (canDrive) {
-            frontLeft.setPower(flPower / max);
-            frontRight.setPower(frPower / max);
-            backLeft.setPower(blPower / max);
-            backRight.setPower(brPower / max);
-        } else {
-            frontLeft.setPower(0);
-            frontRight.setPower(0);
-            backLeft.setPower(0);
-            backRight.setPower(0);
-        }
-=======
     public void setFrontLeftPower(double power) {
         frontLeft.setPower(power);
     }
@@ -102,7 +83,6 @@ public class Drivebase {
     }
     public void setBackRightPower(double power) {
         backRight.setPower(power);
->>>>>>> a52d9ef7e3fd0cfbecafff127a414b7fe76622b2
     }
 
     // Stop all motors

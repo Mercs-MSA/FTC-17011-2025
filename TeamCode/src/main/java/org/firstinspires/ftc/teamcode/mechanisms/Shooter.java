@@ -54,6 +54,11 @@ public class Shooter {
         return shooterMotorRight.getVelocity();
     }
 
+    public void stop() {
+        shooterMotorLeft.setPower(0);
+        shooterMotorRight.setPower(0);
+    }
+
 //    public void setServoPosition1(double pos1) {
 //        shooterServoYaw.setPosition(pos1);
 //    }
