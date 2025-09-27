@@ -33,7 +33,7 @@ public class Drivebase {
     }
 
     // Field-centric drive
-    public void drive(double drive, double strafe, double turn) {
+    public void drive(double drive, double strafe, double turn, boolean canDrive) {
         // Get current heading
         double botHeading = SoftElectronics.getYaw();
 
@@ -51,10 +51,17 @@ public class Drivebase {
                 Math.max(Math.abs(frPower),
                         Math.max(Math.abs(blPower), Math.abs(brPower)))));
 
-        frontLeft.setPower(flPower / max);
-        frontRight.setPower(frPower / max);
-        backLeft.setPower(blPower / max);
-        backRight.setPower(brPower / max);
+        if (canDrive) {
+            frontLeft.setPower(flPower / max);
+            frontRight.setPower(frPower / max);
+            backLeft.setPower(blPower / max);
+            backRight.setPower(brPower / max);
+        } else {
+            frontLeft.setPower(0);
+            frontRight.setPower(0);
+            backLeft.setPower(0);
+            backRight.setPower(0);
+        }
     }
 
     // Stop all motors

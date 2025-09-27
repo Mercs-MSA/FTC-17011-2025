@@ -2,9 +2,9 @@ package org.firstinspires.ftc.teamcode;
 
 
 import com.acmerobotics.dashboard.config.Config;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.mechanisms.Drivebase;
@@ -15,7 +15,7 @@ import org.firstinspires.ftc.teamcode.Constants.GeneralConstants;
 
 @Config
 @TeleOp
-public abstract class Teleop extends OpMode {
+public class Teleop extends OpMode {
     private SoftElectronics softElectronics;
     private Drivebase drivebase;
     private Spindex spindex;
@@ -26,14 +26,18 @@ public abstract class Teleop extends OpMode {
     private double strafe = 0; // left/right
     private double turn = 0;  // rotation
 
+    private ElapsedTime rapidFireTimer;
+
     private static Telemetry myTelem;
 
     private double intakePower = 0.0;
 
-    private enum STATES {STATE1, STATE2, STATE_INACTIVE}
-    private static STATES rapidFireState = STATES.STATE_INACTIVE;
-    private static STATES motifRapidFireState = STATES.STATE_INACTIVE;
-    private static STATES singleShotState = STATES.STATE_INACTIVE;
+    private enum SHOOTER_STATE {STATE1, STATE2, REMOVE_USER_CONTROL, POINT_AT_GOAL_STATE, RUN_SHOOTER_MOTOR_STATE, CLOSE_GATE_STATE, RUN_TRANSFER_STATE, RUN_SPIMDEX_STATE, RELEASE_STATE, INACTIVE_STATE}
+    private static SHOOTER_STATE rapidFireState = SHOOTER_STATE.INACTIVE_STATE;
+    private static SHOOTER_STATE motifRapidFireState = SHOOTER_STATE.INACTIVE_STATE;
+    private static SHOOTER_STATE singleShotState = SHOOTER_STATE.INACTIVE_STATE;
+
+    private static boolean canDrive = true;
 
     @Override
     public void init() {
@@ -41,11 +45,13 @@ public abstract class Teleop extends OpMode {
         softElectronics = new SoftElectronics(hardwareMap, this.telemetry);
         myTelem = softElectronics.getTelemetry();
 
-        // Initialize Drivebase
+        // Initialize Drive base
         drivebase = new Drivebase(hardwareMap);
         spindex = new Spindex(hardwareMap);
         intake = new Intake(hardwareMap);
         shooter = new Shooter(hardwareMap);
+
+        rapidFireTimer = new ElapsedTime();
 
         myTelem.addData("Status", "Initialized");
         myTelem.update();
@@ -65,13 +71,13 @@ public abstract class Teleop extends OpMode {
 
     private void updateDrivebase() {
         // Field-centric driving
-        drivebase.drive(drive, strafe, turn);
+        drivebase.drive(drive, strafe, turn, canDrive);
     }
 
     private void updateShooter() {
-        runSingleShotStateMachine();
-        runMotifRapidFireStateMachine();
-        runRapidFireStateMachine();
+        updateSingleShotStateMachine();
+        updateMotifRapidFireStateMachine();
+        updateRapidFireStateMachine();
     }
 
     private void updateIntake() {
@@ -110,7 +116,7 @@ public abstract class Teleop extends OpMode {
         }
 
         if (gamepad1.right_bumper) {
-            singleShotState = STATES.STATE1;
+            singleShotState = SHOOTER_STATE.STATE1;
         }
 
 
@@ -139,46 +145,91 @@ public abstract class Teleop extends OpMode {
      * State machine code
      */
 
-    private void runRapidFireStateMachine() {
+    private void updateRapidFireStateMachine() {
         switch (rapidFireState) {
-            case STATE1:
-                rapidFireState = STATES.STATE2;
+
+            case REMOVE_USER_CONTROL:
+                canDrive = false;
+
+                rapidFireState = SHOOTER_STATE.POINT_AT_GOAL_STATE;
                 break;
 
-            case STATE2:
-                rapidFireState = STATES.STATE_INACTIVE;
+            case POINT_AT_GOAL_STATE:
+                shooter.pointAtGoal();
+
+                if (Math.abs(shooter.getCurrentAngle() - shooter.getGoalAngle()) <= 0.2) {
+                    rapidFireState = SHOOTER_STATE.RUN_SHOOTER_MOTOR_STATE;
+                }
                 break;
 
-            case STATE_INACTIVE:
+            case RUN_SHOOTER_MOTOR_STATE:
+                int shooterDesiredVelocity = 100;
+                shooter.setMotorVelocity(shooterDesiredVelocity);
+
+                if (Math.abs(shooter.getLeftVelocity() - shooterDesiredVelocity) <= 0.2) {
+                    if (Math.abs(shooter.getRightVelocity()  - shooterDesiredVelocity) <= 0.2) {
+                        rapidFireState = SHOOTER_STATE.CLOSE_GATE_STATE;
+                    }
+                }
+
+                break;
+
+            case CLOSE_GATE_STATE:
+                spindex.closeSpindexGate();
+
+                rapidFireState = SHOOTER_STATE.RUN_TRANSFER_STATE;
+                break;
+
+            case RUN_TRANSFER_STATE:
+                spindex.runTransferWheel();
+
+                rapidFireState = SHOOTER_STATE.RUN_SPIMDEX_STATE;
+
+                rapidFireTimer.reset();
+                break;
+
+            case RUN_SPIMDEX_STATE:
+
+                spindex.runSpindex();
+
+                if (rapidFireTimer.time() > 3)
+                    rapidFireState = SHOOTER_STATE.INACTIVE_STATE;
+                break;
+
+            case INACTIVE_STATE:
+                canDrive = true;
+                shooter.stopShooterMotor();
+                spindex.stopSpindex();
+                spindex.stopTransferWheel();
                 break;
         }
     }
-    private void runMotifRapidFireStateMachine() {
+    private void updateMotifRapidFireStateMachine() {
         switch (motifRapidFireState) {
             case STATE1:
-                motifRapidFireState = STATES.STATE2;
+                motifRapidFireState = SHOOTER_STATE.STATE2;
                 break;
 
             case STATE2:
-                motifRapidFireState = STATES.STATE_INACTIVE;
+                motifRapidFireState = SHOOTER_STATE.INACTIVE_STATE;
                 break;
 
-            case STATE_INACTIVE:
+            case INACTIVE_STATE:
                 break;
         }
     }
 
-    private void runSingleShotStateMachine() {
+    private void updateSingleShotStateMachine() {
         switch (singleShotState) {
             case STATE1:
                 spinUp();
                 break;
 
             case STATE2:
-                singleShotState = STATES.STATE_INACTIVE;
+                singleShotState = SHOOTER_STATE.INACTIVE_STATE;
                 break;
 
-            case STATE_INACTIVE:
+            case INACTIVE_STATE:
                 break;
         }
     }
@@ -186,7 +237,7 @@ public abstract class Teleop extends OpMode {
     private void spinUp() {
         shooter.setMotorVelocity(1600);
         if (shooter.getRightVelocity() == 1600)
-            singleShotState = STATES.STATE2;
+            singleShotState = SHOOTER_STATE.STATE2;
     }
 
     private void shoot() {

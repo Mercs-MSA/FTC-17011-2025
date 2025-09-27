@@ -10,6 +10,16 @@ public class Shooter {
     private DcMotorEx shooterMotorLeft, shooterMotorRight;
     private Servo shooterServoYaw, shooterServoPitch;
 
+    private static int goalAngle = 0;
+    private static int currentAngle = 0;
+
+    public int getCurrentAngle() {
+        return currentAngle;
+    }
+
+    public int getGoalAngle() {
+        return goalAngle;
+    }
 
 
     private enum ShooterState {TRACKING, LOCKED, SHOOTING}
@@ -52,9 +62,13 @@ public class Shooter {
         shooterServoYaw.setPosition(pos2);
     }
 
-    public void stop() {
+    public void stopShooterMotor() {
         shooterMotorLeft.setPower(0);
         shooterMotorRight.setPower(0);
+    }
+
+    public void pointAtGoal() {
+
     }
 
     public void shootArtifact() {
