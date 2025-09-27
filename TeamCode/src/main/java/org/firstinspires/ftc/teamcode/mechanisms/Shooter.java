@@ -1,12 +1,13 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
 public class Shooter {
 
-    private DcMotor shooterMotorLeft, shooterMotorRight;
+    private DcMotorEx shooterMotorLeft, shooterMotorRight;
     private Servo shooterServoYaw, shooterServoPitch;
 
 
@@ -14,10 +15,8 @@ public class Shooter {
     private enum ShooterState {TRACKING, LOCKED, SHOOTING}
 
     public Shooter(HardwareMap hardwareMap) {
-
-
-        shooterMotorLeft = hardwareMap.get(DcMotor.class, "shooterMotorLeft");
-        shooterMotorRight = hardwareMap.get(DcMotor.class, "shooterMotorRight");
+        shooterMotorLeft = hardwareMap.get(DcMotorEx.class, "shooterMotorLeft");
+        shooterMotorRight = hardwareMap.get(DcMotorEx.class, "shooterMotorRight");
         shooterServoYaw = hardwareMap.get(Servo.class, "shooterServoYaw");
         shooterServoPitch = hardwareMap.get(Servo.class, "shooterServoPitch");
 
@@ -32,9 +31,17 @@ public class Shooter {
     }
 
     // Methods to control shooter
-    public void setMotorPower(double power) {
-        shooterMotorLeft.setPower(power);
-        shooterMotorRight.setPower(power);
+    public void setMotorVelocity(double velocity) {
+        shooterMotorLeft.setVelocity(velocity);
+        shooterMotorRight.setVelocity(velocity);
+    }
+
+    public double getLeftVelocity() {
+        return shooterMotorLeft.getVelocity();
+    }
+
+    public double getRightVelocity() {
+        return shooterMotorRight.getVelocity();
     }
 
     public void setServoPosition1(double pos1) {
@@ -48,10 +55,6 @@ public class Shooter {
     public void stop() {
         shooterMotorLeft.setPower(0);
         shooterMotorRight.setPower(0);
-    }
-
-    public void runShooter() {
-
     }
 
     public void shootArtifact() {

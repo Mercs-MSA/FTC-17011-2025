@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -14,7 +15,7 @@ import org.firstinspires.ftc.teamcode.Constants.GeneralConstants;
 
 @Config
 @TeleOp
-public abstract class Teleop extends LinearOpMode {
+public abstract class Teleop extends OpMode {
     private SoftElectronics softElectronics;
     private Drivebase drivebase;
     private Spindex spindex;
@@ -35,7 +36,7 @@ public abstract class Teleop extends LinearOpMode {
     private static STATES singleShotState = STATES.STATE_INACTIVE;
 
     @Override
-    public void runOpMode() {
+    public void init() {
         // Initialize SoftElectronics
         softElectronics = new SoftElectronics(hardwareMap, this.telemetry);
         myTelem = softElectronics.getTelemetry();
@@ -48,7 +49,10 @@ public abstract class Teleop extends LinearOpMode {
 
         myTelem.addData("Status", "Initialized");
         myTelem.update();
+    }
 
+    @Override
+    public void loop() {
         updateDrivebase();
         updateShooter();
         updateIntake();
@@ -65,6 +69,9 @@ public abstract class Teleop extends LinearOpMode {
     }
 
     private void updateShooter() {
+        runSingleShotStateMachine();
+        runMotifRapidFireStateMachine();
+        runRapidFireStateMachine();
     }
 
     private void updateIntake() {
@@ -72,14 +79,13 @@ public abstract class Teleop extends LinearOpMode {
     }
 
     private void updateSpindex() {
-
     }
 
     private void updateGamepad() {
         // Example: read joystick inputs
-        double drive = -gamepad1.left_stick_y; // forward/back
-        double strafe = gamepad1.left_stick_x; // left/right
-        double turn = gamepad1.right_stick_x;  // rotation
+        drive = -gamepad1.left_stick_y; // forward/back
+        strafe = gamepad1.left_stick_x; // left/right
+        turn = gamepad1.right_stick_x;  // rotation
 
         if (gamepad1.left_bumper) {
             intakePower = 1.0;
@@ -100,11 +106,11 @@ public abstract class Teleop extends LinearOpMode {
         }
 
         if (gamepad1.right_trigger > 0.5) {
-            RapidFire();
+//            RapidFire();
         }
 
         if (gamepad1.right_bumper) {
-            SingleShot();
+            singleShotState = STATES.STATE1;
         }
 
 
@@ -123,13 +129,6 @@ public abstract class Teleop extends LinearOpMode {
         shooter.shootArtifact();
     }
 
-    private void RapidFire() {
-        runRapidFireStateMachine();
-    }
-
-    private void SingleShot() {
-        runSingleShotStateMachine();
-    }
 
     private void updateSoftElectronics() {
         myTelem.update();
@@ -141,52 +140,56 @@ public abstract class Teleop extends LinearOpMode {
      */
 
     private void runRapidFireStateMachine() {
-        while (opModeIsActive()) {
-            switch (rapidFireState) {
-                case STATE1:
-                    rapidFireState = STATES.STATE2;
-                    break;
+        switch (rapidFireState) {
+            case STATE1:
+                rapidFireState = STATES.STATE2;
+                break;
 
-                case STATE2:
-                    rapidFireState = STATES.STATE_INACTIVE;
-                    break;
+            case STATE2:
+                rapidFireState = STATES.STATE_INACTIVE;
+                break;
 
-                case STATE_INACTIVE:
-                    break;
-            }
+            case STATE_INACTIVE:
+                break;
         }
     }
     private void runMotifRapidFireStateMachine() {
-        while (opModeIsActive()) {
-            switch (motifRapidFireState) {
-                case STATE1:
-                    motifRapidFireState = STATES.STATE2;
-                    break;
+        switch (motifRapidFireState) {
+            case STATE1:
+                motifRapidFireState = STATES.STATE2;
+                break;
 
-                case STATE2:
-                    motifRapidFireState = STATES.STATE_INACTIVE;
-                    break;
+            case STATE2:
+                motifRapidFireState = STATES.STATE_INACTIVE;
+                break;
 
-                case STATE_INACTIVE:
-                    break;
-            }
+            case STATE_INACTIVE:
+                break;
         }
     }
 
     private void runSingleShotStateMachine() {
-        while (opModeIsActive()) {
-            switch (singleShotState) {
-                case STATE1:
-                    singleShotState = STATES.STATE2;
-                    break;
+        switch (singleShotState) {
+            case STATE1:
+                spinUp();
+                break;
 
-                case STATE2:
-                    singleShotState = STATES.STATE_INACTIVE;
-                    break;
+            case STATE2:
+                singleShotState = STATES.STATE_INACTIVE;
+                break;
 
-                case STATE_INACTIVE:
-                    break;
-            }
+            case STATE_INACTIVE:
+                break;
         }
+    }
+
+    private void spinUp() {
+        shooter.setMotorVelocity(1600);
+        if (shooter.getRightVelocity() == 1600)
+            singleShotState = STATES.STATE2;
+    }
+
+    private void shoot() {
+
     }
 }
