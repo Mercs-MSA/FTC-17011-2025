@@ -15,7 +15,7 @@ import org.firstinspires.ftc.teamcode.Constants.GeneralConstants;
 
 @Config
 @TeleOp
-public abstract class Teleop extends OpMode {
+public class Teleop extends OpMode {
     private SoftElectronics softElectronics;
     private Drivebase drivebase;
     private Spindex spindex;

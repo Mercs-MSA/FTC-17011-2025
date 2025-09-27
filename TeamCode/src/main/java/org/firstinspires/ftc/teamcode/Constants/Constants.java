@@ -40,7 +40,7 @@ public class Constants {
 
     public static class V1Constants extends GeneralConstants {
         public V1Constants() {
-            logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.RIGHT;
+            logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.LEFT;
             usbDirection = RevHubOrientationOnRobot.UsbFacingDirection.UP;
 
             limelightTolerance = 2;

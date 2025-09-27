@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.testPrograms;
 
 
 
-import static org.firstinspires.ftc.teamcode.mechanisms.Intake.intakePower;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
@@ -145,7 +144,6 @@ public class headingToAprilTag extends OpMode {
     }
 
     private void updateIntake() {
-        intake.setPower(intakePower);
     }
 
     private void updateSpindex() {
