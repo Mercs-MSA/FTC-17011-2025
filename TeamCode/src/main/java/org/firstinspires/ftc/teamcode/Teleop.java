@@ -32,12 +32,21 @@ public class Teleop extends OpMode {
 
     private double intakePower = 0.0;
 
+<<<<<<< HEAD
     private enum SHOOTER_STATE {STATE1, STATE2, REMOVE_USER_CONTROL, POINT_AT_GOAL_STATE, RUN_SHOOTER_MOTOR_STATE, CLOSE_GATE_STATE, RUN_TRANSFER_STATE, RUN_SPIMDEX_STATE, RELEASE_STATE, INACTIVE_STATE}
     private static SHOOTER_STATE rapidFireState = SHOOTER_STATE.INACTIVE_STATE;
     private static SHOOTER_STATE motifRapidFireState = SHOOTER_STATE.INACTIVE_STATE;
     private static SHOOTER_STATE singleShotState = SHOOTER_STATE.INACTIVE_STATE;
 
     private static boolean canDrive = true;
+=======
+    private enum STATES {STATE1, STATE2, STATE_INACTIVE}
+
+    private static STATES rapidFireState = STATES.STATE_INACTIVE;
+    private static STATES motifRapidFireState = STATES.STATE_INACTIVE;
+    private static STATES singleShotState = STATES.STATE_INACTIVE;
+>>>>>>> a52d9ef7e3fd0cfbecafff127a414b7fe76622b2
+
 
     @Override
     public void init() {
@@ -71,7 +80,22 @@ public class Teleop extends OpMode {
 
     private void updateDrivebase() {
         // Field-centric driving
+<<<<<<< HEAD
         drivebase.drive(drive, strafe, turn, canDrive);
+=======
+        if (singleShotState != STATES.STATE_INACTIVE || rapidFireState != STATES.STATE_INACTIVE || motifRapidFireState != STATES.STATE_INACTIVE) {
+            drivebase.stop();
+        } else {
+            drivebase.drive(drive, strafe, turn);
+        }
+
+        if (gamepad2.right_bumper) {
+            drivebase.setFrontRightPower(.3);
+            drivebase.setBackRightPower(.3);
+            drivebase.setFrontLeftPower(.3);
+            drivebase.setBackLeftPower(.3);
+        }
+>>>>>>> a52d9ef7e3fd0cfbecafff127a414b7fe76622b2
     }
 
     private void updateShooter() {
@@ -226,10 +250,18 @@ public class Teleop extends OpMode {
                 break;
 
             case STATE2:
+<<<<<<< HEAD
                 singleShotState = SHOOTER_STATE.INACTIVE_STATE;
                 break;
 
             case INACTIVE_STATE:
+=======
+                shoot();
+                break;
+
+            case STATE_INACTIVE:
+                holdPower();
+>>>>>>> a52d9ef7e3fd0cfbecafff127a414b7fe76622b2
                 break;
         }
     }
@@ -241,6 +273,13 @@ public class Teleop extends OpMode {
     }
 
     private void shoot() {
+        spindex.runTransferWheel();
+        if (shooter.getRightVelocity() < 1600)
+            singleShotState = STATES.STATE_INACTIVE;
+    }
 
+    private void holdPower() {
+        shooter.stop();
     }
 }
+

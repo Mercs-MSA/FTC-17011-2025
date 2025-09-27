@@ -36,7 +36,7 @@ public class Spindex {
         spindexTransferServo = hardwareMap.get(CRServo.class, "spindexTransferServo");
         spindexGateServo = hardwareMap.get(Servo.class, "spindexGateServo");
 
-        spindexColorBack = hardwareMap.get(ColorRangeSensor.class, "spindexColorF");
+        spindexColorBack = hardwareMap.get(ColorRangeSensor.class, "spindexColorB");
         spindexColorRight = hardwareMap.get(ColorRangeSensor.class, "spindexColorR");
         spindexColorLeft = hardwareMap.get(ColorRangeSensor.class, "spindexColorL");
 
