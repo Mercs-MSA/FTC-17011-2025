@@ -175,10 +175,11 @@ public abstract class Teleop extends OpMode {
                 break;
 
             case STATE2:
-                singleShotState = STATES.STATE_INACTIVE;
+                shoot();
                 break;
 
             case STATE_INACTIVE:
+                holdPower();
                 break;
         }
     }
@@ -190,6 +191,12 @@ public abstract class Teleop extends OpMode {
     }
 
     private void shoot() {
+        spindex.runTransferWheel();
+        if (shooter.getRightVelocity() < 1600)
+            singleShotState = STATES.STATE_INACTIVE;
+    }
 
+    private void holdPower() {
+        shooter.setMotorVelocity(800);
     }
 }
