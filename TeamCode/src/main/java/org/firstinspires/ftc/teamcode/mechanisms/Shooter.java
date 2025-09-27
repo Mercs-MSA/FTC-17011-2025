@@ -12,8 +12,6 @@ public class Shooter {
 
 
 
-    private enum ShooterState {TRACKING, LOCKED, SHOOTING}
-
     public Shooter(HardwareMap hardwareMap) {
         shooterMotorLeft = hardwareMap.get(DcMotorEx.class, "shooterMotorLeft");
         shooterMotorRight = hardwareMap.get(DcMotorEx.class, "shooterMotorRight");
