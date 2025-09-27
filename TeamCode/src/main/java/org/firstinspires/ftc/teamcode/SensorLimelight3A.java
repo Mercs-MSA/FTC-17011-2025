@@ -30,7 +30,7 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
 TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-package org.firstinspires.ftc.robotcontroller.external.samples;
+package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
@@ -67,7 +67,6 @@ import java.util.List;
  *   below the name of the Limelight on the top level configuration screen.
  */
 @TeleOp(name = "Sensor: Limelight3A", group = "Sensor")
-@Disabled
 public class SensorLimelight3A extends LinearOpMode {
 
     private Limelight3A limelight;
@@ -79,7 +78,7 @@ public class SensorLimelight3A extends LinearOpMode {
 
         telemetry.setMsTransmissionInterval(11);
 
-        limelight.pipelineSwitch(0);
+        limelight.pipelineSwitch(3);
 
         /*
          * Starts polling for data.  If you neglect to call start(), getLatestResult() will return null.
@@ -117,18 +116,6 @@ public class SensorLimelight3A extends LinearOpMode {
 
                 telemetry.addData("Botpose", botpose.toString());
 
-                // Access barcode results
-                List<LLResultTypes.BarcodeResult> barcodeResults = result.getBarcodeResults();
-                for (LLResultTypes.BarcodeResult br : barcodeResults) {
-                    telemetry.addData("Barcode", "Data: %s", br.getData());
-                }
-
-                // Access classifier results
-                List<LLResultTypes.ClassifierResult> classifierResults = result.getClassifierResults();
-                for (LLResultTypes.ClassifierResult cr : classifierResults) {
-                    telemetry.addData("Classifier", "Class: %s, Confidence: %.2f", cr.getClassName(), cr.getConfidence());
-                }
-
                 // Access detector results
                 List<LLResultTypes.DetectorResult> detectorResults = result.getDetectorResults();
                 for (LLResultTypes.DetectorResult dr : detectorResults) {
@@ -149,6 +136,7 @@ public class SensorLimelight3A extends LinearOpMode {
             } else {
                 telemetry.addData("Limelight", "No data available");
             }
+
 
             telemetry.update();
         }

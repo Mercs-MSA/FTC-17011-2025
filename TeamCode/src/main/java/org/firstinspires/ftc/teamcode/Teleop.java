@@ -35,6 +35,8 @@ public abstract class Teleop extends OpMode {
     private static STATES motifRapidFireState = STATES.STATE_INACTIVE;
     private static STATES singleShotState = STATES.STATE_INACTIVE;
 
+    private static STATES drivebaseState = STATES.STATE_INACTIVE;
+
     @Override
     public void init() {
         // Initialize SoftElectronics
@@ -66,12 +68,21 @@ public abstract class Teleop extends OpMode {
     private void updateDrivebase() {
         // Field-centric driving
         drivebase.drive(drive, strafe, turn);
+
+        if(singleShotState != STATES.STATE_INACTIVE || rapidFireState != STATES.STATE_INACTIVE || motifRapidFireState != STATES.STATE_INACTIVE) {
+            drivebaseState = STATES.STATE1;
+
+        }else{
+        drivebaseState = STATES.STATE_INACTIVE;
+        }
+
     }
 
     private void updateShooter() {
         runSingleShotStateMachine();
         runMotifRapidFireStateMachine();
         runRapidFireStateMachine();
+        runDriveBaseStateMachine();
     }
 
     private void updateIntake() {
@@ -184,6 +195,17 @@ public abstract class Teleop extends OpMode {
         }
     }
 
+    private void runDriveBaseStateMachine() {
+        switch(drivebaseState) {
+            case STATE1:
+                drivebase.stop();
+                break;
+
+            case STATE_INACTIVE:
+                break;
+        }
+    }
+
     private void spinUp() {
         shooter.setMotorVelocity(1600);
         if (shooter.getRightVelocity() == 1600)
@@ -200,3 +222,4 @@ public abstract class Teleop extends OpMode {
         shooter.setMotorVelocity(800);
     }
 }
+
