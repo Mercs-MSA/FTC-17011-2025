@@ -12,9 +12,9 @@ import org.firstinspires.ftc.teamcode.Constants.GeneralConstants;
 
 public class Spindex {
     private static DcMotorEx spindexMotor;
-    private static ColorRangeSensor spindexColorBack; //Closest to wheel
-    private static ColorRangeSensor spindexColorRight; //Right of the wheel
-    private static ColorRangeSensor spindexColorLeft; //Left of the wheel
+    public ColorRangeSensor spindexColorBack; //Closest to wheel
+    public ColorRangeSensor spindexColorRight; //Right of the wheel
+    public ColorRangeSensor spindexColorLeft; //Left of the wheel
 
 
 
@@ -77,6 +77,7 @@ public class Spindex {
 
 
     public void runSpindexToColor(GeneralConstants.artifactColors targetColor) {
+
         if (targetColor.equals(GeneralConstants.artifactColors.EMPTY)) {
             throw new IllegalArgumentException("Target color cannot be empty");
         } else {

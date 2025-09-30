@@ -32,12 +32,16 @@ public class Teleop extends OpMode {
 
     private double intakePower = 0.0;
 
-    private enum SHOOTER_STATE {STATE1, STATE2, REMOVE_USER_CONTROL, POINT_AT_GOAL_STATE, RUN_SHOOTER_MOTOR_STATE, CLOSE_GATE_STATE, RUN_TRANSFER_STATE, RUN_SPIMDEX_STATE, RELEASE_STATE, INACTIVE_STATE}
+    private enum SHOOTER_STATE {REMOVE_USER_CONTROL, POINT_AT_GOAL_STATE, RUN_SHOOTER_MOTOR_STATE, CLOSE_GATE_STATE, RUN_TRANSFER_STATE, RUN_SPINDEX_STATE, RELEASE_STATE, INACTIVE_STATE}
     private static SHOOTER_STATE rapidFireState = SHOOTER_STATE.INACTIVE_STATE;
     private static SHOOTER_STATE motifRapidFireState = SHOOTER_STATE.INACTIVE_STATE;
     private static SHOOTER_STATE singleShotState = SHOOTER_STATE.INACTIVE_STATE;
 
     private static boolean canDrive = true;
+
+    private static final GeneralConstants.artifactColors[] motifPattern = {GeneralConstants.artifactColors.PURPLE, GeneralConstants.artifactColors.GREEN, GeneralConstants.artifactColors.GREEN};
+
+    private static int motifRapidFireArtifactCycleCount = 0;
 
 
     @Override
@@ -128,7 +132,7 @@ public class Teleop extends OpMode {
         }
 
         if (gamepad1.right_bumper) {
-            singleShotState = SHOOTER_STATE.STATE1;
+            singleShotState = SHOOTER_STATE.REMOVE_USER_CONTROL;
         }
 
 
@@ -195,12 +199,12 @@ public class Teleop extends OpMode {
             case RUN_TRANSFER_STATE:
                 spindex.runTransferWheel();
 
-                rapidFireState = SHOOTER_STATE.RUN_SPIMDEX_STATE;
+                rapidFireState = SHOOTER_STATE.RUN_SPINDEX_STATE;
 
                 rapidFireTimer.reset();
                 break;
 
-            case RUN_SPIMDEX_STATE:
+            case RUN_SPINDEX_STATE:
 
                 spindex.runSpindex();
 
@@ -218,45 +222,64 @@ public class Teleop extends OpMode {
     }
     private void updateMotifRapidFireStateMachine() {
         switch (motifRapidFireState) {
-            case STATE1:
-                motifRapidFireState = SHOOTER_STATE.STATE2;
+
+            case REMOVE_USER_CONTROL:
+                canDrive = false;
+                motifRapidFireArtifactCycleCount = 0;
+
+                motifRapidFireState = SHOOTER_STATE.POINT_AT_GOAL_STATE;
                 break;
 
-            case STATE2:
-                motifRapidFireState = SHOOTER_STATE.INACTIVE_STATE;
+            case POINT_AT_GOAL_STATE:
+                shooter.pointAtGoal();
+
+                if (Math.abs(shooter.getCurrentAngle() - shooter.getGoalAngle()) <= 0.2) {
+                    motifRapidFireState = SHOOTER_STATE.RUN_SPINDEX_STATE;
+                }
+                break;
+
+            case RUN_SPINDEX_STATE:
+                spindex.runSpindex();
+                spindex.stopTransferWheel();
+
+                if (spindex.getColor(spindex.spindexColorBack) == motifPattern[motifRapidFireArtifactCycleCount]) {
+                    motifRapidFireState = SHOOTER_STATE.RUN_TRANSFER_STATE;
+                    rapidFireTimer.reset();
+                }
+                break;
+
+            case RUN_TRANSFER_STATE:
+                spindex.stopSpindex();
+                spindex.runTransferWheel();
+
+                if (rapidFireTimer.time() > 3) {
+                    motifRapidFireArtifactCycleCount++;
+
+                    if (motifRapidFireArtifactCycleCount >= motifPattern.length)
+                        motifRapidFireState = SHOOTER_STATE.INACTIVE_STATE;
+                    else
+                        motifRapidFireState = SHOOTER_STATE.RUN_SPINDEX_STATE;
+                }
                 break;
 
             case INACTIVE_STATE:
+                canDrive = true;
+                shooter.stopShooterMotor();
+                spindex.stopSpindex();
+                spindex.stopTransferWheel();
+
+                motifRapidFireArtifactCycleCount = 0;
                 break;
         }
     }
 
     private void updateSingleShotStateMachine() {
         switch (singleShotState) {
-            case STATE1:
-                spinUp();
-                break;
-
-            case STATE2:
-                shoot();
-                break;
 
             case INACTIVE_STATE:
                 holdPower();
                 break;
         }
-    }
-
-    private void spinUp() {
-        shooter.setMotorVelocity(1600);
-        if (shooter.getRightVelocity() == 1600)
-            singleShotState = SHOOTER_STATE.STATE2;
-    }
-
-    private void shoot() {
-        spindex.runTransferWheel();
-        if (shooter.getRightVelocity() < 1600)
-            singleShotState = SHOOTER_STATE.INACTIVE_STATE;
     }
 
     private void holdPower() {
