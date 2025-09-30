@@ -60,7 +60,7 @@ public class Spindex {
     }
 
     public void runSpindex() {
-        spindexMotor.setPower(1);
+        spindexMotor.setPower(.5);
     }
 
     public void stopSpindex() {

@@ -64,6 +64,10 @@ public class Shooter {
         shooterMotorRight.setPower(0);
     }
 
+    public void setTurretYawPower(double p) {
+        shooterServoYaw.setPower(p);
+    }
+
 //    public void setServoPosition1(double pos1) {
 //        shooterServoYaw.setPosition(pos1);
 //    }
