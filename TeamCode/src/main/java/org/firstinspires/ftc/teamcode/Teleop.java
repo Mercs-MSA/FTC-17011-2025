@@ -32,7 +32,7 @@ public class Teleop extends OpMode {
 
     private double intakePower = 0.0;
 
-    public static int shooterDesiredVelocity = 60;
+    public static int shooterDesiredVelocity = 6000;
 
     private enum SHOOTER_STATE {REMOVE_USER_CONTROL, INTERMEDIATE_STATE, POINT_AT_GOAL_STATE, RUN_SHOOTER_MOTOR_STATE, CLOSE_GATE_STATE, RUN_TRANSFER_STATE, RUN_SPINDEX_STATE, RELEASE_STATE, INACTIVE_STATE}
     private static SHOOTER_STATE nextState = SHOOTER_STATE.INACTIVE_STATE;
@@ -68,57 +68,37 @@ public class Teleop extends OpMode {
     @Override
     public void loop() {
         updateDrivebase();
-        updateShooter();
-        updateIntake();
-        updateSpindex();
+        updateMechanisms();
 
-        updateSoftElectronics();
-
-        updateGamepad();
         myTelem.addData("state:", singleShotState.toString());
         myTelem.update();
     }
 
     private void updateDrivebase() {
         // Field-centric driving
+        drive = -gamepad1.left_stick_y; // forward/back
+        strafe = gamepad1.left_stick_x; // left/right
+        turn = gamepad1.right_stick_x;  // rotation
+
         if (singleShotState != SHOOTER_STATE.INACTIVE_STATE || rapidFireState != SHOOTER_STATE.INACTIVE_STATE || motifRapidFireState != SHOOTER_STATE.INACTIVE_STATE) {
             drivebase.stop();
         } else {
             drivebase.drive(drive, strafe, turn);
         }
-
-        if (gamepad2.right_bumper) {
-            drivebase.setFrontRightPower(.3);
-            drivebase.setBackRightPower(.3);
-            drivebase.setFrontLeftPower(.3);
-            drivebase.setBackLeftPower(.3);
-        }
     }
 
-    private void updateShooter() {
-        updateSingleShotStateMachine();
-        updateMotifRapidFireStateMachine();
-        updateRapidFireStateMachine();
-    }
-
-    private void updateIntake() {
-        intake.setPower(intakePower);
-    }
-
-    private void updateSpindex() {
-    }
-
-    private void updateGamepad() {
+    private void updateMechanisms() {
+//        updateSingleShotStateMachine();
+//        updateMotifRapidFireStateMachine();
+//        updateRapidFireStateMachine();
         // Example: read joystick inputs
-        drive = -gamepad1.left_stick_y; // forward/back
-        strafe = gamepad1.left_stick_x; // left/right
-        turn = gamepad1.right_stick_x;  // rotation
-
         if (gamepad1.left_bumper) {
             intakePower = 1.0;
         } else if (gamepad1.dpad_down) {
             intakePower = -1.0;
         }
+
+        intake.setPower(intakePower);
 
         if (gamepad1.a) {
             spindex.runSpindexToColor(GeneralConstants.artifactColors.PURPLE);
@@ -134,34 +114,38 @@ public class Teleop extends OpMode {
         }
 
         if (gamepad1.right_trigger > 0.5) {
-            spindex.runSpindex();
+//            spindex.runSpindex();
+            spindex.runTransferWheel();
         }
 
         if (gamepad1.right_bumper) {
 //            singleShotState = SHOOTER_STATE.RUN_SPINDEX_STATE;
-            singleShotState = SHOOTER_STATE.RUN_SHOOTER_MOTOR_STATE;
+//            singleShotState = SHOOTER_STATE.RUN_SHOOTER_MOTOR_STATE;
+            shooter.setMotorVelocity(shooterDesiredVelocity);
+            if (shooter.getRightVelocity() > 3005)
+                spindex.runTransferWheel();
         }
 
+        if (gamepad1.dpad_up) {
+            shooter.stop();
+            spindex.stopTransferWheel();
+        }
 
     }
 
-    private void MotifRapidFire() {
-        GeneralConstants.artifactColors[] motifPattern = {GeneralConstants.artifactColors.PURPLE, GeneralConstants.artifactColors.GREEN, GeneralConstants.artifactColors.GREEN};
+//    private void MotifRapidFire() {
+//        GeneralConstants.artifactColors[] motifPattern = {GeneralConstants.artifactColors.PURPLE, GeneralConstants.artifactColors.GREEN, GeneralConstants.artifactColors.GREEN};
+//
+//        spindex.runSpindexToColor(motifPattern[0]);
+//        shooter.shootArtifact();
+//
+//        spindex.runSpindexToColor(motifPattern[1]);
+//        shooter.shootArtifact();
+//
+//        spindex.runSpindexToColor(motifPattern[2]);
+//        shooter.shootArtifact();
+//    }
 
-        spindex.runSpindexToColor(motifPattern[0]);
-        shooter.shootArtifact();
-
-        spindex.runSpindexToColor(motifPattern[1]);
-        shooter.shootArtifact();
-
-        spindex.runSpindexToColor(motifPattern[2]);
-        shooter.shootArtifact();
-    }
-
-
-    private void updateSoftElectronics() {
-        myTelem.update();
-    }
 
 
     /*
@@ -303,18 +287,11 @@ public class Teleop extends OpMode {
     }
 
     public void whileRunning() {
-        myTelem.addData("i:", i);
-        if (i == 499) singleShotState = SHOOTER_STATE.INACTIVE_STATE;
     }
-
-    int i = 0;
 
     public void runTransfer() {
         singleShotState = SHOOTER_STATE.INTERMEDIATE_STATE;
         spindex.runTransferWheel();
-        while (i < 500) {
-            i++;
-        }
     }
 
     private void holdPower() {

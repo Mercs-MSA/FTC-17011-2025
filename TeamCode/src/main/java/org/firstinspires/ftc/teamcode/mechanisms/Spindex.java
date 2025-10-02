@@ -60,7 +60,7 @@ public class Spindex {
     }
 
     public void runSpindex() {
-        spindexMotor.setPower(.5);
+        spindexMotor.setPower(1);
     }
 
     public void stopSpindex() {
@@ -81,31 +81,28 @@ public class Spindex {
         if (targetColor.equals(GeneralConstants.artifactColors.EMPTY)) {
             throw new IllegalArgumentException("Target color cannot be empty");
         } else {
-            for (int i = 0; i < 2; i++) {
-                updateSpinColorSensors();
-                if (spindexColorBackState.equals(targetColor))
-                    return;
-                else if (spindexColorRightState.equals(targetColor))
-                    runSpindexToNextArtifact(false);
-                else
-                    runSpindexToNextArtifact(true);
-            }
+            updateSpinColorSensors();
+            if (spindexColorBackState.equals(targetColor))
+                return;
+            else if (spindexColorRightState.equals(targetColor))
+                runSpindexToNextArtifact(1);
+            else
+                runSpindexToNextArtifact(2);
             updateSpinColorSensors();
         }
     }
 
-    private void runSpindexToNextArtifact(boolean reverse) {
+    //0 is 0, 1 is negative, 2 is positive.
+    private void runSpindexToNextArtifact(int direction) {
 //        spindexMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
 
 //        spindexMotor.setTargetPosition((encoderTicksForNextArtifact) + spindexMotor.getCurrentPosition());
-        while (getColor(spindexColorBack).equals(GeneralConstants.artifactColors.EMPTY)) {
-            double velocity = (reverse ? -1 : 1) * spindexColorBack.getDistance(DistanceUnit.INCH) * 10;
+        if (getColor(spindexColorBack).equals(GeneralConstants.artifactColors.EMPTY)) {
+            double velocity = (direction == 0 ? 0 : direction == 1 ? -1 : 1) * spindexColorBack.getDistance(DistanceUnit.INCH) * 20;
             spindexMotor.setVelocity(velocity);
             if (!getColor(spindexColorLeft).equals(GeneralConstants.artifactColors.EMPTY) || !getColor(spindexColorRight).equals(GeneralConstants.artifactColors.EMPTY))
                 return;
         }
-
-//        spindexMotor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
     }
 
     public GeneralConstants.artifactColors getColor(ColorRangeSensor colorSensor) {
