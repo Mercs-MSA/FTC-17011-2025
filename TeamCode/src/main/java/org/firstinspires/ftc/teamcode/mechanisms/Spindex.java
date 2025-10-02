@@ -98,7 +98,7 @@ public class Spindex {
 //        spindexMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
 
 //        spindexMotor.setTargetPosition((encoderTicksForNextArtifact) + spindexMotor.getCurrentPosition());
-        while (getColor(spindexColorBack).equals(GeneralConstants.artifactColors.EMPTY)) {
+        if (getColor(spindexColorBack).equals(GeneralConstants.artifactColors.EMPTY)) {
             double velocity = (reverse ? -1 : 1) * spindexColorBack.getDistance(DistanceUnit.INCH) * 10;
             spindexMotor.setVelocity(velocity);
             if (!getColor(spindexColorLeft).equals(GeneralConstants.artifactColors.EMPTY) || !getColor(spindexColorRight).equals(GeneralConstants.artifactColors.EMPTY))
