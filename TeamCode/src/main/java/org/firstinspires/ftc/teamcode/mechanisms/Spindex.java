@@ -80,7 +80,7 @@ public class Spindex {
         updateSpinColorSensors();
         if (targetColor.equals(GeneralConstants.artifactColors.EMPTY)) {
             throw new IllegalArgumentException("Target color cannot be empty");
-        } else if (!spindexColorRightState.equals(targetColor) || !spindexColorLeftState.equals(targetColor) || !spindexColorBackState.equals(targetColor)) {
+        } else if (!spindexColorRightState.equals(targetColor) && !spindexColorLeftState.equals(targetColor) && !spindexColorBackState.equals(targetColor)) {
             return;
         } else {
             if (spindexColorBackState.equals(targetColor))
@@ -94,7 +94,7 @@ public class Spindex {
     }
 
     //0 is 0, 1 is negative, 2 is positive.
-    private void runSpindexToNextArtifact(int direction) {
+    public void runSpindexToNextArtifact(int direction) {
 //        spindexMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
 
 //        spindexMotor.setTargetPosition((encoderTicksForNextArtifact) + spindexMotor.getCurrentPosition());
