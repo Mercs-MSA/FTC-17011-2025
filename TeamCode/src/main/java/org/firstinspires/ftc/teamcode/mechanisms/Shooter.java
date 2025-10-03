@@ -6,7 +6,10 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.Servo;
+
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public class Shooter {
 
@@ -89,6 +92,13 @@ public class Shooter {
     }
 
     public void shootArtifact() {
+    }
 
+    public NormalizedRGBA getColor() {
+        return exitSensor.getNormalizedColors();
+    }
+
+    public double getDistance(DistanceUnit units) {
+        return exitSensor.getDistance(units);
     }
 }

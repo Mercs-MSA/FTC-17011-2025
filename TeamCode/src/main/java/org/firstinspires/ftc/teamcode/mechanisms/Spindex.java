@@ -77,11 +77,12 @@ public class Spindex {
 
 
     public void runSpindexToColor(GeneralConstants.artifactColors targetColor) {
-
+        updateSpinColorSensors();
         if (targetColor.equals(GeneralConstants.artifactColors.EMPTY)) {
             throw new IllegalArgumentException("Target color cannot be empty");
+        } else if (!spindexColorRightState.equals(targetColor) || !spindexColorLeftState.equals(targetColor) || !spindexColorBackState.equals(targetColor)) {
+            return;
         } else {
-            updateSpinColorSensors();
             if (spindexColorBackState.equals(targetColor))
                 return;
             else if (spindexColorRightState.equals(targetColor))

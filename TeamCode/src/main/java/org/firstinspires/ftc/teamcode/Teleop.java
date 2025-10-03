@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.mechanisms.Drivebase;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
@@ -88,23 +89,23 @@ public class Teleop extends OpMode {
     }
 
     private void updateMechanisms() {
-//        updateSingleShotStateMachine();
+        updateSingleShotStateMachine();
 //        updateMotifRapidFireStateMachine();
 //        updateRapidFireStateMachine();
         // Example: read joystick inputs
         if (gamepad1.left_bumper) {
-            intakePower = 1.0;
-        } else if (gamepad1.dpad_down) {
             intakePower = -1.0;
+        } else if (gamepad1.dpad_down) {
+            intakePower = 1.0;
         }
 
         intake.setPower(intakePower);
 
-        if (gamepad1.a) {
+        if (gamepad1.triangle) {
             spindex.runSpindexToColor(GeneralConstants.artifactColors.PURPLE);
         }
 
-        if (gamepad1.b) {
+        if (gamepad1.circle) {
             spindex.runSpindexToColor(GeneralConstants.artifactColors.GREEN);
         }
 
@@ -126,11 +127,14 @@ public class Teleop extends OpMode {
                 spindex.runTransferWheel();
         }
 
-        if (gamepad1.dpad_up) {
+        if (gamepad1.cross) {
             shooter.stop();
             spindex.stopTransferWheel();
         }
 
+        if (gamepad1.dpad_up) {
+            singleShotState = SHOOTER_STATE.REMOVE_USER_CONTROL;
+        }
     }
 
 //    private void MotifRapidFire() {
@@ -271,14 +275,26 @@ public class Teleop extends OpMode {
 //                spindex.runSpindexToColor(GeneralConstants.artifactColors.PURPLE);
 //                singleShotState = SHOOTER_STATE.RUN_SHOOTER_MOTOR_STATE;
 //                break;
+            case REMOVE_USER_CONTROL:
+                canDrive = false;
+                singleShotState = SHOOTER_STATE.RUN_SHOOTER_MOTOR_STATE;
+                break;
             case RUN_SHOOTER_MOTOR_STATE:
-                shooter.setMotorVelocity(60);
-                if (shooter.getRightVelocity() > 55) {
+                shooter.setMotorVelocity(shooterDesiredVelocity);
+                if (shooter.getRightVelocity() > shooterDesiredVelocity * .99) {
                     singleShotState = SHOOTER_STATE.RUN_TRANSFER_STATE;
                 }
                 break;
-            case RUN_TRANSFER_STATE: runTransfer();
+            case RUN_SPINDEX_STATE:
+                if (!spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.artifactColors.EMPTY))
+                    singleShotState = SHOOTER_STATE.RUN_TRANSFER_STATE;
+//                runTransfer();
 //                spindex.closeSpindexGate();
+                break;
+            case RUN_TRANSFER_STATE:
+                spindex.runTransferWheel();
+                if (shooter.getDistance(DistanceUnit.INCH) < 3)
+                    singleShotState = SHOOTER_STATE.INACTIVE_STATE;
                 break;
             case INACTIVE_STATE:
                 holdPower();
