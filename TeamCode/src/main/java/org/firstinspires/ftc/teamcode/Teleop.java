@@ -35,6 +35,7 @@ public class Teleop extends OpMode {
     public static int shooterDesiredVelocity = 6000;
 
     private enum SHOOTER_STATE {REMOVE_USER_CONTROL, INTERMEDIATE_STATE, POINT_AT_GOAL_STATE, RUN_SHOOTER_MOTOR_STATE, CLOSE_GATE_STATE, RUN_TRANSFER_STATE, RUN_SPINDEX_STATE, RELEASE_STATE, INACTIVE_STATE}
+
     private static SHOOTER_STATE nextState = SHOOTER_STATE.INACTIVE_STATE;
     private static SHOOTER_STATE rapidFireState = SHOOTER_STATE.INACTIVE_STATE;
     private static SHOOTER_STATE motifRapidFireState = SHOOTER_STATE.INACTIVE_STATE;
@@ -174,7 +175,7 @@ public class Teleop extends OpMode {
                 shooter.setMotorVelocity(shooterDesiredVelocity);
 
                 if (Math.abs(shooter.getLeftVelocity() - shooterDesiredVelocity) <= 0.2) {
-                    if (Math.abs(shooter.getRightVelocity()  - shooterDesiredVelocity) <= 0.2) {
+                    if (Math.abs(shooter.getRightVelocity() - shooterDesiredVelocity) <= 0.2) {
                         rapidFireState = SHOOTER_STATE.CLOSE_GATE_STATE;
                     }
                 }
@@ -211,6 +212,7 @@ public class Teleop extends OpMode {
                 break;
         }
     }
+
     private void updateMotifRapidFireStateMachine() {
         switch (motifRapidFireState) {
 
@@ -266,7 +268,9 @@ public class Teleop extends OpMode {
 
     private void updateSingleShotStateMachine() {
         switch (singleShotState) {
-            case INTERMEDIATE_STATE: whileRunning(); break;
+            case INTERMEDIATE_STATE:
+                whileRunning();
+                break;
 //            case RUN_SPINDEX_STATE:
 //                spindex.runSpindexToColor(GeneralConstants.artifactColors.PURPLE);
 //                singleShotState = SHOOTER_STATE.RUN_SHOOTER_MOTOR_STATE;
@@ -277,7 +281,8 @@ public class Teleop extends OpMode {
                     singleShotState = SHOOTER_STATE.RUN_TRANSFER_STATE;
                 }
                 break;
-            case RUN_TRANSFER_STATE: runTransfer();
+            case RUN_TRANSFER_STATE:
+                runTransfer();
 //                spindex.closeSpindexGate();
                 break;
             case INACTIVE_STATE:
