@@ -35,55 +35,39 @@ public class Drivebase {
 
     // Field-centric drive
     public void drive(double drive, double strafe, double turn) {
-//        // Get current heading
-//        double botHeading = SoftElectronics.getYaw();
-//
-//        // Rotate joystick input to be field-centric
-//        double rotX = strafe * Math.cos(-botHeading) - drive * Math.sin(-botHeading);
-//        double rotY = strafe * Math.sin(-botHeading) + drive * Math.cos(-botHeading);
-//
-//        double flPower = rotY + rotX + turn;
-//        double frPower = rotY - rotX - turn;
-//        double blPower = rotY - rotX + turn;
-//        double brPower = rotY + rotX - turn;
-//
-//        // Normalize powers
-//        double max = Math.max(1.0, Math.max(Math.abs(flPower),
-//                Math.max(Math.abs(frPower),
-//                        Math.max(Math.abs(blPower), Math.abs(brPower)))));
-//
-//        frontLeft.setPower(flPower / max);
-//        frontRight.setPower(frPower / max);
-//        backLeft.setPower(blPower / max);
-//        backRight.setPower(brPower / max);
+        // Get current heading
+        double botHeading = SoftElectronics.getYaw();
 
-        // Combine the joystick requests for each axis-motion to determine each wheel's power.
-        // Set up a variable for each drive wheel to save the power level for telemetry.
-        double frontLeftPower  = drive + strafe + turn;
-        double frontRightPower = drive - strafe - turn;
-        double backLeftPower   = drive - strafe + turn;
-        double backRightPower  = drive + strafe - turn;
+        // Rotate joystick input to be field-centric
+        double rotX = strafe * Math.cos(-botHeading) - drive * Math.sin(-botHeading);
+        double rotY = strafe * Math.sin(-botHeading) + drive * Math.cos(-botHeading);
 
+        double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(turn), 1);
+        double frontLeftPower = (rotY + rotX + turn) / denominator;
+        double backLeftPower = (rotY - rotX + turn) / denominator;
+        double frontRightPower = (rotY - rotX - turn) / denominator;
+        double backRightPower = (rotY + rotX - turn) / denominator;
 
-        // Send calculated power to wheels
         frontLeft.setPower(frontLeftPower);
         frontRight.setPower(frontRightPower);
         backLeft.setPower(backLeftPower);
-        backRight.setPower(backRightPower);
+        backRight.setPower(backLeftPower);
+
+//         Combine the joystick requests for each axis-motion to determine each wheel's power.
+//         Set up a variable for each drive wheel to save the power level for telemetry.
+//        double frontLeftPower  = drive + strafe + turn;
+//        double frontRightPower = drive - strafe - turn;
+//        double backLeftPower   = drive - strafe + turn;
+//        double backRightPower  = drive + strafe - turn;
+//
+//
+//        // Send calculated power to wheels
+//        frontLeft.setPower(frontLeftPower);
+//        frontRight.setPower(frontRightPower);
+//        backLeft.setPower(backLeftPower);
+//        backRight.setPower(backRightPower);
     }
 
-    public void setFrontLeftPower(double power) {
-        frontLeft.setPower(power);
-    }
-    public void setBackLeftPower(double power) {
-        backLeft.setPower(power);
-    }
-    public void setFrontRightPower(double power) {
-        frontRight.setPower(power);
-    }
-    public void setBackRightPower(double power) {
-        backRight.setPower(power);
-    }
 
     // Stop all motors
     public void stop() {

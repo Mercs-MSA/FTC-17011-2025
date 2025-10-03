@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 public class SoftElectronics {
     private static FtcDashboard dash;
@@ -26,7 +27,6 @@ public class SoftElectronics {
         telemetryA.update();
 
 
-
         logoDirection = currentRobotConstants.logoDirection;
         usbDirection  = currentRobotConstants.usbDirection;
         orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
@@ -37,7 +37,7 @@ public class SoftElectronics {
     }
 
     public static double getYaw() {
-        return imu.getRobotYawPitchRollAngles().getYaw();
+        return imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
     }
 
     public static void resetYaw() {
