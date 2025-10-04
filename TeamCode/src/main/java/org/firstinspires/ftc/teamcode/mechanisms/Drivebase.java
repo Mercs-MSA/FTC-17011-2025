@@ -51,7 +51,7 @@ public class Drivebase {
         frontLeft.setPower(frontLeftPower);
         frontRight.setPower(frontRightPower);
         backLeft.setPower(backLeftPower);
-        backRight.setPower(backLeftPower);
+        backRight.setPower(backRightPower);
 
 //         Combine the joystick requests for each axis-motion to determine each wheel's power.
 //         Set up a variable for each drive wheel to save the power level for telemetry.

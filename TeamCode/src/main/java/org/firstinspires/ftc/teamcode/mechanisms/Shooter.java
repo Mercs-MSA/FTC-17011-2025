@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorRangeSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -12,14 +13,16 @@ import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public class Shooter {
-
     private DcMotorEx shooterMotorLeft, shooterMotorRight;
     private ColorRangeSensor exitSensor;
 //    private CRServo shooterServoYaw;
 //    private Servo shooterServoPitch;
 
+//    private Limelight3A limelight;
+
     private static int goalAngle = 0;
     private static int currentAngle = 0;
+    public static int pipeline = 0;
 
     public int getCurrentAngle() {
         return currentAngle;
@@ -36,6 +39,10 @@ public class Shooter {
 //        shooterServoYaw = hardwareMap.get(CRServo.class, "shooterServoYaw");
 //        shooterServoPitch = hardwareMap.get(Servo.class, "shooterServoPitch");
         exitSensor = hardwareMap.get(ColorRangeSensor.class, "exitSensor");
+//        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+
+//        limelight.start();
+//        limelight.pipelineSwitch(0);
 
         // Configure initial settings
         shooterMotorLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -101,4 +108,19 @@ public class Shooter {
     public double getDistance(DistanceUnit units) {
         return exitSensor.getDistance(units);
     }
+
+//    public void limelightLoop() {
+//        if (limelight.getStatus().equals()) {
+//
+//        }
+//
+//    }
+
+//    public double getXRangeToTarget() {
+//        return limelight.getLatestResult()
+//    }
+
+//    public double getYawToTarget() {
+//
+//    }
 }

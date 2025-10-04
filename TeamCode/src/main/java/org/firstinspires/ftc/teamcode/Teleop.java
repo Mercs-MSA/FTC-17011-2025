@@ -1,7 +1,9 @@
 package org.firstinspires.ftc.teamcode;
 
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -17,6 +19,7 @@ import org.firstinspires.ftc.teamcode.Constants.GeneralConstants;
 @Config
 @TeleOp
 public class Teleop extends OpMode {
+    public FtcDashboard dash;
     private SoftElectronics softElectronics;
     private Drivebase drivebase;
     private Spindex spindex;
@@ -33,7 +36,7 @@ public class Teleop extends OpMode {
 
     private double intakePower = 0.0;
 
-    public static int shooterDesiredVelocity = 6000;
+    public static int shooterDesiredVelocity = 2000;
 
     private enum SHOOTER_STATE {REMOVE_USER_CONTROL, INTERMEDIATE_STATE, POINT_AT_GOAL_STATE, RUN_SHOOTER_MOTOR_STATE, CLOSE_GATE_STATE, RUN_TRANSFER_STATE, RUN_SPINDEX_STATE, RELEASE_STATE, INACTIVE_STATE}
     private static SHOOTER_STATE nextState = SHOOTER_STATE.INACTIVE_STATE;
@@ -52,7 +55,8 @@ public class Teleop extends OpMode {
     public void init() {
         // Initialize SoftElectronics
         softElectronics = new SoftElectronics(hardwareMap, this.telemetry);
-        myTelem = softElectronics.getTelemetry();
+        dash = FtcDashboard.getInstance();
+        myTelem = new MultipleTelemetry(dash.getTelemetry(), softElectronics.getTelemetry());
 
         // Initialize Drive base
         drivebase = new Drivebase(hardwareMap);
@@ -71,7 +75,13 @@ public class Teleop extends OpMode {
         updateDrivebase();
         updateMechanisms();
 
+        myTelem.addData("Right Color:", spindex.getColor(spindex.spindexColorRight));
+        myTelem.addData("Left Color:", spindex.getColor(spindex.spindexColorLeft));
+        myTelem.addData("Back Color:", spindex.getColor(spindex.spindexColorBack));
         myTelem.addData("state:", singleShotState.toString());
+        myTelem.addData("shooter velocity:", shooter.getRightVelocity());
+        myTelem.addData("spindex velocity:", spindex.getSpindexVelocity());
+        myTelem.addData("spindex position:", spindex.getSpindexPosition());
         myTelem.update();
     }
 
@@ -97,6 +107,8 @@ public class Teleop extends OpMode {
             intakePower = -1.0;
         } else if (gamepad1.dpad_down) {
             intakePower = 1.0;
+        } else {
+            intakePower = 0;
         }
 
         intake.setPower(intakePower);
@@ -111,7 +123,7 @@ public class Teleop extends OpMode {
 
         if (gamepad1.left_trigger > 0.5) {
 //            MotifRapidFire();
-            spindex.stopSpindex();
+            spindex.runSpindex();
         }
 
         if (gamepad1.right_trigger > 0.5) {
@@ -123,8 +135,8 @@ public class Teleop extends OpMode {
 //            singleShotState = SHOOTER_STATE.RUN_SPINDEX_STATE;
 //            singleShotState = SHOOTER_STATE.RUN_SHOOTER_MOTOR_STATE;
             shooter.setMotorVelocity(shooterDesiredVelocity);
-            if (shooter.getRightVelocity() > 3005)
-                spindex.runTransferWheel();
+//            if (shooter.getRightVelocity() > 2000)
+//                spindex.runTransferWheel();
         }
 
         if (gamepad1.cross) {
@@ -286,15 +298,17 @@ public class Teleop extends OpMode {
                 }
                 break;
             case RUN_SPINDEX_STATE:
-                if (!spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.artifactColors.EMPTY))
+//                if (!spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.artifactColors.EMPTY))
                     singleShotState = SHOOTER_STATE.RUN_TRANSFER_STATE;
 //                runTransfer();
 //                spindex.closeSpindexGate();
                 break;
             case RUN_TRANSFER_STATE:
                 spindex.runTransferWheel();
-                if (shooter.getDistance(DistanceUnit.INCH) < 3)
+                if (shooter.getDistance(DistanceUnit.CM) < 5) {
+                    myTelem.addData("Shot", "");
                     singleShotState = SHOOTER_STATE.INACTIVE_STATE;
+                }
                 break;
             case INACTIVE_STATE:
                 holdPower();

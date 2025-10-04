@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorRangeSensor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -10,11 +11,13 @@ import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Constants.GeneralConstants;
 
+@Config
 public class Spindex {
     private static DcMotorEx spindexMotor;
     public ColorRangeSensor spindexColorBack; //Closest to wheel
     public ColorRangeSensor spindexColorRight; //Right of the wheel
     public ColorRangeSensor spindexColorLeft; //Left of the wheel
+    public static double spindexVelocity = 117;
 
 
 
@@ -46,7 +49,8 @@ public class Spindex {
 
         spindexMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         spindexMotor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
-        spindexMotor.setPower(0);
+        spindexMotor.setPower(1);
+        spindexMotor.setVelocity(0);
 
         spindexTransferServo.setPower(0);
     }
@@ -60,11 +64,19 @@ public class Spindex {
     }
 
     public void runSpindex() {
-        spindexMotor.setPower(1);
+        spindexMotor.setVelocity(spindexVelocity);
     }
 
     public void stopSpindex() {
-        spindexMotor.setPower(0);
+        spindexMotor.setVelocity(0);
+    }
+
+    public double getSpindexVelocity() {
+        return spindexMotor.getVelocity();
+    }
+
+    public double getSpindexPosition() {
+        return spindexMotor.getCurrentPosition();
     }
 
     public void runTransferWheel() {
