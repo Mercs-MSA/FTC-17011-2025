@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
+import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLStatus;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -20,6 +21,8 @@ public class Shooter {
 //    private Servo shooterServoPitch;
 
     private Limelight3A limelight;
+    private LLStatus llStatus;
+    private LLResult llResults;
 
     private static int goalAngle = 0;
     private static int currentAngle = 0;
@@ -33,9 +36,20 @@ public class Shooter {
         return goalAngle;
     }
 
-//    public int updateLL() {
-//        LLStatus status = limelight.getStatus();
-//    }
+    public void updateLL() {
+        llStatus = limelight.getStatus();
+        llResults = limelight.getLatestResult();
+
+        if (llResults.isValid()) {
+            double captureLatency =llResults.getCaptureLatency();
+            double targetingLatency = llResults.getTargetingLatency();
+            double parseLatency = llResults.getParseLatency();
+
+
+        }
+
+
+    }
 
 
     public Shooter(HardwareMap hardwareMap) {
@@ -44,10 +58,10 @@ public class Shooter {
 //        shooterServoYaw = hardwareMap.get(CRServo.class, "shooterServoYaw");
 //        shooterServoPitch = hardwareMap.get(Servo.class, "shooterServoPitch");
         exitSensor = hardwareMap.get(ColorRangeSensor.class, "exitSensor");
-//        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
 
-//        limelight.start();
-//        limelight.pipelineSwitch(0);
+        limelight.start();
+        limelight.pipelineSwitch(0); //TODO: Edit pipelines to filter out tags in Limelight Dash
 
         // Configure initial settings
         shooterMotorLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -110,22 +124,19 @@ public class Shooter {
         return exitSensor.getNormalizedColors();
     }
 
-    public double getDistance(DistanceUnit units) {
+    public double getExitDistance(DistanceUnit units) {
         return exitSensor.getDistance(units);
     }
 
-//    public void limelightLoop() {
-//        if (limelight.getStatus().equals()) {
-//
-//        }
-//
-//    }
+    public double getTX() {
+        return llResults.getFiducialResults().get(0).getTargetXDegrees();
+    }
 
-//    public double getXRangeToTarget() {
-//        return limelight.getLatestResult()
-//    }
+    public LLResult getLLResults() {
+        return llResults;
+    }
 
-//    public double getYawToTarget() {
-//
-//    }
+    public LLStatus getLLStatus() {
+        return llStatus;
+    }
 }

@@ -77,11 +77,12 @@ public class Teleop extends OpMode {
     public void loop() {
         updateDrivebase();
         updateMechanisms();
+        shooter.updateLL();
 
         myTelem.addData("Right Color:", spindex.getColor(spindex.spindexColorRight));
         myTelem.addData("Left Color:", spindex.getColor(spindex.spindexColorLeft));
         myTelem.addData("Back Color:", spindex.getColor(spindex.spindexColorBack));
-        myTelem.addData("Exit Sensor:", shooter.getDistance(DistanceUnit.CM));
+        myTelem.addData("Exit Sensor:", shooter.getExitDistance(DistanceUnit.CM));
         myTelem.addData("state:", singleShotState.toString());
         myTelem.addData("shooter velocity:", shooter.getRightVelocity());
         myTelem.addData("spindex velocity:", spindex.getSpindexVelocity());
@@ -309,7 +310,7 @@ public class Teleop extends OpMode {
                 break;
             case RUN_TRANSFER_STATE:
                 spindex.runTransferWheel();
-                if (shooter.getDistance(DistanceUnit.CM) < 5) {
+                if (shooter.getExitDistance(DistanceUnit.CM) < 5) {
                     myTelem.addData("Shot", "");
                     singleShotState = SHOOTER_STATE.INACTIVE_STATE;
                 }
