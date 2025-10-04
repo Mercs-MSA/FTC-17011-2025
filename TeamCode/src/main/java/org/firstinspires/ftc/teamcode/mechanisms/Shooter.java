@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
+import com.qualcomm.hardware.limelightvision.LLStatus;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorRangeSensor;
@@ -18,7 +19,7 @@ public class Shooter {
 //    private CRServo shooterServoYaw;
 //    private Servo shooterServoPitch;
 
-//    private Limelight3A limelight;
+    private Limelight3A limelight;
 
     private static int goalAngle = 0;
     private static int currentAngle = 0;
@@ -31,6 +32,10 @@ public class Shooter {
     public int getGoalAngle() {
         return goalAngle;
     }
+
+//    public int updateLL() {
+//        LLStatus status = limelight.getStatus();
+//    }
 
 
     public Shooter(HardwareMap hardwareMap) {

@@ -17,8 +17,8 @@ apply from: '../build.dependencies.gradle'
 
 android {
     namespace = 'org.firstinspires.ftc.teamcode'
-
     compileSdk 35
+
     defaultConfig {
         minSdk 24
     }
@@ -28,14 +28,8 @@ android {
     }
 }
 
-repositories {
-    maven {
-        url = 'https://maven.brott.dev/'
-    }
-}
 
 dependencies {
     implementation project(':FtcRobotController')
-    implementation "com.acmerobotics.dashboard:dashboard:0.4.14"
-    implementation "com.bylazar:fullpanels:1.0.6"
+//    implementation "com.bylazar:ftcontrol:0.6.8"
 }

@@ -4,6 +4,7 @@ package org.firstinspires.ftc.teamcode;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.bylazar.ftcontrol.panels.integration.TelemetryManager;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -33,6 +34,7 @@ public class Teleop extends OpMode {
     private ElapsedTime rapidFireTimer;
 
     private static Telemetry myTelem;
+    private static TelemetryManager myPanels;
 
     private double intakePower = 0.0;
 
@@ -57,6 +59,7 @@ public class Teleop extends OpMode {
         softElectronics = new SoftElectronics(hardwareMap, this.telemetry);
         dash = FtcDashboard.getInstance();
         myTelem = new MultipleTelemetry(dash.getTelemetry(), softElectronics.getTelemetry());
+        myPanels = softElectronics.getPanelsTelemetry();
 
         // Initialize Drive base
         drivebase = new Drivebase(hardwareMap);
