@@ -297,50 +297,34 @@ public class Teleop extends OpMode {
 
     private void updateSingleShotStateMachine() {
         switch (singleShotState) {
-            case INTERMEDIATE_STATE: whileRunning(); break;
-//            case RUN_SPINDEX_STATE:
-//                spindex.runSpindexToColor(GeneralConstants.artifactColors.PURPLE);
-//                singleShotState = SHOOTER_STATE.RUN_SHOOTER_MOTOR_STATE;
-//                break;
             case REMOVE_USER_CONTROL:
                 canDrive = false;
                 singleShotState = SHOOTER_STATE.RUN_SHOOTER_MOTOR_STATE;
                 break;
             case RUN_SHOOTER_MOTOR_STATE:
                 shooter.setMotorVelocity(shooterDesiredVelocity);
-                if (shooter.getRightVelocity() > shooterDesiredVelocity * .99) {
+                if (shooter.getRightVelocity() > shooterDesiredVelocity * .98) {
                     singleShotState = SHOOTER_STATE.RUN_TRANSFER_STATE;
                 }
                 break;
             case RUN_SPINDEX_STATE:
-//                if (!spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.artifactColors.EMPTY))
+                spindex.runSpindexToNextArtifact(2);
+                if (!spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.artifactColors.EMPTY))
                     singleShotState = SHOOTER_STATE.RUN_TRANSFER_STATE;
-//                runTransfer();
-//                spindex.closeSpindexGate();
                 break;
             case RUN_TRANSFER_STATE:
+                spindex.closeSpindexGate();
                 spindex.runTransferWheel();
-                if (shooter.getExitDistance(DistanceUnit.CM) < 5) {
+                if (shooter.getExitDistance(DistanceUnit.CM) < 4) {
                     myTelem.addData("Shot", "");
                     singleShotState = SHOOTER_STATE.INACTIVE_STATE;
+                    spindex.openSpindexGate();
                 }
                 break;
             case INACTIVE_STATE:
-                holdPower();
+                shooter.stop();
                 break;
         }
-    }
-
-    public void whileRunning() {
-    }
-
-    public void runTransfer() {
-        singleShotState = SHOOTER_STATE.INTERMEDIATE_STATE;
-        spindex.runTransferWheel();
-    }
-
-    private void holdPower() {
-        shooter.stop();
     }
 }
 
