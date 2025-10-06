@@ -248,14 +248,19 @@ public class Teleop extends OpMode {
             case REMOVE_USER_CONTROL:
                 canDrive = false;
                 motifRapidFireArtifactCycleCount = 0;
-
                 motifRapidFireState = SHOOTER_STATE.POINT_AT_GOAL_STATE;
                 break;
 
             case POINT_AT_GOAL_STATE:
                 shooter.pointAtGoal();
-
                 if (Math.abs(shooter.getCurrentAngle() - shooter.getGoalAngle()) <= 0.2) {
+                    motifRapidFireState = SHOOTER_STATE.RUN_SHOOTER_MOTOR_STATE;
+                }
+                break;
+
+            case RUN_SHOOTER_MOTOR_STATE:
+                shooter.setMotorVelocity(shooterDesiredVelocity);
+                if (shooter.getRightVelocity() > shooterDesiredVelocity * 0.99) {
                     motifRapidFireState = SHOOTER_STATE.RUN_SPINDEX_STATE;
                 }
                 break;
@@ -265,22 +270,24 @@ public class Teleop extends OpMode {
                 spindex.stopTransferWheel();
 
                 if (spindex.getColor(spindex.spindexColorBack) == motifPattern[motifRapidFireArtifactCycleCount]) {
-                    motifRapidFireState = SHOOTER_STATE.RUN_TRANSFER_STATE;
+                    spindex.stopSpindex();
                     rapidFireTimer.reset();
+                    motifRapidFireState = SHOOTER_STATE.RUN_TRANSFER_STATE;
                 }
                 break;
 
             case RUN_TRANSFER_STATE:
-                spindex.stopSpindex();
                 spindex.runTransferWheel();
 
                 if (rapidFireTimer.time() > 3) {
+                    spindex.stopTransferWheel();
                     motifRapidFireArtifactCycleCount++;
 
-                    if (motifRapidFireArtifactCycleCount >= motifPattern.length)
+                    if (motifRapidFireArtifactCycleCount >= motifPattern.length) {
                         motifRapidFireState = SHOOTER_STATE.INACTIVE_STATE;
-                    else
+                    } else {
                         motifRapidFireState = SHOOTER_STATE.RUN_SPINDEX_STATE;
+                    }
                 }
                 break;
 
@@ -289,7 +296,6 @@ public class Teleop extends OpMode {
                 shooter.stopShooterMotor();
                 spindex.stopSpindex();
                 spindex.stopTransferWheel();
-
                 motifRapidFireArtifactCycleCount = 0;
                 break;
         }
@@ -343,4 +349,5 @@ public class Teleop extends OpMode {
         shooter.stop();
     }
 }
+
 
