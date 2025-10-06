@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
+import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLStatus;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -12,6 +13,7 @@ import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.teamcode.Constants.GeneralConstants;
 
 public class Shooter {
     private DcMotorEx shooterMotorLeft, shooterMotorRight;
@@ -20,6 +22,7 @@ public class Shooter {
 //    private Servo shooterServoPitch;
 
     private Limelight3A limelight;
+    private LLResult limeResult;
 
     private static int goalAngle = 0;
     private static int currentAngle = 0;
@@ -56,11 +59,18 @@ public class Shooter {
         shooterMotorRight.setDirection(DcMotor.Direction.REVERSE);
         shooterMotorLeft.setDirection(DcMotor.Direction.FORWARD);
 
-        shooterMotorLeft.setPower(0);
-        shooterMotorRight.setPower(0);
+//        shooterMotorLeft.setPower(1);
+//        shooterMotorRight.setPower(1);
+        shooterMotorRight.setVelocity(0);
+        shooterMotorLeft.setVelocity(0);
 
 //        shooterServoYaw.setPower(0);
 //        shooterServoPitch.setPosition(0);
+    }
+
+    public void setShooterPower(double power) {
+        shooterMotorLeft.setPower(power);
+        shooterMotorRight.setPower(power);
     }
 
     // Methods to control shooter
@@ -127,5 +137,13 @@ public class Shooter {
 
 //    public double getYawToTarget() {
 //
+//    }
+
+//    public GeneralConstants.artifactColors[] getMotifPattern() {
+//        GeneralConstants.artifactColors[] result = new GeneralConstants.artifactColors[3];
+//
+//        if (limelight.)
+//
+//        return result;
 //    }
 }

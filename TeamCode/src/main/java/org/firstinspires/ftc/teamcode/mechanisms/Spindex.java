@@ -17,7 +17,7 @@ public class Spindex {
     public ColorRangeSensor spindexColorBack; //Closest to wheel
     public ColorRangeSensor spindexColorRight; //Right of the wheel
     public ColorRangeSensor spindexColorLeft; //Left of the wheel
-    public static double spindexVelocity = 117;
+    public static double spindexVelocity = 600;
 
 
 
@@ -30,8 +30,8 @@ public class Spindex {
 
     private static int numOfArtifactsInRobot = 0;
 
-    private static final double spindexGateOpenPosition = 0.0;
-    private static final double spindexGateClosedPosition = 0.0;
+    public static double spindexGateOpenPosition = 0.0;
+    public static double spindexGateClosedPosition = 0.0;
 
     public Spindex(HardwareMap hardwareMap) {
         spindexMotor = hardwareMap.get(DcMotorEx.class, "spindexMotor");
@@ -49,7 +49,7 @@ public class Spindex {
 
         spindexMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         spindexMotor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
-        spindexMotor.setPower(1);
+//        spindexMotor.setPower(1);
         spindexMotor.setVelocity(0);
 
         spindexTransferServo.setPower(0);
@@ -65,6 +65,11 @@ public class Spindex {
 
     public void runSpindex() {
         spindexMotor.setVelocity(spindexVelocity);
+    }
+
+    public void initSpindex() {
+        spindexMotor.setPower(1);
+        spindexMotor.setVelocity(0);
     }
 
     public void stopSpindex() {
@@ -123,13 +128,23 @@ public class Spindex {
         float g = colorSensor.green();
         float b = colorSensor.blue();
 
-        if (r > 100 && b > 100 && g < 80 && colorSensor.getDistance(DistanceUnit.INCH) < 1)
-            return GeneralConstants.artifactColors.GREEN;
-        else if (g > 120 && r < 100 && b < 100 && colorSensor.getDistance(DistanceUnit.INCH) < 1)
+
+        if (g < 980 && g > 400 && r > 330 && b > 570 && colorSensor.getDistance(DistanceUnit.INCH) < 3)
             return GeneralConstants.artifactColors.PURPLE;
+        else if (r < 330 && b > 740 && g > 980 && colorSensor.getDistance(DistanceUnit.INCH) < 3)
+            return GeneralConstants.artifactColors.GREEN;
         else
             return GeneralConstants.artifactColors.EMPTY;
     }
+
+    public String getColor(ColorRangeSensor colorRangeSensor, boolean irrelevant) {
+        float r = colorRangeSensor.red();
+        float g = colorRangeSensor.green();
+        float b = colorRangeSensor.blue();
+
+        return "R: " + r + " G: " + g + " B: " + b;
+    }
+
 
     public void updateSpinColorSensors() {
         spindexColorBackState = getColor(spindexColorBack);

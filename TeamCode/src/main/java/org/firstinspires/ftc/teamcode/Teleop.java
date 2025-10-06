@@ -74,13 +74,21 @@ public class Teleop extends OpMode {
     }
 
     @Override
+    public void start() {
+        super.start();
+        shooter.setShooterPower(1);
+        shooter.setMotorVelocity(0);
+        spindex.initSpindex();
+    }
+
+    @Override
     public void loop() {
         updateDrivebase();
         updateMechanisms();
 
-        myTelem.addData("Right Color:", spindex.getColor(spindex.spindexColorRight));
-        myTelem.addData("Left Color:", spindex.getColor(spindex.spindexColorLeft));
-        myTelem.addData("Back Color:", spindex.getColor(spindex.spindexColorBack));
+        myTelem.addData("Right Color:", spindex.getColor(spindex.spindexColorRight) + " " + spindex.getColor(spindex.spindexColorRight, true));
+        myTelem.addData("Left Color:", spindex.getColor(spindex.spindexColorLeft) + " " + spindex.getColor(spindex.spindexColorLeft, true));
+        myTelem.addData("Back Color:", spindex.getColor(spindex.spindexColorBack) + " " + spindex.getColor(spindex.spindexColorBack, true));
         myTelem.addData("Exit Sensor:", shooter.getDistance(DistanceUnit.CM));
         myTelem.addData("state:", singleShotState.toString());
         myTelem.addData("shooter velocity:", shooter.getRightVelocity());
@@ -108,9 +116,9 @@ public class Teleop extends OpMode {
 //        updateRapidFireStateMachine();
         // Example: read joystick inputs
         if (gamepad1.left_bumper) {
-            intakePower = -1.0;
-        } else if (gamepad1.dpad_down) {
             intakePower = 1.0;
+        } else if (gamepad1.dpad_down) {
+            intakePower = -1.0;
         } else {
             intakePower = 0;
         }
@@ -125,14 +133,14 @@ public class Teleop extends OpMode {
             spindex.runSpindexToColor(GeneralConstants.artifactColors.GREEN);
         }
 
-        if (gamepad1.left_trigger > 0.5) {
-//            MotifRapidFire();
+        if (gamepad1.left_trigger > 0.5)
             spindex.runSpindex();
-        }
+//        else if (gamepad1.left_trigger < .5 && gamepad1.left_trigger > .3)
+//            spindex.stopSpindex();
 
         if (gamepad1.right_trigger > 0.5) {
-//            spindex.runSpindex();
-            spindex.runTransferWheel();
+            spindex.openSpindexGate();
+//            spindex.runTransferWheel();
         }
 
         if (gamepad1.right_bumper) {
@@ -146,6 +154,8 @@ public class Teleop extends OpMode {
         if (gamepad1.cross) {
             shooter.stop();
             spindex.stopTransferWheel();
+            spindex.stopSpindex();
+            spindex.closeSpindexGate();
         }
 
         if (gamepad1.dpad_up) {
@@ -309,7 +319,7 @@ public class Teleop extends OpMode {
                 break;
             case RUN_TRANSFER_STATE:
                 spindex.runTransferWheel();
-                if (shooter.getDistance(DistanceUnit.CM) < 5) {
+                if (shooter.getDistance(DistanceUnit.CM) < 4) {
                     myTelem.addData("Shot", "");
                     singleShotState = SHOOTER_STATE.INACTIVE_STATE;
                 }
