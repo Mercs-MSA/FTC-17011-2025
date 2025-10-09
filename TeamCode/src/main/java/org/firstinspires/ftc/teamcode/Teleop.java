@@ -204,7 +204,7 @@ public class Teleop extends OpMode {
                 break;
 
             case POINT_AT_GOAL_STATE:
-//                shooter.pointAtGoal();
+                shooter.pointAtGoal();
 
 
                 if (Math.abs(shooter.getCurrentAngle() - shooter.getGoalAngle()) <= 0.2) {
@@ -215,12 +215,9 @@ public class Teleop extends OpMode {
             case RUN_SHOOTER_MOTOR_STATE:
                 shooter.setMotorVelocity(shooterDesiredVelocity);
 
-                if (Math.abs(shooter.getLeftVelocity() - shooterDesiredVelocity) <= 0.2) {
-                    if (Math.abs(shooter.getRightVelocity()  - shooterDesiredVelocity) <= 0.2) {
-                        rapidFireState = SHOOTER_STATE.CLOSE_GATE_STATE;
-                    }
+                if (shooter.getRightVelocity() > shooterDesiredVelocity * .99) {
+                    rapidFireState = SHOOTER_STATE.CLOSE_GATE_STATE;
                 }
-
                 break;
 
             case CLOSE_GATE_STATE:
@@ -241,8 +238,9 @@ public class Teleop extends OpMode {
 
                 spindex.runSpindex();
 
-                if (rapidFireTimer.time() > 3)
+                if (gamepad1.x) {
                     rapidFireState = SHOOTER_STATE.INACTIVE_STATE;
+                }
                 break;
 
             case INACTIVE_STATE:
