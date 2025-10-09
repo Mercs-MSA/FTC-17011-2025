@@ -7,6 +7,7 @@ import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.bylazar.ftcontrol.panels.integration.TelemetryManager;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -113,6 +114,7 @@ public class Teleop extends OpMode {
 
     private void updateMechanisms() {
         updateSingleShotStateMachine();
+        shooter.updateLL();
 //        updateMotifRapidFireStateMachine();
 //        updateRapidFireStateMachine();
         // Example: read joystick inputs
@@ -141,7 +143,7 @@ public class Teleop extends OpMode {
 
         if (gamepad1.right_trigger > 0.5) {
             spindex.openSpindexGate();
-//            spindex.runTransferWheel();
+            spindex.runTransferWheel();
         }
 
         if (gamepad1.right_bumper) {
@@ -159,9 +161,18 @@ public class Teleop extends OpMode {
             spindex.closeSpindexGate();
         }
 
-        if (gamepad1.dpad_up) {
-            singleShotState = SHOOTER_STATE.REMOVE_USER_CONTROL;
+//        if (gamepad1.dpad_up) {
+//            singleShotState = SHOOTER_STATE.REMOVE_USER_CONTROL;
+//        }
+
+        if(gamepad1.dpad_left) {
+            shooter.aimShooter(Servo.Direction.REVERSE);
         }
+        if(gamepad1.dpad_right) {
+            shooter.aimShooter(Servo.Direction.FORWARD);
+        }
+        telemetry.addData("TX", shooter.getTX());
+        telemetry.addData("inRange", shooter.inRange());
     }
 
 //    private void MotifRapidFire() {
@@ -236,7 +247,7 @@ public class Teleop extends OpMode {
 
             case INACTIVE_STATE:
                 canDrive = true;
-                shooter.stopShooterMotor();
+                shooter.stop();
                 spindex.stopSpindex();
                 spindex.stopTransferWheel();
                 break;
@@ -252,10 +263,10 @@ public class Teleop extends OpMode {
                 break;
 
             case POINT_AT_GOAL_STATE:
-                shooter.pointAtGoal();
-                if (Math.abs(shooter.getCurrentAngle() - shooter.getGoalAngle()) <= 0.2) {
-                    motifRapidFireState = SHOOTER_STATE.RUN_SHOOTER_MOTOR_STATE;
-                }
+//                shooter.pointAtGoal();
+//                if (Math.abs(shooter.getCurrentAngle() - shooter.getGoalAngle()) <= 0.2) {
+//                    motifRapidFireState = SHOOTER_STATE.RUN_SHOOTER_MOTOR_STATE;
+//                }
                 break;
 
             case RUN_SHOOTER_MOTOR_STATE:
@@ -293,7 +304,7 @@ public class Teleop extends OpMode {
 
             case INACTIVE_STATE:
                 canDrive = true;
-                shooter.stopShooterMotor();
+                shooter.stop();
                 spindex.stopSpindex();
                 spindex.stopTransferWheel();
                 motifRapidFireArtifactCycleCount = 0;

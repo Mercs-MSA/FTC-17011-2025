@@ -18,7 +18,7 @@ import org.firstinspires.ftc.teamcode.Constants.GeneralConstants;
 public class Shooter {
     private DcMotorEx shooterMotorLeft, shooterMotorRight;
     private ColorRangeSensor exitSensor;
-//    private CRServo shooterServoYaw;
+    private CRServo shooterServoYaw;
 //    private Servo shooterServoPitch;
 
     private Limelight3A limelight;
@@ -27,7 +27,10 @@ public class Shooter {
 
     private static int goalAngle = 0;
     private static int currentAngle = 0;
-    public static int pipeline = 0;
+    private static int pipeline = 0;
+
+    private static double goalRange = 2;
+
 
     public int getCurrentAngle() {
         return currentAngle;
@@ -56,7 +59,7 @@ public class Shooter {
     public Shooter(HardwareMap hardwareMap) {
         shooterMotorLeft = hardwareMap.get(DcMotorEx.class, "shooterMotorLeft");
         shooterMotorRight = hardwareMap.get(DcMotorEx.class, "shooterMotorRight");
-//        shooterServoYaw = hardwareMap.get(CRServo.class, "shooterServoYaw");
+        shooterServoYaw = hardwareMap.get(CRServo.class, "shooterServoYaw");
 //        shooterServoPitch = hardwareMap.get(Servo.class, "shooterServoPitch");
         exitSensor = hardwareMap.get(ColorRangeSensor.class, "exitSensor");
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
@@ -105,7 +108,7 @@ public class Shooter {
     }
 
     public void setTurretYawPower(double p) {
-//        shooterServoYaw.setPower(p);
+        shooterServoYaw.setPower(p);
     }
 
 //    public void setServoPosition1(double pos1) {
@@ -116,13 +119,26 @@ public class Shooter {
 //        shooterServoYaw.setPosition(pos2);
 //    }
 
-    public void stopShooterMotor() {
-        shooterMotorLeft.setPower(0);
-        shooterMotorRight.setPower(0);
+    public void aimShooter(Servo.Direction direction) {
+        if (getTX() != null) {
+            if (getTX() < -goalRange) {
+                setTurretYawPower(-1);
+            } else if (getTX() > goalRange) {
+                setTurretYawPower(1);
+            } else if (getTX() >= -goalRange && getTX() <= goalRange){
+                setTurretYawPower(0);
+            }
+        } else {
+            if (direction.equals(Servo.Direction.FORWARD)) {
+                setTurretYawPower(-1);
+            } else if (direction.equals(Servo.Direction.REVERSE)) {
+                setTurretYawPower(1);
+            }
+        }
     }
 
-    public void pointAtGoal() {
-
+    public boolean inRange() {
+        return getTX() != null && getTX() > -goalRange && getTX() < goalRange;
     }
 
     public void shootArtifact() {
@@ -136,8 +152,8 @@ public class Shooter {
         return exitSensor.getDistance(units);
     }
 
-    public double getTX() {
-        return llResults.getFiducialResults().get(0).getTargetXDegrees();
+    public Double getTX() {
+        return llResults.isValid() ? llResults.getFiducialResults().get(0).getTargetXDegrees() : null;
     }
 
     public LLResult getLLResults() {
