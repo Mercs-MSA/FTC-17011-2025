@@ -166,7 +166,7 @@ public class Teleop extends OpMode {
 //        if (gamepad1.dpadUpWasPressed() && singleShotState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
 //            singleShotState = SHOOTER_STATE.REMOVE_USER_CONTROL;
         if(gamepad1.dpad_up) {
-            shooter.setTurretYawPower(0.5);
+            shooter.setTurretYawPower(1);
         }
 
 //        if (gamepad1.dpad_up) {

@@ -65,6 +65,7 @@ public class Shooter {
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
 
         shooterServoYaw.setDirection(CRServo.Direction.FORWARD);
+        shooterServoYaw.setPower(0);
 
         limelight.start();
         limelight.pipelineSwitch(0); //TODO: Edit pipelines to filter out tags in Limelight Dash
