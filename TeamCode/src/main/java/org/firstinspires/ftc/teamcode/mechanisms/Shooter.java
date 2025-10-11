@@ -29,7 +29,7 @@ public class Shooter {
     private static int currentAngle = 0;
     private static int pipeline = 0;
 
-    private static double goalRange = 2;
+    private static double goalRange = 4;
 
 
     public int getCurrentAngle() {
@@ -63,6 +63,8 @@ public class Shooter {
 //        shooterServoPitch = hardwareMap.get(Servo.class, "shooterServoPitch");
         exitSensor = hardwareMap.get(ColorRangeSensor.class, "exitSensor");
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
+
+        shooterServoYaw.setDirection(CRServo.Direction.FORWARD);
 
         limelight.start();
         limelight.pipelineSwitch(0); //TODO: Edit pipelines to filter out tags in Limelight Dash
@@ -122,17 +124,19 @@ public class Shooter {
     public void aimShooter(Servo.Direction direction) {
         if (getTX() != null) {
             if (getTX() < -goalRange) {
-                setTurretYawPower(-1);
+                setTurretYawPower(-0.3);
             } else if (getTX() > goalRange) {
-                setTurretYawPower(1);
-            } else if (getTX() >= -goalRange && getTX() <= goalRange){
+                setTurretYawPower(0.3);
+            } else if (inRange()){
                 setTurretYawPower(0);
             }
         } else {
             if (direction.equals(Servo.Direction.FORWARD)) {
-                setTurretYawPower(-1);
+                setTurretYawPower(-0.3);
+                if (inRange()) setTurretYawPower(0);
             } else if (direction.equals(Servo.Direction.REVERSE)) {
-                setTurretYawPower(1);
+                setTurretYawPower(0.3);
+                if (inRange()) setTurretYawPower(0);
             }
         }
     }
@@ -140,6 +144,8 @@ public class Shooter {
     public boolean inRange() {
         return getTX() != null && getTX() > -goalRange && getTX() < goalRange;
     }
+
+
 
     public void shootArtifact() {
     }

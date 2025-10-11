@@ -113,7 +113,7 @@ public class Teleop extends OpMode {
     }
 
     private void updateMechanisms() {
-        updateSingleShotStateMachine();
+//        updateSingleShotStateMachine();
         shooter.updateLL();
 //        updateMotifRapidFireStateMachine();
 //        updateRapidFireStateMachine();
@@ -161,6 +161,10 @@ public class Teleop extends OpMode {
             spindex.closeSpindexGate();
         }
 
+        if(gamepad1.dpad_up) {
+            shooter.setTurretYawPower(0.5);
+        }
+
 //        if (gamepad1.dpad_up) {
 //            singleShotState = SHOOTER_STATE.REMOVE_USER_CONTROL;
 //        }
@@ -171,7 +175,10 @@ public class Teleop extends OpMode {
         if(gamepad1.dpad_right) {
             shooter.aimShooter(Servo.Direction.FORWARD);
         }
-        telemetry.addData("TX", shooter.getTX());
+
+        telemetry.addData("result valid?", shooter.getLLResults().isValid());
+        telemetry.addData("pipeline", shooter.getLLStatus().getPipelineIndex());
+        telemetry.addData("TX", shooter.getTX() == null ? "null" : shooter.getTX());
         telemetry.addData("inRange", shooter.inRange());
     }
 
@@ -194,153 +201,153 @@ public class Teleop extends OpMode {
      * State machine code
      */
 
-    private void updateRapidFireStateMachine() {
-        switch (rapidFireState) {
-
-            case REMOVE_USER_CONTROL:
-                canDrive = false;
-
-                rapidFireState = SHOOTER_STATE.POINT_AT_GOAL_STATE;
-                break;
-
-            case POINT_AT_GOAL_STATE:
-                shooter.pointAtGoal();
-
-
-                if (Math.abs(shooter.getCurrentAngle() - shooter.getGoalAngle()) <= 0.2) {
-                    rapidFireState = SHOOTER_STATE.RUN_SHOOTER_MOTOR_STATE;
-                }
-                break;
-
-            case RUN_SHOOTER_MOTOR_STATE:
-                shooter.setMotorVelocity(shooterDesiredVelocity);
-
-                if (shooter.getRightVelocity() > shooterDesiredVelocity * .99) {
-                    rapidFireState = SHOOTER_STATE.CLOSE_GATE_STATE;
-                }
-                break;
-
-            case CLOSE_GATE_STATE:
-                spindex.closeSpindexGate();
-
-                rapidFireState = SHOOTER_STATE.RUN_TRANSFER_STATE;
-                break;
-
-            case RUN_TRANSFER_STATE:
-                spindex.runTransferWheel();
-
-                rapidFireState = SHOOTER_STATE.RUN_SPINDEX_STATE;
-
-                rapidFireTimer.reset();
-                break;
-
-            case RUN_SPINDEX_STATE:
-
-                spindex.runSpindex();
-
-                if (gamepad1.x) {
-                    rapidFireState = SHOOTER_STATE.INACTIVE_STATE;
-                }
-                break;
-
-            case INACTIVE_STATE:
-                canDrive = true;
-                shooter.stop();
-                spindex.stopSpindex();
-                spindex.stopTransferWheel();
-                break;
-        }
-    }
-    private void updateMotifRapidFireStateMachine() {
-        switch (motifRapidFireState) {
-
-            case REMOVE_USER_CONTROL:
-                canDrive = false;
-                motifRapidFireArtifactCycleCount = 0;
-                motifRapidFireState = SHOOTER_STATE.POINT_AT_GOAL_STATE;
-                break;
-
-            case POINT_AT_GOAL_STATE:
-//                shooter.pointAtGoal();
+//    private void updateRapidFireStateMachine() {
+//        switch (rapidFireState) {
+//
+//            case REMOVE_USER_CONTROL:
+//                canDrive = false;
+//
+//                rapidFireState = SHOOTER_STATE.POINT_AT_GOAL_STATE;
+//                break;
+//
+//            case POINT_AT_GOAL_STATE:
+////                shooter.pointAtGoal();
+//
+//
 //                if (Math.abs(shooter.getCurrentAngle() - shooter.getGoalAngle()) <= 0.2) {
-//                    motifRapidFireState = SHOOTER_STATE.RUN_SHOOTER_MOTOR_STATE;
+//                    rapidFireState = SHOOTER_STATE.RUN_SHOOTER_MOTOR_STATE;
 //                }
-                break;
-
-            case RUN_SHOOTER_MOTOR_STATE:
-                shooter.setMotorVelocity(shooterDesiredVelocity);
-                if (shooter.getRightVelocity() > shooterDesiredVelocity * 0.99) {
-                    motifRapidFireState = SHOOTER_STATE.RUN_SPINDEX_STATE;
-                }
-                break;
-
-            case RUN_SPINDEX_STATE:
-                spindex.runSpindex();
-                spindex.stopTransferWheel();
-
-                if (spindex.getColor(spindex.spindexColorBack) == motifPattern[motifRapidFireArtifactCycleCount]) {
-                    spindex.stopSpindex();
-                    rapidFireTimer.reset();
-                    motifRapidFireState = SHOOTER_STATE.RUN_TRANSFER_STATE;
-                }
-                break;
-
-            case RUN_TRANSFER_STATE:
-                spindex.runTransferWheel();
-
-                if (rapidFireTimer.time() > 3) {
-                    spindex.stopTransferWheel();
-                    motifRapidFireArtifactCycleCount++;
-
-                    if (motifRapidFireArtifactCycleCount >= motifPattern.length) {
-                        motifRapidFireState = SHOOTER_STATE.INACTIVE_STATE;
-                    } else {
-                        motifRapidFireState = SHOOTER_STATE.RUN_SPINDEX_STATE;
-                    }
-                }
-                break;
-
-            case INACTIVE_STATE:
-                canDrive = true;
-                shooter.stop();
-                spindex.stopSpindex();
-                spindex.stopTransferWheel();
-                motifRapidFireArtifactCycleCount = 0;
-                break;
-        }
-    }
-
-    private void updateSingleShotStateMachine() {
-        switch (singleShotState) {
-            case REMOVE_USER_CONTROL:
-                canDrive = false;
-                singleShotState = SHOOTER_STATE.RUN_SHOOTER_MOTOR_STATE;
-                break;
-            case RUN_SHOOTER_MOTOR_STATE:
-                shooter.setMotorVelocity(shooterDesiredVelocity);
-                if (shooter.getRightVelocity() > shooterDesiredVelocity * .98) {
-                    singleShotState = SHOOTER_STATE.RUN_TRANSFER_STATE;
-                }
-                break;
-            case RUN_SPINDEX_STATE:
-                spindex.runSpindexToNextArtifact(2);
-                if (!spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.artifactColors.EMPTY))
-                    singleShotState = SHOOTER_STATE.RUN_TRANSFER_STATE;
-                break;
-            case RUN_TRANSFER_STATE:
-                spindex.closeSpindexGate();
-                spindex.runTransferWheel();
-                if (shooter.getExitDistance(DistanceUnit.CM) < 4) {
-                    myTelem.addData("Shot", "");
-                    singleShotState = SHOOTER_STATE.INACTIVE_STATE;
-                    spindex.openSpindexGate();
-                }
-                break;
-            case INACTIVE_STATE:
-                shooter.stop();
-                break;
-        }
-    }
+//                break;
+//
+//            case RUN_SHOOTER_MOTOR_STATE:
+//                shooter.setMotorVelocity(shooterDesiredVelocity);
+//
+//                if (shooter.getRightVelocity() > shooterDesiredVelocity * .99) {
+//                    rapidFireState = SHOOTER_STATE.CLOSE_GATE_STATE;
+//                }
+//                break;
+//
+//            case CLOSE_GATE_STATE:
+//                spindex.closeSpindexGate();
+//
+//                rapidFireState = SHOOTER_STATE.RUN_TRANSFER_STATE;
+//                break;
+//
+//            case RUN_TRANSFER_STATE:
+//                spindex.runTransferWheel();
+//
+//                rapidFireState = SHOOTER_STATE.RUN_SPINDEX_STATE;
+//
+//                rapidFireTimer.reset();
+//                break;
+//
+//            case RUN_SPINDEX_STATE:
+//
+//                spindex.runSpindex();
+//
+//                if (gamepad1.x) {
+//                    rapidFireState = SHOOTER_STATE.INACTIVE_STATE;
+//                }
+//                break;
+//
+//            case INACTIVE_STATE:
+//                canDrive = true;
+//                shooter.stop();
+//                spindex.stopSpindex();
+//                spindex.stopTransferWheel();
+//                break;
+//        }
+//    }
+//    private void updateMotifRapidFireStateMachine() {
+//        switch (motifRapidFireState) {
+//
+//            case REMOVE_USER_CONTROL:
+//                canDrive = false;
+//                motifRapidFireArtifactCycleCount = 0;
+//                motifRapidFireState = SHOOTER_STATE.POINT_AT_GOAL_STATE;
+//                break;
+//
+//            case POINT_AT_GOAL_STATE:
+////                shooter.pointAtGoal();
+////                if (Math.abs(shooter.getCurrentAngle() - shooter.getGoalAngle()) <= 0.2) {
+////                    motifRapidFireState = SHOOTER_STATE.RUN_SHOOTER_MOTOR_STATE;
+////                }
+//                break;
+//
+//            case RUN_SHOOTER_MOTOR_STATE:
+//                shooter.setMotorVelocity(shooterDesiredVelocity);
+//                if (shooter.getRightVelocity() > shooterDesiredVelocity * 0.99) {
+//                    motifRapidFireState = SHOOTER_STATE.RUN_SPINDEX_STATE;
+//                }
+//                break;
+//
+//            case RUN_SPINDEX_STATE:
+//                spindex.runSpindex();
+//                spindex.stopTransferWheel();
+//
+//                if (spindex.getColor(spindex.spindexColorBack) == motifPattern[motifRapidFireArtifactCycleCount]) {
+//                    spindex.stopSpindex();
+//                    rapidFireTimer.reset();
+//                    motifRapidFireState = SHOOTER_STATE.RUN_TRANSFER_STATE;
+//                }
+//                break;
+//
+//            case RUN_TRANSFER_STATE:
+//                spindex.runTransferWheel();
+//
+//                if (rapidFireTimer.time() > 3) {
+//                    spindex.stopTransferWheel();
+//                    motifRapidFireArtifactCycleCount++;
+//
+//                    if (motifRapidFireArtifactCycleCount >= motifPattern.length) {
+//                        motifRapidFireState = SHOOTER_STATE.INACTIVE_STATE;
+//                    } else {
+//                        motifRapidFireState = SHOOTER_STATE.RUN_SPINDEX_STATE;
+//                    }
+//                }
+//                break;
+//
+//            case INACTIVE_STATE:
+//                canDrive = true;
+//                shooter.stop();
+//                spindex.stopSpindex();
+//                spindex.stopTransferWheel();
+//                motifRapidFireArtifactCycleCount = 0;
+//                break;
+//        }
+//    }
+//
+//    private void updateSingleShotStateMachine() {
+//        switch (singleShotState) {
+//            case REMOVE_USER_CONTROL:
+//                canDrive = false;
+//                singleShotState = SHOOTER_STATE.RUN_SHOOTER_MOTOR_STATE;
+//                break;
+//            case RUN_SHOOTER_MOTOR_STATE:
+//                shooter.setMotorVelocity(shooterDesiredVelocity);
+//                if (shooter.getRightVelocity() > shooterDesiredVelocity * .98) {
+//                    singleShotState = SHOOTER_STATE.RUN_TRANSFER_STATE;
+//                }
+//                break;
+//            case RUN_SPINDEX_STATE:
+//                spindex.runSpindexToNextArtifact(2);
+//                if (!spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.artifactColors.EMPTY))
+//                    singleShotState = SHOOTER_STATE.RUN_TRANSFER_STATE;
+//                break;
+//            case RUN_TRANSFER_STATE:
+//                spindex.closeSpindexGate();
+//                spindex.runTransferWheel();
+//                if (shooter.getExitDistance(DistanceUnit.CM) < 4) {
+//                    myTelem.addData("Shot", "");
+//                    singleShotState = SHOOTER_STATE.INACTIVE_STATE;
+//                    spindex.openSpindexGate();
+//                }
+//                break;
+//            case INACTIVE_STATE:
+//                shooter.stop();
+//                break;
+//        }
+//    }
 }
 
 
