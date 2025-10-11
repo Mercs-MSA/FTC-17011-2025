@@ -85,7 +85,7 @@ public class Spindex {
     }
 
     public void runTransferWheel() {
-        spindexTransferServo.setPower(.7);
+        spindexTransferServo.setPower(1);
     }
 
     public void stopTransferWheel() {
