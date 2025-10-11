@@ -41,7 +41,7 @@ public class Teleop extends OpMode {
 
     public static int shooterDesiredVelocity = 2000;
 
-    private enum SHOOTER_STATE {REMOVE_USER_CONTROL, INTERMEDIATE_STATE, POINT_AT_GOAL_STATE, RUN_SHOOTER_MOTOR_STATE, CLOSE_GATE_STATE, RUN_TRANSFER_STATE, RUN_SPINDEX_STATE, RELEASE_STATE, INACTIVE_STATE}
+    private enum SHOOTER_STATE {REMOVE_USER_CONTROL, POINT_AT_GOAL_STATE, RUN_SHOOTER_MOTOR_STATE, CLOSE_GATE_STATE, RUN_TRANSFER_STATE, RUN_SPINDEX_STATE, RELEASE_STATE, INACTIVE_STATE}
     private static SHOOTER_STATE nextState = SHOOTER_STATE.INACTIVE_STATE;
     private static SHOOTER_STATE rapidFireState = SHOOTER_STATE.INACTIVE_STATE;
     private static SHOOTER_STATE motifRapidFireState = SHOOTER_STATE.INACTIVE_STATE;
@@ -70,6 +70,7 @@ public class Teleop extends OpMode {
 
         rapidFireTimer = new ElapsedTime();
 
+        singleShotState = SHOOTER_STATE.INACTIVE_STATE;
         myTelem.addData("Status", "Initialized");
         myTelem.update();
     }
@@ -138,13 +139,15 @@ public class Teleop extends OpMode {
 
         if (gamepad1.left_trigger > 0.5)
             spindex.runSpindex();
-//        else if (gamepad1.left_trigger < .5 && gamepad1.left_trigger > .3)
-//            spindex.stopSpindex();
+        else if (!singleShotState.equals(SHOOTER_STATE.INACTIVE_STATE)) {}
+        else
+            spindex.stopSpindex();
 
         if (gamepad1.right_trigger > 0.5) {
-            spindex.openSpindexGate();
             spindex.runTransferWheel();
-        }
+        } else if (!singleShotState.equals(SHOOTER_STATE.INACTIVE_STATE)) {}
+        else
+            spindex.stopTransferWheel();
 
         if (gamepad1.right_bumper) {
 //            singleShotState = SHOOTER_STATE.RUN_SPINDEX_STATE;
@@ -156,11 +159,12 @@ public class Teleop extends OpMode {
 
         if (gamepad1.cross) {
             shooter.stop();
-            spindex.stopTransferWheel();
-            spindex.stopSpindex();
-            spindex.closeSpindexGate();
+//            spindex.stopTransferWheel();
+//            spindex.stopSpindex();
         }
 
+//        if (gamepad1.dpadUpWasPressed() && singleShotState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
+//            singleShotState = SHOOTER_STATE.REMOVE_USER_CONTROL;
         if(gamepad1.dpad_up) {
             shooter.setTurretYawPower(0.5);
         }
@@ -331,11 +335,12 @@ public class Teleop extends OpMode {
 //                break;
 //            case RUN_SPINDEX_STATE:
 //                spindex.runSpindexToNextArtifact(2);
+//                spindex.stopTransferWheel();
 //                if (!spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.artifactColors.EMPTY))
 //                    singleShotState = SHOOTER_STATE.RUN_TRANSFER_STATE;
 //                break;
 //            case RUN_TRANSFER_STATE:
-//                spindex.closeSpindexGate();
+//                spindex.stopSpindex();
 //                spindex.runTransferWheel();
 //                if (shooter.getExitDistance(DistanceUnit.CM) < 4) {
 //                    myTelem.addData("Shot", "");

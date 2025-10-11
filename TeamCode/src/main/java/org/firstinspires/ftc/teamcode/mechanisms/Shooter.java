@@ -70,8 +70,8 @@ public class Shooter {
         limelight.pipelineSwitch(0); //TODO: Edit pipelines to filter out tags in Limelight Dash
 
         // Configure initial settings
-        shooterMotorLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        shooterMotorRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        shooterMotorLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        shooterMotorRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         shooterMotorRight.setDirection(DcMotor.Direction.REVERSE);
         shooterMotorLeft.setDirection(DcMotor.Direction.FORWARD);

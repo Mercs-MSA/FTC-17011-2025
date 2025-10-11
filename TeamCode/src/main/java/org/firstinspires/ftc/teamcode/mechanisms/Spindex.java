@@ -85,7 +85,7 @@ public class Spindex {
     }
 
     public void runTransferWheel() {
-        spindexTransferServo.setPower(1);
+        spindexTransferServo.setPower(.7);
     }
 
     public void stopTransferWheel() {
@@ -129,9 +129,9 @@ public class Spindex {
         float b = colorSensor.blue();
 
 
-        if (g < 980 && g > 400 && r > 330 && b > 570 && colorSensor.getDistance(DistanceUnit.INCH) < 3)
+        if (g < 980 && g > 400 && r > 330 && b > 570 && colorSensor.getDistance(DistanceUnit.INCH) < 4)
             return GeneralConstants.artifactColors.PURPLE;
-        else if (r < 330 && b > 740 && g > 980 && colorSensor.getDistance(DistanceUnit.INCH) < 3)
+        else if (r < 330 && b > 740 && g > 980 && colorSensor.getDistance(DistanceUnit.INCH) < 4)
             return GeneralConstants.artifactColors.GREEN;
         else
             return GeneralConstants.artifactColors.EMPTY;
