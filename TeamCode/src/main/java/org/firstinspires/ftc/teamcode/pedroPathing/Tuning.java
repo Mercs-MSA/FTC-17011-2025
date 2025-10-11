@@ -7,6 +7,8 @@ import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.follower;
 import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.stopRobot;
 import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.telemetryM;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.bylazar.configurables.PanelsConfigurables;
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.configurables.annotations.IgnoreConfigurable;
@@ -734,10 +736,14 @@ class TranslationalTuner extends OpMode {
     private Path backwards;
 
 //    private final PanelsTelemetry panelsTelemetry = new PanelsTelemetry();
-//    public
+    public FtcDashboard dash;
+    public MultipleTelemetry telemetryA;
 
     @Override
-    public void init() {}
+    public void init() {
+        dash = FtcDashboard.getInstance();
+        telemetryA = new MultipleTelemetry(telemetry, dash.getTelemetry());
+    }
 
     /** This initializes the Follower and creates the forward and backward Paths. */
     @Override
@@ -778,7 +784,8 @@ class TranslationalTuner extends OpMode {
         }
 
         telemetryM.debug("Push the robot laterally to test the Translational PIDF(s).");
-        telemetryM.addData("X position", follower.getPose().getX());
+        telemetryA.addData("X position", follower.getPose().getX());
+        telemetryA.update();
         telemetryM.update(telemetry);
     }
 }
