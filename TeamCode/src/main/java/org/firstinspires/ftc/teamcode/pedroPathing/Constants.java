@@ -26,7 +26,6 @@ public class Constants {
             ;
 
 
-    private static Object GoBildxaPinpointDriver;
     public static PinpointConstants localizerConstants = new PinpointConstants()
             .forwardPodY(-7.125)
             .strafePodX(-2)
