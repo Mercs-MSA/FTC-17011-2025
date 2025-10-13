@@ -11,8 +11,9 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+
 @Autonomous
-public class AutoPractice extends OpMode {
+public class RedPlayerSideAuto extends OpMode {
     private Follower follower;
     private Telemetry telemetryA;
     private FtcDashboard dash;
@@ -22,7 +23,11 @@ public class AutoPractice extends OpMode {
     private enum AUTO_STATES {
         PATH_ACTIVE,
         START,
-        INACTIVE
+        INACTIVE,
+        SHOOT_STATE,
+        PATH_TO_INTAKE1,
+        INTAKE_STATE,
+        PATH_TO_SHOOT2,
     }
 
     private AUTO_STATES currentState = AUTO_STATES.START;
@@ -31,10 +36,16 @@ public class AutoPractice extends OpMode {
     /// ALL POINTS/PATHS HERE
     public static final Pose startPose = new Pose(0, 0, 0);
     public static final Pose examplePose = new Pose(0,0,0);
+    public static final Pose shootPose = new Pose(0,0,0);
+    public static final Pose intakePose1 = new Pose(0,0,0);
 
     public static final Path examplePath = new Path(new BezierLine(startPose, examplePose));
+    public static final Path shootPath1 = new Path(new BezierLine(startPose, shootPose));
+    public static final Path intakePath1 = new Path(new BezierLine(shootPose, intakePose1));
+    public static final Path shootPath2 = new Path(new BezierLine(intakePose1, shootPose ));
 
-
+    public static final double shootHeading = Math.toRadians(90);
+    public static final double intakeHeading = Math.toRadians(90);
     @Override
     public void init() {
         telemetryA = new MultipleTelemetry(telemetry, dash.getTelemetry());
@@ -42,7 +53,31 @@ public class AutoPractice extends OpMode {
 
     /// ALL FUNCTIONS HERE
     private void startState() {
-
+        setupPath(shootPath1, shootHeading);
+        //Sort Balls while Driving
+        currentState = AUTO_STATES.PATH_ACTIVE;
+        nextState = AUTO_STATES.SHOOT_STATE;
+    }
+    private void shootState() {
+        //Shoots balls here
+        currentState = AUTO_STATES.PATH_ACTIVE;
+        nextState = AUTO_STATES.PATH_TO_INTAKE1;
+    }
+    private void pathIntake1() {
+        setupPath(intakePath1, intakeHeading);
+        currentState = AUTO_STATES.PATH_ACTIVE;
+        nextState = AUTO_STATES.INTAKE_STATE;
+    }
+    private void intakeState() {
+        //Intakes Balls here
+        currentState = AUTO_STATES.PATH_ACTIVE;
+        nextState = AUTO_STATES.PATH_TO_SHOOT2;
+    }
+    private void pathShoot2() {
+        setupPath(shootPath2, shootHeading);
+        //Sort Balls while moving
+        currentState = AUTO_STATES.PATH_ACTIVE;
+        nextState = AUTO_STATES.SHOOT_STATE;
     }
 
     private void pathActiveState() {
@@ -71,6 +106,10 @@ public class AutoPractice extends OpMode {
         switch (currentState) {
             case START: startState(); break;
             case PATH_ACTIVE: pathActiveState(); break;
+            case SHOOT_STATE: shootState(); break;
+            case PATH_TO_INTAKE1: pathIntake1(); break;
+            case INTAKE_STATE: intakeState(); break;
+            case PATH_TO_SHOOT2: pathShoot2(); break;
             case INACTIVE: inactiveState(); break;
         }
     }
