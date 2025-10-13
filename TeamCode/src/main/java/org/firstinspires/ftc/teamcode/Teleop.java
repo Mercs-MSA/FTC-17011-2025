@@ -92,7 +92,9 @@ public class Teleop extends OpMode {
         myTelem.addData("Right Color:", spindex.getColor(spindex.spindexColorRight));
         myTelem.addData("Left Color:", spindex.getColor(spindex.spindexColorLeft));
         myTelem.addData("Back Color:", spindex.getColor(spindex.spindexColorBack));
-        myTelem.addData("Exit Sensor:", shooter.getExitDistance(DistanceUnit.CM));
+        myTelem.addData("Back Color:", spindex.getColor(spindex.spindexColorBack, true));
+//        myTelem.addData("Exit Sensor:", shooter.getExitDistance(DistanceUnit.CM));
+        myTelem.addData("Back distance: ", spindex.spindexColorBack.getDistance(DistanceUnit.INCH));
         myTelem.addData("state:", singleShotState.toString());
         myTelem.addData("shooter velocity:", shooter.getRightVelocity());
         myTelem.addData("spindex velocity:", spindex.getSpindexVelocity());

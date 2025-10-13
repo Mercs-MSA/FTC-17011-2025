@@ -128,13 +128,32 @@ public class Spindex {
         float g = colorSensor.green();
         float b = colorSensor.blue();
 
-
-        if (g < 980 && g > 400 && r > 330 && b > 570 && colorSensor.getDistance(DistanceUnit.INCH) < 4)
-            return GeneralConstants.artifactColors.PURPLE;
-        else if (r < 330 && b > 740 && g > 980 && colorSensor.getDistance(DistanceUnit.INCH) < 4)
-            return GeneralConstants.artifactColors.GREEN;
-        else
-            return GeneralConstants.artifactColors.EMPTY;
+        if (colorSensor.equals(spindexColorBack)) {
+//            if (g < 980 && g > 400 && r > 330 && b > 570 && colorSensor.getDistance(DistanceUnit.INCH) < 3)
+//                return GeneralConstants.artifactColors.PURPLE;
+//            else if (r < 330 && b > 740 && g > 980 && colorSensor.getDistance(DistanceUnit.INCH) < 3)
+//                return GeneralConstants.artifactColors.GREEN;
+//            else
+//                return GeneralConstants.artifactColors.EMPTY;
+            if (g > r && g > (b + 5) && colorSensor.getDistance(DistanceUnit.INCH) < 2.3)
+                return GeneralConstants.artifactColors.GREEN;
+            else if (colorSensor.getDistance(DistanceUnit.INCH) < 2.3)
+                return GeneralConstants.artifactColors.PURPLE;
+            else
+                return GeneralConstants.artifactColors.EMPTY;
+        } else {
+//            if (g < 980 && g > 400 && r > 330 && b > 570 && colorSensor.getDistance(DistanceUnit.INCH) < 1.5)
+//                return GeneralConstants.artifactColors.PURPLE;
+//            else if (r < 330 && b > 740 && g > 980 && colorSensor.getDistance(DistanceUnit.INCH) < 1.5)
+//                return GeneralConstants.artifactColors.GREEN;            else
+//                return GeneralConstants.artifactColors.EMPTY;
+            if (g > r && g > b && colorSensor.getDistance(DistanceUnit.INCH) < 1.5)
+                return GeneralConstants.artifactColors.GREEN;
+            else if (colorSensor.getDistance(DistanceUnit.INCH) < 1.5)
+                return GeneralConstants.artifactColors.PURPLE;
+            else
+                return GeneralConstants.artifactColors.EMPTY;
+        }
     }
 
     public String getColor(ColorRangeSensor colorRangeSensor, boolean irrelevant) {
