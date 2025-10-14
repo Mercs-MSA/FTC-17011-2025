@@ -47,6 +47,17 @@ public class Teleop extends OpMode {
     private static SHOOTER_STATE motifRapidFireState = SHOOTER_STATE.INACTIVE_STATE;
     private static SHOOTER_STATE singleShotState = SHOOTER_STATE.INACTIVE_STATE;
 
+//
+//    public enum SPIN_STATES {
+//        INACTIVE,
+//        ACTIVE_GREEN,
+//        ACTIVE_PURPLE
+//    }
+//
+//    private SPIN_STATES currentSpinState = SPIN_STATES.INACTIVE;
+    public static boolean spinningToColor = false;
+
+
     private static boolean canDrive = true;
 
     private static final GeneralConstants.artifactColors[] motifPattern = {GeneralConstants.artifactColors.PURPLE, GeneralConstants.artifactColors.GREEN, GeneralConstants.artifactColors.GREEN};
@@ -89,6 +100,8 @@ public class Teleop extends OpMode {
         updateMechanisms();
         shooter.updateLL();
 
+        myTelem.addData("Spinning to Color?", spinningToColor);
+        myTelem.addData("Num of artifacts in robot:", spindex.getNumOfArtifactsInRobot());
         myTelem.addData("Right Color:", spindex.getColor(spindex.spindexColorRight));
         myTelem.addData("Left Color:", spindex.getColor(spindex.spindexColorLeft));
         myTelem.addData("Back Color:", spindex.getColor(spindex.spindexColorBack));
@@ -123,6 +136,7 @@ public class Teleop extends OpMode {
         // Example: read joystick inputs
         if (gamepad1.left_bumper) {
             intakePower = 1.0;
+            spindex.runSpindex();
         } else if (gamepad1.dpad_down) {
             intakePower = -1.0;
         } else {
@@ -132,24 +146,33 @@ public class Teleop extends OpMode {
         intake.setPower(intakePower);
 
         if (gamepad1.triangle) {
-            spindex.runSpindexToColor(GeneralConstants.artifactColors.PURPLE);
+            spinningToColor = true;
+            spindex.setSpindexColorTarget(GeneralConstants.artifactColors.PURPLE);
         }
 
         if (gamepad1.circle) {
-            spindex.runSpindexToColor(GeneralConstants.artifactColors.GREEN);
+            spinningToColor = true;
+            spindex.setSpindexColorTarget(GeneralConstants.artifactColors.GREEN);
         }
 
-        if (gamepad1.left_trigger > 0.5)
+        if (spinningToColor)
+            spindex.runSpindexToColor();
+
+        if (gamepad1.left_trigger > 0.5) {
             spindex.runSpindex();
-        else if (!singleShotState.equals(SHOOTER_STATE.INACTIVE_STATE)) {}
+            spinningToColor = false;
+        } else if (!singleShotState.equals(SHOOTER_STATE.INACTIVE_STATE)) {}
         else
             spindex.stopSpindex();
 
         if (gamepad1.right_trigger > 0.5) {
             spindex.runTransferWheel();
+            spindex.closeSpindexGate();
         } else if (!singleShotState.equals(SHOOTER_STATE.INACTIVE_STATE)) {}
-        else
+        else {
+            spindex.openSpindexGate();
             spindex.stopTransferWheel();
+        }
 
         if (gamepad1.right_bumper) {
 //            singleShotState = SHOOTER_STATE.RUN_SPINDEX_STATE;
@@ -203,6 +226,13 @@ public class Teleop extends OpMode {
     /*
      * State machine code
      */
+
+///    private void spinStateMachine() {
+//        switch (currentSpinState) {
+//            case INACTIVE: break;
+//            case ACTIVE_GREEN:
+//        }
+//    }
 
 //    private void updateRapidFireStateMachine() {
 //        switch (rapidFireState) {

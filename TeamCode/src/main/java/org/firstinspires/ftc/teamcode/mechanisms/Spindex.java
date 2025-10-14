@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
+import static org.firstinspires.ftc.teamcode.Teleop.spinningToColor;
+
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorRangeSensor;
@@ -17,7 +19,8 @@ public class Spindex {
     public ColorRangeSensor spindexColorBack; //Closest to wheel
     public ColorRangeSensor spindexColorRight; //Right of the wheel
     public ColorRangeSensor spindexColorLeft; //Left of the wheel
-    public static double spindexVelocity = 600;
+    public static double spindexVelocity = -600;
+    public static double spindexThirdCount = 468;
 
 
 
@@ -29,9 +32,24 @@ public class Spindex {
     private static Servo spindexGateServo;
 
     private static int numOfArtifactsInRobot = 0;
+    private int numSnapshot = 0;
 
-    public static double spindexGateOpenPosition = 0.0;
-    public static double spindexGateClosedPosition = 0.0;
+    public static double spindexGateOpenPosition = .15;
+    public static double spindexGateClosedPosition = .28;
+
+    private boolean alreadyChecked = false;
+
+    public GeneralConstants.artifactColors targetColor = GeneralConstants.artifactColors.EMPTY;
+
+
+    //    public enum SPIN_STATES {
+//        INACTIVE,
+//        ACTIVE_GREEN,
+//        ACTIVE_PURPLE
+//    }
+//
+//    private SPIN_STATES currentSpinState = SPIN_STATES.INACTIVE;
+
 
     public Spindex(HardwareMap hardwareMap) {
         spindexMotor = hardwareMap.get(DcMotorEx.class, "spindexMotor");
@@ -51,8 +69,10 @@ public class Spindex {
         spindexMotor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
 //        spindexMotor.setPower(1);
         spindexMotor.setVelocity(0);
+        spindexMotor.setTargetPosition(0);
 
         spindexTransferServo.setPower(0);
+        spindexGateServo.setPosition(.25);
     }
 
     public void openSpindexGate() {
@@ -93,20 +113,72 @@ public class Spindex {
     }
 
 
-    public void runSpindexToColor(GeneralConstants.artifactColors targetColor) {
+//    public void runSpindexToColor(GeneralConstants.artifactColors targetColor) {
+//        updateSpinColorSensors();
+//        if (targetColor.equals(GeneralConstants.artifactColors.EMPTY)) {
+//            throw new IllegalArgumentException("Target color cannot be empty");
+//        } else if (!spindexColorRightState.equals(targetColor) && !spindexColorLeftState.equals(targetColor) && !spindexColorBackState.equals(targetColor)) {
+//            return;
+//        } else {
+//            if (spindexColorBackState.equals(targetColor))
+//                return;
+//            else if (spindexColorRightState.equals(targetColor))
+//                runSpindexToNextArtifact(1);
+//            else
+//                runSpindexToNextArtifact(2);
+//            updateSpinColorSensors();
+//        }
+//    }
+
+    public void setSpindexColorTarget(GeneralConstants.artifactColors targetColor) {
+        this.targetColor = targetColor;
+        numSnapshot = numOfArtifactsInRobot;
+        alreadyChecked = false;
+    }
+
+    public void runSpindexToColor() {
         updateSpinColorSensors();
-        if (targetColor.equals(GeneralConstants.artifactColors.EMPTY)) {
-            throw new IllegalArgumentException("Target color cannot be empty");
-        } else if (!spindexColorRightState.equals(targetColor) && !spindexColorLeftState.equals(targetColor) && !spindexColorBackState.equals(targetColor)) {
-            return;
+        if (numSnapshot == 0) {
+            if (!((Math.abs(spindexMotor.getCurrentPosition()) / spindexThirdCount) < 3.05) && !((Math.abs(spindexMotor.getCurrentPosition()) / spindexThirdCount) > 2.95)) {
+                spindexMotor.setVelocity(spindexVelocity);
+                if (numOfArtifactsInRobot > 0)
+                    numSnapshot = numOfArtifactsInRobot;
+            } else {
+                //STOP
+                stopSpindex();
+                spinningToColor = false;
+                targetColor = GeneralConstants.artifactColors.EMPTY;
+            }
+//        } else if (!spindexColorRightState.equals(targetColor) && !spindexColorLeftState.equals(targetColor) && !spindexColorBackState.equals(targetColor)) {
+//            stopSpindex();
+//            spinningToColor = false;
+//            targetColor = GeneralConstants.artifactColors.EMPTY;
+//        } else {
+//            if (spindexColorBackState.equals(targetColor)) {
+//                stopSpindex();
+//                spinningToColor = false;
+//                targetColor = GeneralConstants.artifactColors.EMPTY;
+//            }
+//            else {
+//                spindexMotor.setVelocity(spindexVelocity);
+//            }
+//        }
+
         } else {
-            if (spindexColorBackState.equals(targetColor))
-                return;
-            else if (spindexColorRightState.equals(targetColor))
-                runSpindexToNextArtifact(1);
-            else
-                runSpindexToNextArtifact(2);
-            updateSpinColorSensors();
+//            if (!spindexColorRightState.equals(targetColor) && !spindexColorLeftState.equals(targetColor) && !spindexColorBackState.equals(targetColor) && !alreadyChecked) {
+//                stopSpindex();
+//                spinningToColor = false;
+//                targetColor = GeneralConstants.artifactColors.EMPTY;
+//            } else {
+//                alreadyChecked = true;
+                if (spindexColorBackState.equals(targetColor)) {
+                    stopSpindex();
+                    spinningToColor = false;
+                    targetColor = GeneralConstants.artifactColors.EMPTY;
+                } else {
+                    spindexMotor.setVelocity(spindexVelocity);
+                }
+//            }
         }
     }
 
@@ -116,7 +188,8 @@ public class Spindex {
 
 //        spindexMotor.setTargetPosition((encoderTicksForNextArtifact) + spindexMotor.getCurrentPosition());
         if (getColor(spindexColorBack).equals(GeneralConstants.artifactColors.EMPTY)) {
-            double velocity = (direction == 0 ? 0 : direction == 1 ? -1 : 1) * spindexColorBack.getDistance(DistanceUnit.INCH) * 20;
+//            double velocity = (direction == 0 ? 0 : direction == 1 ? -1 : 1) * spindexColorBack.getDistance(DistanceUnit.INCH) * 20;
+            double velocity = spindexColorBack.getDistance(DistanceUnit.INCH) * 20;
             spindexMotor.setVelocity(velocity);
             if (!getColor(spindexColorLeft).equals(GeneralConstants.artifactColors.EMPTY) || !getColor(spindexColorRight).equals(GeneralConstants.artifactColors.EMPTY))
                 return;
@@ -166,6 +239,7 @@ public class Spindex {
 
 
     public void updateSpinColorSensors() {
+        numOfArtifactsInRobot = 0;
         spindexColorBackState = getColor(spindexColorBack);
         spindexColorLeftState = getColor(spindexColorLeft);
         spindexColorRightState = getColor(spindexColorRight);
