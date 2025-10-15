@@ -179,7 +179,7 @@ class LocalizationTest extends OpMode {
  * @version 1.0, 5/6/2024
  */
 class ForwardTuner extends OpMode {
-    public static double DISTANCE = 64;
+    public static double DISTANCE = 48;
 
     @Override
     public void init() {
@@ -226,7 +226,7 @@ class ForwardTuner extends OpMode {
  * @version 2.0, 6/26/2025
  */
 class LateralTuner extends OpMode {
-    public static double DISTANCE = 64;
+    public static double DISTANCE = 48;
 
     @Override
     public void init() {
@@ -529,7 +529,7 @@ class LateralVelocityTuner extends OpMode {
  */
 class ForwardZeroPowerAccelerationTuner extends OpMode {
     private final ArrayList<Double> accelerations = new ArrayList<>();
-    public static double VELOCITY = 61.634717325525955;
+    public static double VELOCITY = 40;
 
     private double previousVelocity;
     private long previousTimeNano;
@@ -633,7 +633,7 @@ class ForwardZeroPowerAccelerationTuner extends OpMode {
  */
 class LateralZeroPowerAccelerationTuner extends OpMode {
     private final ArrayList<Double> accelerations = new ArrayList<>();
-    public static double VELOCITY = 46.190167764908;
+    public static double VELOCITY = 30;
     private double previousVelocity;
     private long previousTimeNano;
     private boolean stopping;
@@ -856,6 +856,7 @@ class HeadingTuner extends OpMode {
         }
 
         telemetryM.debug("Turn the robot manually to test the Heading PIDF(s).");
+        telemetryM.addData("Heading:", Math.toDegrees(follower.getHeading()));
         telemetryM.update(telemetry);
     }
 }
