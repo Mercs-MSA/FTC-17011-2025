@@ -2,7 +2,10 @@ package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.follower.Follower;
+import com.pedropathing.ftc.drivetrains.Mecanum;
+import com.pedropathing.ftc.localization.localizers.OTOSLocalizer;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.Path;
@@ -11,7 +14,10 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+
 @Autonomous
+@Configurable
 public class AutoPractice extends OpMode {
     private Follower follower;
     private Telemetry telemetryA;
@@ -30,19 +36,25 @@ public class AutoPractice extends OpMode {
 
     /// ALL POINTS/PATHS HERE
     public static final Pose startPose = new Pose(0, 0, 0);
-    public static final Pose examplePose = new Pose(0,0,0);
+    public static final Pose examplePose = new Pose(62.7,0,0);
 
     public static final Path examplePath = new Path(new BezierLine(startPose, examplePose));
 
 
     @Override
     public void init() {
+        follower = Constants.createFollower(hardwareMap);
+        follower.setStartingPose(startPose);
+
+        dash = FtcDashboard.getInstance();
         telemetryA = new MultipleTelemetry(telemetry, dash.getTelemetry());
     }
 
     /// ALL FUNCTIONS HERE
     private void startState() {
-
+        setupPath(examplePath, 0);
+        currentState = AUTO_STATES.PATH_ACTIVE;
+        nextState = AUTO_STATES.INACTIVE;
     }
 
     private void pathActiveState() {
