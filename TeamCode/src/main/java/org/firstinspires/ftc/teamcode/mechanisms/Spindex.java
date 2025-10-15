@@ -189,8 +189,8 @@ public class Spindex {
 //        spindexMotor.setTargetPosition((encoderTicksForNextArtifact) + spindexMotor.getCurrentPosition());
         if (getColor(spindexColorBack).equals(GeneralConstants.artifactColors.EMPTY)) {
 //            double velocity = (direction == 0 ? 0 : direction == 1 ? -1 : 1) * spindexColorBack.getDistance(DistanceUnit.INCH) * 20;
-            double velocity = spindexColorBack.getDistance(DistanceUnit.INCH) * 20;
-            spindexMotor.setVelocity(velocity);
+//            double velocity = spindexColorBack.getDistance(DistanceUnit.INCH) * 20;
+            spindexMotor.setVelocity(spindexVelocity);
             if (!getColor(spindexColorLeft).equals(GeneralConstants.artifactColors.EMPTY) || !getColor(spindexColorRight).equals(GeneralConstants.artifactColors.EMPTY))
                 return;
         }

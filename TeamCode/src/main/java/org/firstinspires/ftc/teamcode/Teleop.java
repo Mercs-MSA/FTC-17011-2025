@@ -39,7 +39,7 @@ public class Teleop extends OpMode {
 
     private double intakePower = 0.0;
 
-    public static int shooterDesiredVelocity = 2000;
+    public static int shooterDesiredVelocity = 1500;
 
     private enum SHOOTER_STATE {REMOVE_USER_CONTROL, POINT_AT_GOAL_STATE, RUN_SHOOTER_MOTOR_STATE, CLOSE_GATE_STATE, RUN_TRANSFER_STATE, RUN_SPINDEX_STATE, RELEASE_STATE, INACTIVE_STATE}
     private static SHOOTER_STATE nextState = SHOOTER_STATE.INACTIVE_STATE;
@@ -358,8 +358,8 @@ public class Teleop extends OpMode {
                 break;
             case RUN_SHOOTER_MOTOR_STATE:
                 shooter.setMotorVelocity(shooterDesiredVelocity);
-                if (shooter.getRightVelocity() > shooterDesiredVelocity * .98) {
-                    singleShotState = SHOOTER_STATE.RUN_TRANSFER_STATE;
+                if (shooter.getRightVelocity() > shooterDesiredVelocity * .9) {
+                    singleShotState = SHOOTER_STATE.RUN_SPINDEX_STATE;
                 }
                 break;
             case RUN_SPINDEX_STATE:
@@ -370,16 +370,20 @@ public class Teleop extends OpMode {
                 break;
             case RUN_TRANSFER_STATE:
                 spindex.stopSpindex();
+                spindex.closeSpindexGate();
                 spindex.runTransferWheel();
                 if (gamepad1.x)
                     rapidFireState = SHOOTER_STATE.INACTIVE_STATE;
+                else if (drive > .1 || drive < -.1 || strafe > .1 || strafe < -.1 || turn > .1 || turn < -.1) {
+
+                }
                 if (shooter.getExitDistance(DistanceUnit.CM) < 4) {
                     myTelem.addData("Shot", "");
                     singleShotState = SHOOTER_STATE.INACTIVE_STATE;
-                    spindex.openSpindexGate();
                 }
                 break;
             case INACTIVE_STATE:
+                spindex.openSpindexGate();
                 shooter.stop();
                 break;
         }
