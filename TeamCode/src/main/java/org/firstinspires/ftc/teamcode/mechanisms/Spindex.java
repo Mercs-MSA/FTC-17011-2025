@@ -19,7 +19,7 @@ public class Spindex {
     public ColorRangeSensor spindexColorBack; //Closest to wheel
     public ColorRangeSensor spindexColorRight; //Right of the wheel
     public ColorRangeSensor spindexColorLeft; //Left of the wheel
-    public static double spindexVelocity = -600;
+    public static double spindexVelocity = -800;
     public static double spindexThirdCount = 468;
 
 
@@ -83,8 +83,8 @@ public class Spindex {
         spindexGateServo.setPosition(spindexGateClosedPosition);
     }
 
-    public void runSpindex() {
-        spindexMotor.setVelocity(spindexVelocity);
+    public void runSpindex(boolean reverseTrue) {
+        spindexMotor.setVelocity((reverseTrue ? -1 : 1) * spindexVelocity);
     }
 
     public void initSpindex() {
