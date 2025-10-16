@@ -47,7 +47,7 @@ public class RedPlayerSideAuto extends OpMode {
 
     private enum SHOOTER_STATE {REMOVE_USER_CONTROL, RUN_SHOOTER_MOTOR_STATE, RUN_TRANSFER_STATE, RUN_SPINDEX_STATE, INACTIVE_STATE}
     private static SHOOTER_STATE singleShotState = SHOOTER_STATE.INACTIVE_STATE;
-    public static int shooterDesiredVelocity = 1825;
+    public static int shooterDesiredVelocity = 1800;
     private int timesShot = 0;
 
 
@@ -57,7 +57,7 @@ public class RedPlayerSideAuto extends OpMode {
 
     /// ALL POINTS/PATHS HERE
     public static final Pose startPose = new Pose(0, 0, 0);
-    public static final Pose shootPose = new Pose(64.67,0,Math.toRadians(-45));
+    public static final Pose shootPose = new Pose(66.67,0,Math.toRadians(-45));
     public static final Pose intakePose1 = new Pose(70.298,-47.134,Math.toRadians(-90));
 
     public static final Path shootPath1 = new Path(new BezierLine(startPose, shootPose));
