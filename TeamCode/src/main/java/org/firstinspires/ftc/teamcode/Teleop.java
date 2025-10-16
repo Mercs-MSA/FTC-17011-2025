@@ -211,18 +211,18 @@ public class Teleop extends OpMode {
 
         intake.setPower(intakePower);
 
-        if (gamepad1.triangle) {
-            spinningToColor = true;
-            spindex.setSpindexColorTarget(GeneralConstants.artifactColors.PURPLE);
-        }
-
-        if (gamepad1.circle) {
-            spinningToColor = true;
-            spindex.setSpindexColorTarget(GeneralConstants.artifactColors.GREEN);
-        }
-
-        if (spinningToColor)
-            spindex.runSpindexToColor();
+//        if (gamepad1.triangle) {
+//            spinningToColor = true;
+//            spindex.setSpindexColorTarget(GeneralConstants.artifactColors.PURPLE);
+//        }
+//
+//        if (gamepad1.circle) {
+//            spinningToColor = true;
+//            spindex.setSpindexColorTarget(GeneralConstants.artifactColors.GREEN);
+//        }
+//
+//        if (spinningToColor)
+//            spindex.runSpindexToColor();
 
         if (gamepad1.left_trigger > 0.5 && rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE))
             rapidFireState = SHOOTER_STATE.REMOVE_USER_CONTROL;

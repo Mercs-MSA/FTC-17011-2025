@@ -47,23 +47,23 @@ public class RedPlayerSideAuto extends OpMode {
 
     private enum SHOOTER_STATE {REMOVE_USER_CONTROL, RUN_SHOOTER_MOTOR_STATE, RUN_TRANSFER_STATE, RUN_SPINDEX_STATE, INACTIVE_STATE}
     private static SHOOTER_STATE singleShotState = SHOOTER_STATE.INACTIVE_STATE;
-    public static int shooterDesiredVelocity = 1800;
+    public static int shooterDesiredVelocity = 1825;
     private int timesShot = 0;
 
 
     private AUTO_STATES currentState = AUTO_STATES.START;
     private AUTO_STATES nextState = AUTO_STATES.INACTIVE;
+    private AUTO_STATES previousState = AUTO_STATES.INACTIVE;
 
     /// ALL POINTS/PATHS HERE
     public static final Pose startPose = new Pose(0, 0, 0);
-    public static final Pose shootPose = new Pose(62.7,0,Math.toRadians(-45));
-    public static final Pose intakePose1 = new Pose(0,0,0);
+    public static final Pose shootPose = new Pose(64.67,0,Math.toRadians(-45));
+    public static final Pose intakePose1 = new Pose(70.298,-47.134,Math.toRadians(-90));
 
     public static final Path shootPath1 = new Path(new BezierLine(startPose, shootPose));
     public static final Path intakePath1 = new Path(new BezierLine(shootPose, intakePose1));
     public static final Path shootPath2 = new Path(new BezierLine(intakePose1, shootPose ));
 
-    public static final double intakeHeading = Math.toRadians(90);
     @Override
     public void init() {
         softElectronics = new SoftElectronics(hardwareMap, this.telemetry);
@@ -75,6 +75,7 @@ public class RedPlayerSideAuto extends OpMode {
 
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(startPose);
+        follower.setMaxPower(1);
 
         dash = FtcDashboard.getInstance();
         telemetryA = new MultipleTelemetry(telemetry, dash.getTelemetry());
@@ -97,6 +98,7 @@ public class RedPlayerSideAuto extends OpMode {
         nextState = AUTO_STATES.SHOOT_STATE;
     }
     private void shootState() {
+        spindex.openSpindexGate();
         intake.setPower(1);
         shooter.setMotorVelocity(shooterDesiredVelocity);
         if (shooter.getRightVelocity() > shooterDesiredVelocity * .8) {
@@ -113,19 +115,23 @@ public class RedPlayerSideAuto extends OpMode {
         spindex.stopSpindex();
         spindex.closeSpindexGate();
         spindex.runTransferWheel();
-        if (singleShotState.equals(SHOOTER_STATE.INACTIVE_STATE) && shootTimer.time() > 3) {
+        if (singleShotState.equals(SHOOTER_STATE.INACTIVE_STATE) && shootTimer.time() > 3.76) {
             timesShot += 1;
             shootTimer.reset();
             if (timesShot < 3)
                 currentState = AUTO_STATES.SHOOT_STATE;
             else {
                 timesShot = 0;
-                currentState = AUTO_STATES.INACTIVE;
+                previousState = AUTO_STATES.SHOOT_STATE_TWO;
+                currentState = AUTO_STATES.PATH_TO_INTAKE1;
             }
         }
     }
     private void pathIntake1() {
-        setupPath(intakePath1, intakeHeading);
+        setupPath(intakePath1, intakePose1.getHeading());
+        follower.setMaxPower(.5);
+        spindex.openSpindexGate();
+        shooter.stop();
         currentState = AUTO_STATES.PATH_ACTIVE;
         nextState = AUTO_STATES.INTAKE_STATE;
     }
@@ -144,6 +150,9 @@ public class RedPlayerSideAuto extends OpMode {
     private void pathActiveState() {
         if (!follower.isBusy()) {
             currentState = nextState;
+        }
+        if (previousState.equals(AUTO_STATES.SHOOT_STATE_TWO)) {
+            intake.setPower(1);
         }
     }
 
@@ -189,7 +198,8 @@ public class RedPlayerSideAuto extends OpMode {
         telemetryA.addData("current state", currentState);
         telemetryA.addData("x", follower.getPose().getX());
         telemetryA.addData("y", follower.getPose().getY());
-        telemetryA.addData("heading", follower.getPose().getHeading());
+        telemetryA.addData("heading", Math.toDegrees(follower.getPose().getHeading()));
+        telemetryA.addData("shot timer:", shootTimer.time());
         telemetryA.update();
     }
 

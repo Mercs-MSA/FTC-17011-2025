@@ -35,7 +35,7 @@ public class Spindex {
     private int numSnapshot = 0;
 
     public static double spindexGateOpenPosition = .15;
-    public static double spindexGateClosedPosition = .28;
+    public static double spindexGateClosedPosition = .3;
 
     private boolean alreadyChecked = false;
 
