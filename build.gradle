@@ -22,7 +22,7 @@ allprojects {
         mavenCentral()
         google()
         maven {
-//            url = "https://mymaven.bylazar.com/releases"
+            url = "https://mymaven.bylazar.com/releases"
             url = 'https://maven.brott.dev/'
         }
     }

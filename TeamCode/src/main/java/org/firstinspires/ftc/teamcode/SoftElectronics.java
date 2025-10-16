@@ -10,10 +10,13 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import com.bylazar.ftcontrol.panels.Panels;
 import com.bylazar.ftcontrol.panels.integration.TelemetryManager;
+import com.qualcomm.robotcore.hardware.ImuOrientationOnRobot;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
 
 public class SoftElectronics {
@@ -69,5 +72,10 @@ public class SoftElectronics {
 
     public static FtcDashboard getDashboard() {
         return dash;
+    }
+
+    public static void setAngleOffset(int offset) {
+        imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(new Orientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES, offset, 0, 0, 0))));
+        imu.resetYaw();
     }
 }

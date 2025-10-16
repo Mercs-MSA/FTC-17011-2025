@@ -1,10 +1,12 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
 import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.SoftElectronics;
@@ -15,6 +17,8 @@ public class Drivebase {
     // Declare motors
     private static DcMotor frontLeft, frontRight, backLeft, backRight;
     private SparkFunOTOS otos;
+    private double offset = 0;
+    private double IMUheadingTracker = 0;
 
     private double TX = 0;
 
@@ -49,11 +53,16 @@ public class Drivebase {
         TX = 0;
     }
 
+
+    public void offsetYaw(double offset) {
+        this.offset = Math.toRadians(offset);
+    }
+
     // Field-centric drive
     public void drive(double drive, double strafe, double turn) {
         // Get current heading
-        double botHeading = SoftElectronics.getYaw();
-//        double botHeading = otos.getPosition().h;
+        double botHeading = SoftElectronics.getYaw() + offset;
+        IMUheadingTracker = botHeading;
 
         // Rotate joystick input to be field-centric
         double rotX = strafe * Math.cos(-botHeading) - drive * Math.sin(-botHeading);
@@ -87,7 +96,7 @@ public class Drivebase {
 
 
     public void setPosition(SparkFunOTOS.Pose2D pose) {
-        otos.setPosition(pose);;
+        otos.setPosition(pose);
     }
 
 
@@ -103,7 +112,7 @@ public class Drivebase {
                 } else {
                     drive(0, 0, .5 * (Math.abs(45 - botHeading) / 10));
                 }
-            } else {
+            } else if (llResult.getFiducialResults().contains()) {
                 if (TX < -2) {
                     drive(0, 0, -.5 * (Math.abs(TX) / 50));
                 } else if (TX > 2) {
@@ -139,5 +148,13 @@ public class Drivebase {
 
     public SparkFunOTOS.Pose2D getPosition() {
         return otos.getPosition();
+    }
+
+    public double getBotHeading() {
+        return IMUheadingTracker;
+    }
+
+    public double getOffset() {
+        return offset;
     }
 }

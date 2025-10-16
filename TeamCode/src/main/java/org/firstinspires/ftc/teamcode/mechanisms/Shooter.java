@@ -143,6 +143,7 @@ public class Shooter {
     }
 
     public boolean inRange() {
+        llResults.getFiducialResults().getFiducialId();
         return getTX() != null && getTX() > -goalRange && getTX() < goalRange;
     }
 

@@ -72,7 +72,7 @@ public class Spindex {
         spindexMotor.setTargetPosition(0);
 
         spindexTransferServo.setPower(0);
-        spindexGateServo.setPosition(.25);
+        spindexGateServo.setPosition(spindexGateOpenPosition);
     }
 
     public void openSpindexGate() {

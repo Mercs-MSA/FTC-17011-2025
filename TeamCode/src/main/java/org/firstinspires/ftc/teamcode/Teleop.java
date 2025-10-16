@@ -14,7 +14,9 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcontroller.external.samples.SensorSparkFunOTOS;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.teamcode.mechanisms.Drivebase;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
@@ -53,7 +55,7 @@ public class Teleop extends OpMode {
         PLAYER_SIDE
     }
 
-    public static STARTING_ORIENTATION startingOrientation = STARTING_ORIENTATION.PLAYER_SIDE;
+    public static STARTING_ORIENTATION startingOrientation = STARTING_ORIENTATION.GOAL_SIDE;
 
     private enum SHOOTER_STATE {REMOVE_USER_CONTROL, POINT_AT_GOAL_STATE, RUN_SHOOTER_MOTOR_STATE, CLOSE_GATE_STATE, RUN_TRANSFER_STATE, RUN_SPINDEX_STATE, RELEASE_STATE, INACTIVE_STATE}
     private static SHOOTER_STATE rapidFireState = SHOOTER_STATE.INACTIVE_STATE;
@@ -107,17 +109,33 @@ public class Teleop extends OpMode {
         else if (gamepad1.left_bumper)
             onBlueAlliance = true;
 
-        if (onBlueAlliance)
+        if (onBlueAlliance) {
             myTelem.addLine("Blue alliance selected. Press right bumper to select red.");
-        else
+            if (startingOrientation.equals(STARTING_ORIENTATION.GOAL_SIDE))
+                drivebase.offsetYaw(90);
+            else
+                drivebase.offsetYaw(-90);
+        } else {
             myTelem.addLine("Red alliance selected. Press left bumper to select blue.");
+            if (startingOrientation.equals(STARTING_ORIENTATION.GOAL_SIDE))
+                drivebase.offsetYaw(-90);
+            else
+                drivebase.offsetYaw(90);
+        }
 
         if (startingOrientation.equals(STARTING_ORIENTATION.PLAYER_SIDE)) {
-            myTelem.addLine("Starting on player side. Press dpad up to select goal side.");
-            drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, 0));
-        } else if (startingOrientation.equals(STARTING_ORIENTATION.GOAL_SIDE)) {
-            myTelem.addLine("Starting on goal side. Press dpad up to select player side.");
+            myTelem.addLine("Facing towards player side. Press dpad up to select goal side.");
             drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, Math.PI));
+        } else if (startingOrientation.equals(STARTING_ORIENTATION.GOAL_SIDE)) {
+            myTelem.addLine("Facing towards goal side. Press dpad up to select player side.");
+            drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, 0));
+        }
+
+        if (gamepad1.dpadUpWasPressed()) {
+            if (startingOrientation.equals(STARTING_ORIENTATION.PLAYER_SIDE))
+                startingOrientation = STARTING_ORIENTATION.GOAL_SIDE;
+            else
+                startingOrientation = STARTING_ORIENTATION.PLAYER_SIDE;
         }
     }
 
@@ -136,7 +154,9 @@ public class Teleop extends OpMode {
         shooter.updateLL();
 
 
-        myTelem.addData("Robot Yaw:", Math.toDegrees(drivebase.getPosition().h));
+//        myTelem.addData("Robot Yaw:", Math.toDegrees(drivebase.getPosition().h));
+        myTelem.addData("Robot Heading:", drivebase.getBotHeading());
+        myTelem.addData("Robot Offset:", drivebase.getOffset());
 //        myTelem.addData("Spinning to Color?", spinningToColor);
 //        myTelem.addData("Num of artifacts in robot:", spindex.getNumOfArtifactsInRobot());
         myTelem.addData("Right Color:", spindex.getColor(spindex.spindexColorRight));
