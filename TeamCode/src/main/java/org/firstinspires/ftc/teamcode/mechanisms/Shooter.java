@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
 import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.LLStatus;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -143,7 +144,6 @@ public class Shooter {
     }
 
     public boolean inRange() {
-        llResults.getFiducialResults().getFiducialId();
         return getTX() != null && getTX() > -goalRange && getTX() < goalRange;
     }
 

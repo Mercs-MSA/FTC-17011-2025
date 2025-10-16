@@ -61,7 +61,8 @@ public class Drivebase {
     // Field-centric drive
     public void drive(double drive, double strafe, double turn) {
         // Get current heading
-        double botHeading = SoftElectronics.getYaw() + offset;
+//        double botHeading = SoftElectronics.getYaw() + offset;
+        double botHeading = otos.getPosition().h;
         IMUheadingTracker = botHeading;
 
         // Rotate joystick input to be field-centric
@@ -112,24 +113,24 @@ public class Drivebase {
                 } else {
                     drive(0, 0, .5 * (Math.abs(45 - botHeading) / 10));
                 }
-            } else if (llResult.getFiducialResults().contains()) {
-                if (TX < -2) {
+            } else if (botHeading > 24 && botHeading < 64) {
+                if (TX < -.5) {
                     drive(0, 0, -.5 * (Math.abs(TX) / 50));
-                } else if (TX > 2) {
+                } else if (TX > .5) {
                     drive(0, 0, .5 * (Math.abs(TX) / 50));
                 }
             }
         } else {
             if (!llResult.isValid()) {
                 if (botHeading > -44 && botHeading < 135) {
-                    drive(0, 0, .5 * (Math.abs(-45 - botHeading) / 0));
+                    drive(0, 0, .5 * (Math.abs(-45 - botHeading) / 10));
                 } else {
                     drive(0, 0, -.5 * (Math.abs(-45 - botHeading) / 10));
                 }
-            } else {
-                if (TX < -2) {
+            } else if (botHeading < -24 && botHeading > -64) {
+                if (TX < -.5) {
                     drive(0, 0, -.5 * (Math.abs(TX) / 50));
-                } else if (TX > 2) {
+                } else if (TX > .5) {
                     drive(0, 0, .5 * (Math.abs(TX) / 50));
                 }
             }

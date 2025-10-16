@@ -46,7 +46,7 @@ public class Teleop extends OpMode {
 
     private double intakePower = 0.0;
 
-    public static int shooterDesiredVelocity = 1950;
+    public static int shooterDesiredVelocity = 1800;
 
     public static boolean onBlueAlliance = true;
 
@@ -111,25 +111,31 @@ public class Teleop extends OpMode {
 
         if (onBlueAlliance) {
             myTelem.addLine("Blue alliance selected. Press right bumper to select red.");
-            if (startingOrientation.equals(STARTING_ORIENTATION.GOAL_SIDE))
-                drivebase.offsetYaw(90);
-            else
-                drivebase.offsetYaw(-90);
+            if (startingOrientation.equals(STARTING_ORIENTATION.GOAL_SIDE)) {
+//                drivebase.offsetYaw(-90);
+                drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, -Math.PI/2));
+            } else {
+//                drivebase.offsetYaw(90);
+                drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, Math.PI/2));
+            }
         } else {
             myTelem.addLine("Red alliance selected. Press left bumper to select blue.");
-            if (startingOrientation.equals(STARTING_ORIENTATION.GOAL_SIDE))
-                drivebase.offsetYaw(-90);
-            else
-                drivebase.offsetYaw(90);
+            if (startingOrientation.equals(STARTING_ORIENTATION.GOAL_SIDE)) {
+//                drivebase.offsetYaw(90);
+                drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, Math.PI/2));
+            } else {
+//                drivebase.offsetYaw(-90);
+                drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, -Math.PI/2));
+            }
         }
 
-        if (startingOrientation.equals(STARTING_ORIENTATION.PLAYER_SIDE)) {
-            myTelem.addLine("Facing towards player side. Press dpad up to select goal side.");
-            drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, Math.PI));
-        } else if (startingOrientation.equals(STARTING_ORIENTATION.GOAL_SIDE)) {
-            myTelem.addLine("Facing towards goal side. Press dpad up to select player side.");
-            drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, 0));
-        }
+//        if (startingOrientation.equals(STARTING_ORIENTATION.PLAYER_SIDE)) {
+//            myTelem.addLine("Facing towards player side. Press dpad up to select goal side.");
+//            drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, Math.PI));
+//        } else if (startingOrientation.equals(STARTING_ORIENTATION.GOAL_SIDE)) {
+//            myTelem.addLine("Facing towards goal side. Press dpad up to select player side.");
+//            drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, 0));
+//        }
 
         if (gamepad1.dpadUpWasPressed()) {
             if (startingOrientation.equals(STARTING_ORIENTATION.PLAYER_SIDE))
@@ -310,7 +316,7 @@ public class Teleop extends OpMode {
                 shooter.setMotorVelocity(shooterDesiredVelocity);
                 spindex.runSpindexToNextArtifact(2);
                 spindex.openSpindexGate();
-                spindex.stopTransferWheel();
+//                spindex.stopTransferWheel();
                 if (!spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.artifactColors.EMPTY) && shooter.getRightVelocity() > shooterDesiredVelocity * .95) {
                     rapidFireState = SHOOTER_STATE.RUN_TRANSFER_STATE;
                     rapidFireTimer.reset();

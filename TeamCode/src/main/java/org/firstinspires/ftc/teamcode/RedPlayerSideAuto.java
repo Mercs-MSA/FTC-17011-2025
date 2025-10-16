@@ -47,7 +47,9 @@ public class RedPlayerSideAuto extends OpMode {
 
     private enum SHOOTER_STATE {REMOVE_USER_CONTROL, RUN_SHOOTER_MOTOR_STATE, RUN_TRANSFER_STATE, RUN_SPINDEX_STATE, INACTIVE_STATE}
     private static SHOOTER_STATE singleShotState = SHOOTER_STATE.INACTIVE_STATE;
-    public static int shooterDesiredVelocity = 1950;
+    public static int shooterDesiredVelocity = 1800;
+    private int timesShot = 0;
+
 
     private AUTO_STATES currentState = AUTO_STATES.START;
     private AUTO_STATES nextState = AUTO_STATES.INACTIVE;
@@ -112,8 +114,14 @@ public class RedPlayerSideAuto extends OpMode {
         spindex.closeSpindexGate();
         spindex.runTransferWheel();
         if (singleShotState.equals(SHOOTER_STATE.INACTIVE_STATE) && shootTimer.time() > 3) {
+            timesShot += 1;
             shootTimer.reset();
-            currentState = AUTO_STATES.INACTIVE;
+            if (timesShot < 3)
+                currentState = AUTO_STATES.SHOOT_STATE;
+            else {
+                timesShot = 0;
+                currentState = AUTO_STATES.INACTIVE;
+            }
         }
     }
     private void pathIntake1() {
