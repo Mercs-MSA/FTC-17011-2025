@@ -46,7 +46,7 @@ public class Teleop extends OpMode {
 
     private double intakePower = 0.0;
 
-    public static int shooterDesiredVelocity = 1800;
+    public static int shooterDesiredVelocity = 4000;
 
     public static boolean onBlueAlliance = true;
 
@@ -61,23 +61,10 @@ public class Teleop extends OpMode {
     private static SHOOTER_STATE rapidFireState = SHOOTER_STATE.INACTIVE_STATE;
     private static SHOOTER_STATE motifRapidFireState = SHOOTER_STATE.INACTIVE_STATE;
     private static SHOOTER_STATE singleShotState = SHOOTER_STATE.INACTIVE_STATE;
-
-//
-//    public enum SPIN_STATES {
-//        INACTIVE,
-//        ACTIVE_GREEN,
-//        ACTIVE_PURPLE
-//    }
-//
-//    private SPIN_STATES currentSpinState = SPIN_STATES.INACTIVE;
     public static boolean spinningToColor = false;
 
 
     private static boolean canDrive = true;
-
-    private static final GeneralConstants.artifactColors[] motifPattern = {GeneralConstants.artifactColors.PURPLE, GeneralConstants.artifactColors.GREEN, GeneralConstants.artifactColors.GREEN};
-
-    private static int motifRapidFireArtifactCycleCount = 0;
 
 
     @Override
@@ -199,10 +186,10 @@ public class Teleop extends OpMode {
 //        updateRapidFireStateMachine();
 
         if (gamepad1.left_bumper) {
-            intakePower = 1.0;
+            intakePower = -0.5;
             spindex.runSpindex(false);
         } else if (gamepad1.dpad_down) {
-            intakePower = -1.0;
+            intakePower = 0.5;
         } else if (!singleShotState.equals(SHOOTER_STATE.INACTIVE_STATE) || !rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE)) {}
         else {
             intakePower = 0;
@@ -230,10 +217,8 @@ public class Teleop extends OpMode {
 
         if (gamepad1.right_trigger > 0.5) {
             spindex.runTransferWheel();
-            spindex.closeSpindexGate();
         } else if (!singleShotState.equals(SHOOTER_STATE.INACTIVE_STATE) || !rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE)) {}
         else {
-            spindex.openSpindexGate();
             spindex.stopTransferWheel();
         }
 
@@ -261,7 +246,6 @@ public class Teleop extends OpMode {
 
         if (gamepad1.options) {
             spindex.runSpindex(true);
-            spindex.openSpindexGate();
         }
 
         telemetry.addData("result valid?", shooter.getLLResults().isValid());
@@ -269,32 +253,6 @@ public class Teleop extends OpMode {
         telemetry.addData("TX", shooter.getTX() == null ? "null" : shooter.getTX());
         telemetry.addData("inRange", shooter.inRange());
     }
-
-//    private void MotifRapidFire() {
-//        GeneralConstants.artifactColors[] motifPattern = {GeneralConstants.artifactColors.PURPLE, GeneralConstants.artifactColors.GREEN, GeneralConstants.artifactColors.GREEN};
-//
-//        spindex.runSpindexToColor(motifPattern[0]);
-//        shooter.shootArtifact();
-//
-//        spindex.runSpindexToColor(motifPattern[1]);
-//        shooter.shootArtifact();
-//
-//        spindex.runSpindexToColor(motifPattern[2]);
-//        shooter.shootArtifact();
-//    }
-
-
-
-    /*
-     * State machine code
-     */
-
-///    private void spinStateMachine() {
-//        switch (currentSpinState) {
-//            case INACTIVE: break;
-//            case ACTIVE_GREEN:
-//        }
-//    }
 
     private void updateRapidFireStateMachine() {
         switch (rapidFireState) {
@@ -315,7 +273,6 @@ public class Teleop extends OpMode {
                 intake.setPower(1);
                 shooter.setMotorVelocity(shooterDesiredVelocity);
                 spindex.runSpindexToNextArtifact(2);
-                spindex.openSpindexGate();
 //                spindex.stopTransferWheel();
                 if (!spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.artifactColors.EMPTY) && shooter.getRightVelocity() > shooterDesiredVelocity * .95) {
                     rapidFireState = SHOOTER_STATE.RUN_TRANSFER_STATE;
@@ -327,7 +284,6 @@ public class Teleop extends OpMode {
             case RUN_TRANSFER_STATE:
                 intake.setPower(1);
                 spindex.stopSpindex();
-                spindex.closeSpindexGate();
                 spindex.runTransferWheel();
                 if (rapidFireTimer.time(TimeUnit.SECONDS) > 3) {
                     rapidFireTimer.reset();
@@ -339,72 +295,12 @@ public class Teleop extends OpMode {
                 break;
             case INACTIVE_STATE:
                 if (singleShotState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
-                    spindex.openSpindexGate();
                     shooter.stop();
                     spindex.stopTransferWheel();
                 }
                 break;
         }
     }
-//    private void updateMotifRapidFireStateMachine() {
-//        switch (motifRapidFireState) {
-//
-//            case REMOVE_USER_CONTROL:
-//                canDrive = false;
-//                motifRapidFireArtifactCycleCount = 0;
-//                motifRapidFireState = SHOOTER_STATE.POINT_AT_GOAL_STATE;
-//                break;
-//
-//            case POINT_AT_GOAL_STATE:
-////                shooter.pointAtGoal();
-////                if (Math.abs(shooter.getCurrentAngle() - shooter.getGoalAngle()) <= 0.2) {
-////                    motifRapidFireState = SHOOTER_STATE.RUN_SHOOTER_MOTOR_STATE;
-////                }
-//                break;
-//
-//            case RUN_SHOOTER_MOTOR_STATE:
-//                shooter.setMotorVelocity(shooterDesiredVelocity);
-//                if (shooter.getRightVelocity() > shooterDesiredVelocity * 0.99) {
-//                    motifRapidFireState = SHOOTER_STATE.RUN_SPINDEX_STATE;
-//                }
-//                break;
-//
-//            case RUN_SPINDEX_STATE:
-//                spindex.runSpindex();
-//                spindex.stopTransferWheel();
-//
-//                if (spindex.getColor(spindex.spindexColorBack) == motifPattern[motifRapidFireArtifactCycleCount]) {
-//                    spindex.stopSpindex();
-//                    rapidFireTimer.reset();
-//                    motifRapidFireState = SHOOTER_STATE.RUN_TRANSFER_STATE;
-//                }
-//                break;
-//
-//            case RUN_TRANSFER_STATE:
-//                spindex.runTransferWheel();
-//
-//                if (rapidFireTimer.time() > 3) {
-//                    spindex.stopTransferWheel();
-//                    motifRapidFireArtifactCycleCount++;
-//
-//                    if (motifRapidFireArtifactCycleCount >= motifPattern.length) {
-//                        motifRapidFireState = SHOOTER_STATE.INACTIVE_STATE;
-//                    } else {
-//                        motifRapidFireState = SHOOTER_STATE.RUN_SPINDEX_STATE;
-//                    }
-//                }
-//                break;
-//
-//            case INACTIVE_STATE:
-//                canDrive = true;
-//                shooter.stop();
-//                spindex.stopSpindex();
-//                spindex.stopTransferWheel();
-//                motifRapidFireArtifactCycleCount = 0;
-//                break;
-//        }
-//    }
-//
     private void updateSingleShotStateMachine() {
         switch (singleShotState) {
             case REMOVE_USER_CONTROL:
@@ -428,20 +324,14 @@ public class Teleop extends OpMode {
             case RUN_TRANSFER_STATE:
                 intake.setPower(1);
                 spindex.stopSpindex();
-                spindex.closeSpindexGate();
                 spindex.runTransferWheel();
                 if (gamepad1.x)
                     singleShotState = SHOOTER_STATE.INACTIVE_STATE;
                 else if (drive > .1 || drive < -.1 || strafe > .1 || strafe < -.1 || turn > .1 || turn < -.1)
                     singleShotState = SHOOTER_STATE.INACTIVE_STATE;
-                if (shooter.getExitDistance(DistanceUnit.CM) < 4) {
-                    myTelem.addData("Shot", "");
-                    singleShotState = SHOOTER_STATE.INACTIVE_STATE;
-                }
                 break;
             case INACTIVE_STATE:
                 if (rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
-                    spindex.openSpindexGate();
                     shooter.stop();
                     spindex.stopTransferWheel();
                 }

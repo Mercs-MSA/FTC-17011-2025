@@ -96,7 +96,6 @@ public class BluePlayerSideAuto extends OpMode {
         nextState = AUTO_STATES.SHOOT_STATE;
     }
     private void shootState() {
-        spindex.openSpindexGate();
         intake.setPower(1);
         shooter.setMotorVelocity(shooterDesiredVelocity);
         if (shooter.getRightVelocity() > shooterDesiredVelocity * .8) {
@@ -111,7 +110,6 @@ public class BluePlayerSideAuto extends OpMode {
     private void shootStatePart2() {
         intake.setPower(1);
         spindex.stopSpindex();
-        spindex.closeSpindexGate();
         spindex.runTransferWheel();
         if (singleShotState.equals(SHOOTER_STATE.INACTIVE_STATE) && shootTimer.time() > 3.76) {
             timesShot += 1;
@@ -128,7 +126,6 @@ public class BluePlayerSideAuto extends OpMode {
     private void pathIntake1() {
         setupPath(intakePath1, intakePose1.getHeading());
         follower.setMaxPower(.5);
-        spindex.openSpindexGate();
         shooter.stop();
         currentState = AUTO_STATES.PATH_ACTIVE;
         nextState = AUTO_STATES.INTAKE_STATE;
@@ -222,11 +219,9 @@ public class BluePlayerSideAuto extends OpMode {
             case RUN_TRANSFER_STATE:
                 intake.setPower(1);
                 spindex.stopSpindex();
-                spindex.closeSpindexGate();
                 spindex.runTransferWheel();
                 break;
             case INACTIVE_STATE:
-                spindex.openSpindexGate();
                 shooter.stop();
                 spindex.stopTransferWheel();
                 break;

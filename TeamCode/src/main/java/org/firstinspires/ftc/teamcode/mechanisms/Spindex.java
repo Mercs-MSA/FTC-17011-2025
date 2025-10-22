@@ -29,8 +29,6 @@ public class Spindex {
     private GeneralConstants.artifactColors spindexColorLeftState;
 
     private static CRServo spindexTransferServo;
-    private static Servo spindexGateServo;
-
     private static int numOfArtifactsInRobot = 0;
     private int numSnapshot = 0;
 
@@ -55,8 +53,6 @@ public class Spindex {
         spindexMotor = hardwareMap.get(DcMotorEx.class, "spindexMotor");
 
         spindexTransferServo = hardwareMap.get(CRServo.class, "spindexTransferServo");
-        spindexGateServo = hardwareMap.get(Servo.class, "spindexGateServo");
-
         spindexColorBack = hardwareMap.get(ColorRangeSensor.class, "spindexColorB");
         spindexColorRight = hardwareMap.get(ColorRangeSensor.class, "spindexColorR");
         spindexColorLeft = hardwareMap.get(ColorRangeSensor.class, "spindexColorL");
@@ -72,15 +68,6 @@ public class Spindex {
         spindexMotor.setTargetPosition(0);
 
         spindexTransferServo.setPower(0);
-        spindexGateServo.setPosition(spindexGateOpenPosition);
-    }
-
-    public void openSpindexGate() {
-        spindexGateServo.setPosition(spindexGateOpenPosition);
-    }
-
-    public void closeSpindexGate () {
-        spindexGateServo.setPosition(spindexGateClosedPosition);
     }
 
     public void runSpindex(boolean reverseTrue) {

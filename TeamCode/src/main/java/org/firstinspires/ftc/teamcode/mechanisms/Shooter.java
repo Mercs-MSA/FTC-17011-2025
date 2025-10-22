@@ -18,7 +18,7 @@ import org.firstinspires.ftc.teamcode.Constants.GeneralConstants;
 
 public class Shooter {
     private DcMotorEx shooterMotorLeft, shooterMotorRight;
-    private ColorRangeSensor exitSensor;
+//    private ColorRangeSensor exitSensor;
     private CRServo shooterServoYaw;
 //    private Servo shooterServoPitch;
 
@@ -62,7 +62,7 @@ public class Shooter {
         shooterMotorRight = hardwareMap.get(DcMotorEx.class, "shooterMotorRight");
         shooterServoYaw = hardwareMap.get(CRServo.class, "shooterServoYaw");
 //        shooterServoPitch = hardwareMap.get(Servo.class, "shooterServoPitch");
-        exitSensor = hardwareMap.get(ColorRangeSensor.class, "exitSensor");
+//        exitSensor = hardwareMap.get(ColorRangeSensor.class, "exitSensor");
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
 
         shooterServoYaw.setDirection(CRServo.Direction.FORWARD);
@@ -152,13 +152,13 @@ public class Shooter {
     public void shootArtifact() {
     }
 
-    public NormalizedRGBA getColor() {
-        return exitSensor.getNormalizedColors();
-    }
-
-    public double getExitDistance(DistanceUnit units) {
-        return exitSensor.getDistance(units);
-    }
+//    public NormalizedRGBA getColor() {
+//        return exitSensor.getNormalizedColors();
+//    }
+//
+//    public double getExitDistance(DistanceUnit units) {
+//        return exitSensor.getDistance(units);
+//    }
 
     public Double getTX() {
         return llResults.isValid() ? llResults.getFiducialResults().get(0).getTargetXDegrees() : null;
