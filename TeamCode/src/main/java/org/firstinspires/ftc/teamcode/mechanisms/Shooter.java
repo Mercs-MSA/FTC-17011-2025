@@ -12,6 +12,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Constants.GeneralConstants;
@@ -31,6 +32,8 @@ public class Shooter {
     private static int pipeline = 0;
 
     private static double goalRange = 4;
+
+
 
 
     public int getCurrentAngle() {
@@ -86,6 +89,13 @@ public class Shooter {
 //        shooterServoYaw.setPower(0);
 //        shooterServoPitch.setPosition(0);
     }
+
+    public double getRpm() {
+        // getVelocity() returns ticks/second; convert to RPM
+        return (shooterMotorRight.getVelocity() * 60.0) / 28.0;
+    }
+
+
 
     public void setShooterPower(double power) {
         shooterMotorLeft.setPower(power);
