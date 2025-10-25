@@ -7,10 +7,9 @@ public abstract class GeneralConstants {
     public RevHubOrientationOnRobot.LogoFacingDirection logoDirection;
     public RevHubOrientationOnRobot.UsbFacingDirection usbDirection;
 
-    public static enum artifactColors {
+    public static enum colorSensorStates {
         EMPTY,
-        PURPLE,
-        GREEN,
+        OCCUPIED,
     }
 
     public static double limelightTolerance;

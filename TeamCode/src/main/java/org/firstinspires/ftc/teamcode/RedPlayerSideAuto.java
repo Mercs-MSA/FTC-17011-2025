@@ -12,9 +12,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Constants.GeneralConstants;
-import org.firstinspires.ftc.teamcode.mechanisms.Drivebase;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
 import org.firstinspires.ftc.teamcode.mechanisms.Spindex;
@@ -88,7 +86,6 @@ public class RedPlayerSideAuto extends OpMode {
         super.start();
         shooter.setShooterPower(1);
         shooter.setMotorVelocity(0);
-        spindex.initSpindex();
     }
 
     /// ALL FUNCTIONS HERE
@@ -102,7 +99,7 @@ public class RedPlayerSideAuto extends OpMode {
         shooter.setMotorVelocity(shooterDesiredVelocity);
         if (shooter.getRightVelocity() > shooterDesiredVelocity * .8) {
             spindex.runSpindexToNextArtifact(2);
-            if (!spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.artifactColors.EMPTY) && shooter.getRightVelocity() > shooterDesiredVelocity * .95) {
+            if (!spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.colorSensorStates.EMPTY) && shooter.getRightVelocity() > shooterDesiredVelocity * .95) {
                 currentState = AUTO_STATES.SHOOT_STATE_TWO;
                 shootTimer.reset();
             }
@@ -215,7 +212,7 @@ public class RedPlayerSideAuto extends OpMode {
                 intake.setPower(1);
                 spindex.runSpindexToNextArtifact(2);
                 spindex.stopTransferWheel();
-                if (!spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.artifactColors.EMPTY) && shooter.getRightVelocity() > shooterDesiredVelocity * .95)
+                if (!spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.colorSensorStates.EMPTY) && shooter.getRightVelocity() > shooterDesiredVelocity * .95)
                     singleShotState = SHOOTER_STATE.RUN_TRANSFER_STATE;
                 break;
             case RUN_TRANSFER_STATE:

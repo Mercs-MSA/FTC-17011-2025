@@ -86,7 +86,6 @@ public class BluePlayerSideAuto extends OpMode {
         super.start();
         shooter.setShooterPower(1);
         shooter.setMotorVelocity(0);
-        spindex.initSpindex();
     }
 
     /// ALL FUNCTIONS HERE
@@ -100,7 +99,7 @@ public class BluePlayerSideAuto extends OpMode {
         shooter.setMotorVelocity(shooterDesiredVelocity);
         if (shooter.getRightVelocity() > shooterDesiredVelocity * .8) {
             spindex.runSpindexToNextArtifact(2);
-            if (!spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.artifactColors.EMPTY) && shooter.getRightVelocity() > shooterDesiredVelocity * .95) {
+            if (!spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.colorSensorStates.EMPTY) && shooter.getRightVelocity() > shooterDesiredVelocity * .95) {
                 currentState = AUTO_STATES.SHOOT_STATE_TWO;
                 shootTimer.reset();
             }
@@ -213,7 +212,7 @@ public class BluePlayerSideAuto extends OpMode {
                 intake.setPower(1);
                 spindex.runSpindexToNextArtifact(2);
                 spindex.stopTransferWheel();
-                if (!spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.artifactColors.EMPTY) && shooter.getRightVelocity() > shooterDesiredVelocity * .95)
+                if (!spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.colorSensorStates.EMPTY) && shooter.getRightVelocity() > shooterDesiredVelocity * .95)
                     singleShotState = SHOOTER_STATE.RUN_TRANSFER_STATE;
                 break;
             case RUN_TRANSFER_STATE:

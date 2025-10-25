@@ -40,7 +40,7 @@ public class Teleop extends OpMode {
 
     private double intakePower = 0.0;
 
-    public static int shooterDesiredVelocity = 4000;
+    public static int shooterDesiredVelocity = 1750;
 
     public static boolean onBlueAlliance = true;
 
@@ -133,9 +133,8 @@ public class Teleop extends OpMode {
     @Override
     public void start() {
         super.start();
-        shooter.setShooterPower(1);
+        //shooter.setShooterPower(1);
         shooter.setMotorVelocity(0);
-        spindex.initSpindex();
     }
 
     @Override
@@ -143,7 +142,7 @@ public class Teleop extends OpMode {
         updateDrivebase();
         updateMechanisms();
         updateTelemetry();
-        shooter.updateLL();
+        //shooter.updateLL();
     }
 
     private void updateTelemetry() {
@@ -161,11 +160,17 @@ public class Teleop extends OpMode {
         myTelem.addData("shooter velocity:", shooter.getRightVelocity());
         myTelem.addData("spindex velocity:", spindex.getSpindexVelocity());
         myTelem.addData("spindex position:", spindex.getSpindexPosition());
-        telemetry.addData("result valid?", shooter.getLLResults().isValid());
-        telemetry.addData("pipeline", shooter.getLLStatus().getPipelineIndex());
-        telemetry.addData("TX", shooter.getTX() == null ? "null" : shooter.getTX());
-        telemetry.addData("inRange", shooter.inRange());
+        //telemetry.addData("result valid?", shooter.getLLResults().isValid());
+        //telemetry.addData("pipeline", shooter.getLLStatus().getPipelineIndex());
+        //telemetry.addData("TX", shooter.getTX() == null ? "null" : shooter.getTX());
+        //telemetry.addData("inRange", shooter.inRange());
         myTelem.update();
+    }
+
+    private void updateSpindex() {
+        if (spindex.getSpindexPosition() >= spindex.spindexFullRevolution) {
+            spindex.resetSpindexEncodersByOffset();
+        }
     }
 
     private void updateShotDetector() {
@@ -205,10 +210,12 @@ public class Teleop extends OpMode {
 
     private void updateMechanisms() {
 
+
         /* * COMPETITION ROBOT BUTTONS: * */
         updateSingleShotStateMachine();
         updateRapidFireStateMachine();
         updateShotDetector();
+        updateSpindex();
 
         //Intake
         if (gamepad1.left_bumper) {
@@ -218,7 +225,6 @@ public class Teleop extends OpMode {
             intakePower = 0.5;
         } else if (rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
             intakePower = 0;
-            spindex.stopSpindex();
         }
         intake.setPower(intakePower);
 
@@ -230,26 +236,26 @@ public class Teleop extends OpMode {
         /* * MOTOR TESTING BUTTONS: * */
 
         //Transfer
-        if (gamepad1.a) {
+        if (gamepad1.cross) {
             spindex.runTransferWheel();
         } else if (rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
             spindex.stopTransferWheel();
         }
 
         //Spindex
-        if (gamepad1.b) {
+        if (gamepad1.triangle) {
             spindex.runSpindex();
         } else if (rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
             spindex.stopSpindex();
         }
 
         //Shooter On
-        if (gamepad1.x) {
+        if (gamepad1.circle) {
             shooter.setMotorVelocity(shooterDesiredVelocity);
         }
 
         //Shooter Off
-        if (gamepad1.y) {
+        if (gamepad1.square) {
             shooter.setMotorVelocity(0);
         }
 
@@ -263,7 +269,6 @@ public class Teleop extends OpMode {
                 break;
 
             case RUN_SHOOTER_MOTOR_STATE:
-                intake.setPower(0.5);
                 shooter.setMotorVelocity(shooterDesiredVelocity);
 
                 //Go to Next State
@@ -280,7 +285,7 @@ public class Teleop extends OpMode {
                 spindex.stopTransferWheel(); //might need to comment this
 
                 //Go to next state when Artifact is in position AND shooter has reached desired velocity
-                if (!spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.artifactColors.EMPTY) && shooter.getRightVelocity() > shooterDesiredVelocity * .95) {
+                if (!spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.colorSensorStates.EMPTY) && shooter.getRightVelocity() > shooterDesiredVelocity * .95) {
                     rapidFireState = SHOOTER_STATE.RUN_TRANSFER_STATE;
                     rapidFireTimer.reset();
                 }
@@ -296,7 +301,7 @@ public class Teleop extends OpMode {
                 spindex.runTransferWheel();
 
                 //Repeat RUN_SPINDEX State when timer has reached 3 seconds or when artifact is shot
-                if (rapidFireTimer.time(TimeUnit.SECONDS) > 3 || shotDetected) {
+                if (rapidFireTimer.time(TimeUnit.SECONDS) > 3) {
                     rapidFireTimer.reset();
                     rapidFireState = SHOOTER_STATE.RUN_SPINDEX_STATE;
                 }
@@ -336,7 +341,7 @@ public class Teleop extends OpMode {
                 intake.setPower(1);
                 spindex.runSpindexToNextArtifact(2);
                 spindex.stopTransferWheel();
-                if (!spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.artifactColors.EMPTY) && shooter.getRightVelocity() > shooterDesiredVelocity * .95)
+                if (!spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.colorSensorStates.EMPTY) && shooter.getRightVelocity() > shooterDesiredVelocity * .95)
                     singleShotState = SHOOTER_STATE.RUN_TRANSFER_STATE;
                 break;
             case RUN_TRANSFER_STATE:
@@ -344,13 +349,15 @@ public class Teleop extends OpMode {
                 spindex.stopSpindex();
                 spindex.runTransferWheel();
                 if ((drive > .1 || drive < -.1 || strafe > .1 || strafe < -.1 || turn > .1 || turn < -.1) || shotDetected)
-                    singleShotState = SHOOTER_STATE.INACTIVE_STATE;
+                    singleShotState = SHOOTER_STATE.END_STATE;
                 break;
-            case INACTIVE_STATE:
+            case END_STATE:
                 if (rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
                     shooter.stop();
                     spindex.stopTransferWheel();
                 }
+                break;
+            case INACTIVE_STATE:
                 break;
         }
     }
