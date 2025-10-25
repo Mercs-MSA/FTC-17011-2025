@@ -69,8 +69,8 @@ public class Spindex {
         spindexTransferServo.setPower(0);
     }
 
-    public void runSpindex(double power) {
-        spindexMotor.setPower(power);
+    public void runSpindex() {
+        spindexMotor.setPower(0.5);
     }
 
     public void initSpindex() {
@@ -126,7 +126,7 @@ public class Spindex {
         updateSpinColorSensors();
         if (numSnapshot == 0) {
             if (!((Math.abs(spindexMotor.getCurrentPosition()) / spindexThirdCount) < 3.05) && !((Math.abs(spindexMotor.getCurrentPosition()) / spindexThirdCount) > 2.95)) {
-                runSpindex(0.25);
+                runSpindex();
                 if (numOfArtifactsInRobot > 0)
                     numSnapshot = numOfArtifactsInRobot;
             } else {
