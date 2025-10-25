@@ -8,15 +8,9 @@ import com.bylazar.ftcontrol.panels.integration.TelemetryManager;
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcontroller.external.samples.SensorSparkFunOTOS;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.teamcode.mechanisms.Drivebase;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
@@ -57,7 +51,7 @@ public class Teleop extends OpMode {
 
     public static STARTING_ORIENTATION startingOrientation = STARTING_ORIENTATION.GOAL_SIDE;
 
-    private enum SHOOTER_STATE {REMOVE_USER_CONTROL, POINT_AT_GOAL_STATE, RUN_SHOOTER_MOTOR_STATE, CLOSE_GATE_STATE, RUN_TRANSFER_STATE, RUN_SPINDEX_STATE, RELEASE_STATE, INACTIVE_STATE}
+    private enum SHOOTER_STATE {START_STATE, POINT_AT_GOAL_STATE, RUN_SHOOTER_MOTOR_STATE, CLOSE_GATE_STATE, RUN_TRANSFER_STATE, RUN_SPINDEX_STATE, RELEASE_STATE, INACTIVE_STATE, END_STATE}
     private static SHOOTER_STATE rapidFireState = SHOOTER_STATE.INACTIVE_STATE;
     private static SHOOTER_STATE motifRapidFireState = SHOOTER_STATE.INACTIVE_STATE;
     private static SHOOTER_STATE singleShotState = SHOOTER_STATE.INACTIVE_STATE;
@@ -210,45 +204,53 @@ public class Teleop extends OpMode {
     }
 
     private void updateMechanisms() {
+
+        /* * COMPETITION ROBOT BUTTONS: * */
         updateSingleShotStateMachine();
         updateRapidFireStateMachine();
         updateShotDetector();
-        shooter.updateLL();
 
+        //Intake
         if (gamepad1.left_bumper) {
             intakePower = -0.5;
-            spindex.runSpindex(0.5);
-        } else if (gamepad1.dpad_down) {
+            spindex.runSpindex();
+        } else if (gamepad1.right_bumper) {
             intakePower = 0.5;
-        } else {
+        } else if (rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
             intakePower = 0;
             spindex.stopSpindex();
         }
-
         intake.setPower(intakePower);
 
+        //Shooter
         if (gamepad1.left_trigger > 0.5 && rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
-            rapidFireState = SHOOTER_STATE.REMOVE_USER_CONTROL;
+            rapidFireState = SHOOTER_STATE.START_STATE;
         }
 
+        /* * MOTOR TESTING BUTTONS: * */
 
-        if (gamepad1.right_trigger > 0.5) {
+        //Transfer
+        if (gamepad1.a) {
             spindex.runTransferWheel();
-        } else {
+        } else if (rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
             spindex.stopTransferWheel();
         }
 
-        if (gamepad1.dpadUpWasPressed() && singleShotState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
-            singleShotState = SHOOTER_STATE.REMOVE_USER_CONTROL;
+        //Spindex
+        if (gamepad1.b) {
+            spindex.runSpindex();
+        } else if (rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
+            spindex.stopSpindex();
         }
 
-
-        if (gamepad1.dpad_left) {
-            drivebase.turnToGoal(onBlueAlliance, shooter.getLLResults());
+        //Shooter On
+        if (gamepad1.x) {
+            shooter.setMotorVelocity(shooterDesiredVelocity);
         }
 
-        if (gamepad1.options) {
-            spindex.runSpindex(-0.5);
+        //Shooter Off
+        if (gamepad1.y) {
+            shooter.setMotorVelocity(0);
         }
 
 
@@ -256,54 +258,71 @@ public class Teleop extends OpMode {
 
     private void updateRapidFireStateMachine() {
         switch (rapidFireState) {
-            case REMOVE_USER_CONTROL:
+            case START_STATE:
                 rapidFireState = SHOOTER_STATE.RUN_SHOOTER_MOTOR_STATE;
                 break;
+
             case RUN_SHOOTER_MOTOR_STATE:
                 intake.setPower(0.5);
                 shooter.setMotorVelocity(shooterDesiredVelocity);
-                if (shooter.getRightVelocity() > shooterDesiredVelocity * .8) {
-                    rapidFireState = SHOOTER_STATE.RUN_SPINDEX_STATE;
+
+                //Go to Next State
+                rapidFireState = SHOOTER_STATE.RUN_SPINDEX_STATE;
+
+                //Cancel State Machine
+                if (drive > .1 || drive < -.1 || strafe > .1 || strafe < -.1 || turn > .1 || turn < -.1) {
+                    rapidFireState = SHOOTER_STATE.END_STATE;
                 }
-                if (drive > .1 || drive < -.1 || strafe > .1 || strafe < -.1 || turn > .1 || turn < -.1)
-                    rapidFireState = SHOOTER_STATE.INACTIVE_STATE;
                 break;
+
             case RUN_SPINDEX_STATE:
-                intake.setPower(0.5);
-                shooter.setMotorVelocity(shooterDesiredVelocity);
-                spindex.runSpindex(-0.5);
+                spindex.runSpindex();
                 spindex.stopTransferWheel(); //might need to comment this
+
+                //Go to next state when Artifact is in position AND shooter has reached desired velocity
                 if (!spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.artifactColors.EMPTY) && shooter.getRightVelocity() > shooterDesiredVelocity * .95) {
                     rapidFireState = SHOOTER_STATE.RUN_TRANSFER_STATE;
                     rapidFireTimer.reset();
                 }
-                if (drive > .1 || drive < -.1 || strafe > .1 || strafe < -.1 || turn > .1 || turn < -.1)
-                    rapidFireState = SHOOTER_STATE.INACTIVE_STATE;
+
+                //Cancel State Machine
+                if (drive > .1 || drive < -.1 || strafe > .1 || strafe < -.1 || turn > .1 || turn < -.1) {
+                    rapidFireState = SHOOTER_STATE.END_STATE;
+                }
                 break;
+
             case RUN_TRANSFER_STATE:
-                intake.setPower(0.5);
                 spindex.stopSpindex();
                 spindex.runTransferWheel();
 
+                //Repeat RUN_SPINDEX State when timer has reached 3 seconds or when artifact is shot
                 if (rapidFireTimer.time(TimeUnit.SECONDS) > 3 || shotDetected) {
                     rapidFireTimer.reset();
                     rapidFireState = SHOOTER_STATE.RUN_SPINDEX_STATE;
-                } else if (drive > .1 || drive < -.1 || strafe > .1 || strafe < -.1 || turn > .1 || turn < -.1) {
-                    rapidFireState = SHOOTER_STATE.INACTIVE_STATE;
+                }
+
+                //Cancel State Machine
+                if (drive > .1 || drive < -.1 || strafe > .1 || strafe < -.1 || turn > .1 || turn < -.1) {
+                    rapidFireState = SHOOTER_STATE.END_STATE;
                 }
 
                 break;
+
+            case END_STATE:
+                shooter.stop();
+                spindex.stopTransferWheel();
+                spindex.stopSpindex();
+
+                rapidFireState = SHOOTER_STATE.INACTIVE_STATE;
+
+                break;
             case INACTIVE_STATE:
-                if (singleShotState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
-                    shooter.stop();
-                    spindex.stopTransferWheel();
-                }
                 break;
         }
     }
     private void updateSingleShotStateMachine() {
         switch (singleShotState) {
-            case REMOVE_USER_CONTROL:
+            case START_STATE:
                 singleShotState = SHOOTER_STATE.RUN_SHOOTER_MOTOR_STATE;
                 break;
             case RUN_SHOOTER_MOTOR_STATE:
