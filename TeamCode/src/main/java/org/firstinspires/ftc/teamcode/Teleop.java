@@ -148,10 +148,12 @@ public class Teleop extends OpMode {
     public void loop() {
         updateDrivebase();
         updateMechanisms();
+        updateTelemetry();
         shooter.updateLL();
+    }
 
-
-//        myTelem.addData("Robot Yaw:", Math.toDegrees(drivebase.getPosition().h));
+    private void updateTelemetry() {
+        //        myTelem.addData("Robot Yaw:", Math.toDegrees(drivebase.getPosition().h));
         myTelem.addData("Robot Heading:", drivebase.getBotHeading());
         myTelem.addData("Robot Offset:", drivebase.getOffset());
 //        myTelem.addData("Spinning to Color?", spinningToColor);
@@ -165,10 +167,14 @@ public class Teleop extends OpMode {
         myTelem.addData("shooter velocity:", shooter.getRightVelocity());
         myTelem.addData("spindex velocity:", spindex.getSpindexVelocity());
         myTelem.addData("spindex position:", spindex.getSpindexPosition());
+        telemetry.addData("result valid?", shooter.getLLResults().isValid());
+        telemetry.addData("pipeline", shooter.getLLStatus().getPipelineIndex());
+        telemetry.addData("TX", shooter.getTX() == null ? "null" : shooter.getTX());
+        telemetry.addData("inRange", shooter.inRange());
         myTelem.update();
     }
 
-    void updateShotDetector() {
+    private void updateShotDetector() {
         double rpm = shooter.getRpm();
         ema = (ALPHA * rpm) + (1 - ALPHA) * ema;
 
@@ -206,6 +212,7 @@ public class Teleop extends OpMode {
     private void updateMechanisms() {
         updateSingleShotStateMachine();
         updateRapidFireStateMachine();
+        updateShotDetector();
         shooter.updateLL();
 
         if (gamepad1.left_bumper) {
@@ -220,8 +227,9 @@ public class Teleop extends OpMode {
 
         intake.setPower(intakePower);
 
-        if (gamepad1.left_trigger > 0.5 && rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE))
+        if (gamepad1.left_trigger > 0.5 && rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
             rapidFireState = SHOOTER_STATE.REMOVE_USER_CONTROL;
+        }
 
 
         if (gamepad1.right_trigger > 0.5) {
@@ -230,18 +238,9 @@ public class Teleop extends OpMode {
             spindex.stopTransferWheel();
         }
 
-
-        if (gamepad1.cross) {
-//            shooter.stop();
-//            spindex.stopTransferWheel();
-//            spindex.stopSpindex();
-        }
-
-        if (gamepad1.dpadUpWasPressed() && singleShotState.equals(SHOOTER_STATE.INACTIVE_STATE))
+        if (gamepad1.dpadUpWasPressed() && singleShotState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
             singleShotState = SHOOTER_STATE.REMOVE_USER_CONTROL;
-//        if(gamepad1.dpad_up) {
-//            shooter.setTurretYawPower(1);
-//        }
+        }
 
 
         if (gamepad1.dpad_left) {
@@ -252,10 +251,7 @@ public class Teleop extends OpMode {
             spindex.runSpindex(-0.5);
         }
 
-        telemetry.addData("result valid?", shooter.getLLResults().isValid());
-        telemetry.addData("pipeline", shooter.getLLStatus().getPipelineIndex());
-        telemetry.addData("TX", shooter.getTX() == null ? "null" : shooter.getTX());
-        telemetry.addData("inRange", shooter.inRange());
+
     }
 
     private void updateRapidFireStateMachine() {
