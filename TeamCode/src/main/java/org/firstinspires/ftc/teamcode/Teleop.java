@@ -159,18 +159,12 @@ public class Teleop extends OpMode {
         myTelem.addData("rapid fire timer:", rapidFireTimer.time(TimeUnit.SECONDS));
         myTelem.addData("shooter velocity:", shooter.getRightVelocity());
         myTelem.addData("spindex velocity:", spindex.getSpindexVelocity());
-        myTelem.addData("spindex position:", spindex.getSpindexPosition());
+        myTelem.addData("spindex position:", spindex.spindexMotor.getCurrentPosition());
         //telemetry.addData("result valid?", shooter.getLLResults().isValid());
         //telemetry.addData("pipeline", shooter.getLLStatus().getPipelineIndex());
         //telemetry.addData("TX", shooter.getTX() == null ? "null" : shooter.getTX());
         //telemetry.addData("inRange", shooter.inRange());
         myTelem.update();
-    }
-
-    private void updateSpindex() {
-        if (spindex.getSpindexPosition() >= spindex.spindexFullRevolution) {
-            spindex.resetSpindexEncodersByOffset();
-        }
     }
 
     private void updateShotDetector() {
@@ -215,7 +209,6 @@ public class Teleop extends OpMode {
         updateSingleShotStateMachine();
         updateRapidFireStateMachine();
         updateShotDetector();
-        updateSpindex();
 
         //Intake
         if (gamepad1.left_bumper) {
@@ -259,6 +252,13 @@ public class Teleop extends OpMode {
             shooter.setMotorVelocity(0);
         }
 
+        if (gamepad1.dpad_up) {
+            spindex.runSpindexToEmpty();
+        }
+
+        if (gamepad1.dpad_down) {
+            spindex.runSpindexToTransfer();
+        }
 
     }
 

@@ -5,6 +5,7 @@ import static org.firstinspires.ftc.teamcode.Teleop.spinningToColor;
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorRangeSensor;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
@@ -12,13 +13,12 @@ import org.firstinspires.ftc.teamcode.Constants.GeneralConstants;
 
 @Config
 public class Spindex {
-    private static DcMotorEx spindexMotor;
+    public static DcMotorEx spindexMotor;
     public ColorRangeSensor spindexColorBack; //Closest to wheel
     public ColorRangeSensor spindexColorRight; //Right of the wheel
     public ColorRangeSensor spindexColorLeft; //Left of the wheel
-    public static int spindexFullRevolution = 300; //Amount of encoder positions for one full revolution of spindex
+    public static int spindexFullRevolution = 540; //Amount of encoder positions for one full revolution of spindex
     public static int spindexThirdRevolution = (int)(spindexFullRevolution/3.0); //Amount of encoder positions for one full revolution of spindex
-    private int spindexOffset = 0;
 
 
 
@@ -33,21 +33,10 @@ public class Spindex {
 
     public static double spindexMotorVelocity = 400;
 
-    public static double spindexGateOpenPosition = .15;
-    public static double spindexGateClosedPosition = .285;
-
     private boolean alreadyChecked = false;
 
     public GeneralConstants.colorSensorStates targetColor = GeneralConstants.colorSensorStates.EMPTY;
 
-
-    //    public enum SPIN_STATES {
-//        INACTIVE,
-//        ACTIVE_GREEN,
-//        ACTIVE_PURPLE
-//    }
-//
-//    private SPIN_STATES currentSpinState = SPIN_STATES.INACTIVE;
 
 
     public Spindex(HardwareMap hardwareMap) {
@@ -63,6 +52,7 @@ public class Spindex {
         spindexColorLeftState = GeneralConstants.colorSensorStates.EMPTY;
 
         spindexMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        spindexMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         spindexMotor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
         spindexMotor.setVelocity(0);
         spindexMotor.setTargetPosition(0);
@@ -75,20 +65,51 @@ public class Spindex {
     }
 
     public void runSpindexToTransfer() {
+        /*
         spindexMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        spindexMotor.setVelocity(spindexMotorVelocity);
 
-        int offset = spindexMotor.getCurrentPosition() % 300;
-        while (offset < 0) {
-            offset += 300;
+        int offset = spindexMotor.getCurrentPosition() % spindexFullRevolution;
+
+
+        while (offset >= spindexThirdRevolution) {
+            offset -= spindexThirdRevolution;
+        }
+
+        //If offset is closer to other side, it will lock onto that side
+        if (offset - (spindexThirdRevolution/2) >= 0) {
+            offset = spindexThirdRevolution - offset;
+        } else {
+            offset *= -1;
         }
 
         spindexMotor.setTargetPosition(spindexMotor.getCurrentPosition() + offset);
 
         spindexMotor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+         */
+        spindexMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        spindexMotor.setVelocity(spindexMotorVelocity);
+        spindexMotor.setTargetPosition(spindexMotor.getCurrentPosition() + 600);
+        spindexMotor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+
+
     }
 
     public void runSpindexToEmpty() {
         spindexMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        spindexMotor.setVelocity(spindexMotorVelocity);
+
+        int offset = spindexMotor.getCurrentPosition() % spindexFullRevolution;
+        int target = spindexThirdRevolution/2;
+
+
+        while (offset >= spindexThirdRevolution) {
+            offset -= spindexThirdRevolution;
+        }
+
+        offset = target - offset;
+
+        spindexMotor.setTargetPosition(spindexMotor.getCurrentPosition() + offset);
 
         spindexMotor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
     }
@@ -104,13 +125,7 @@ public class Spindex {
         return spindexMotor.getVelocity();
     }
 
-    public void resetSpindexEncodersByOffset() {
-        spindexOffset = spindexMotor.getCurrentPosition() - spindexFullRevolution;
-    }
 
-    public int getSpindexPosition() {
-        return spindexMotor.getCurrentPosition() - spindexOffset;
-    }
 
     public void runTransferWheel() {
         spindexTransferServo.setPower(1);
