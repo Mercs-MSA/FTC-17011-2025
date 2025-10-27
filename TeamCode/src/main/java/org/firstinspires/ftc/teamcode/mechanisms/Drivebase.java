@@ -61,8 +61,8 @@ public class Drivebase {
     // Field-centric drive
     public void drive(double drive, double strafe, double turn) {
         // Get current heading
-//        double botHeading = SoftElectronics.getYaw() + offset;
-        double botHeading = otos.getPosition().h;
+        double botHeading = SoftElectronics.getYaw() + offset;
+//        double botHeading = otos.getPosition().h;
         IMUheadingTracker = botHeading;
 
         // Rotate joystick input to be field-centric

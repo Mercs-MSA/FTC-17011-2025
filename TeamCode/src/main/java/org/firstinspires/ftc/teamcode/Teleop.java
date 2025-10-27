@@ -97,20 +97,20 @@ public class Teleop extends OpMode {
         if (onBlueAlliance) {
             myTelem.addLine("Blue alliance selected. Press right bumper to select red.");
             if (startingOrientation.equals(STARTING_ORIENTATION.GOAL_SIDE)) {
-//                drivebase.offsetYaw(-90);
-                drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, -Math.PI/2));
+                drivebase.offsetYaw(-Math.PI/2);
+//                drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, -Math.PI/2));
             } else {
-//                drivebase.offsetYaw(90);
-                drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, Math.PI/2));
+                drivebase.offsetYaw(Math.PI/2);
+//                drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, Math.PI/2));
             }
         } else {
             myTelem.addLine("Red alliance selected. Press left bumper to select blue.");
             if (startingOrientation.equals(STARTING_ORIENTATION.GOAL_SIDE)) {
-//                drivebase.offsetYaw(90);
-                drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, Math.PI/2));
+                drivebase.offsetYaw(Math.PI/2);
+//                drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, Math.PI/2));
             } else {
-//                drivebase.offsetYaw(-90);
-                drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, -Math.PI/2));
+                drivebase.offsetYaw(-Math.PI/2);
+//                drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, -Math.PI/2));
             }
         }
 
