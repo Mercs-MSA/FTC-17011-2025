@@ -5,7 +5,6 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.bylazar.ftcontrol.panels.integration.TelemetryManager;
-import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -64,6 +63,8 @@ public class Teleop extends OpMode {
     final double RECOVER_PCT = 0.10;            // must recover within 10% of target to re-arm
     boolean shotArmed = true;
     boolean shotDetected = false;
+
+    boolean spindexRunPosition = false;
 
     @Override
     public void init() {
@@ -212,17 +213,17 @@ public class Teleop extends OpMode {
 
         //Intake
         if (gamepad1.left_bumper) {
-            intakePower = -0.5;
+            intakePower = -1;
             spindex.runSpindex();
         } else if (gamepad1.right_bumper) {
-            intakePower = 0.5;
+            intakePower = 1;
         } else if (rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
             intakePower = 0;
         }
         intake.setPower(intakePower);
 
         //Shooter
-        if (gamepad1.left_trigger > 0.5 && rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
+        if (gamepad1.right_trigger > 0.5 && rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
             rapidFireState = SHOOTER_STATE.START_STATE;
         }
 
@@ -238,8 +239,10 @@ public class Teleop extends OpMode {
         //Spindex
         if (gamepad1.triangle) {
             spindex.runSpindex();
-        } else if (rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
-            spindex.stopSpindex();
+        } else if (gamepad1.dpadDownWasPressed()) {
+            spindex.runSpindexToIntake();
+        } else if (gamepad1.dpadUpWasPressed()) {
+            spindex.runSpindexToTransfer();
         }
 
         //Shooter On
@@ -250,14 +253,6 @@ public class Teleop extends OpMode {
         //Shooter Off
         if (gamepad1.square) {
             shooter.setMotorVelocity(0);
-        }
-
-        if (gamepad1.dpad_up) {
-            spindex.runSpindexToEmpty();
-        }
-
-        if (gamepad1.dpad_down) {
-            spindex.runSpindexToTransfer();
         }
 
     }

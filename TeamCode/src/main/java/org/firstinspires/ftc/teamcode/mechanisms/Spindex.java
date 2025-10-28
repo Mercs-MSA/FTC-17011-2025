@@ -31,9 +31,10 @@ public class Spindex {
     private static int numOfArtifactsInRobot = 0;
     private int numSnapshot = 0;
 
-    public static double spindexMotorVelocity = 400;
+    public static double spindexMotorVelocity = 800;
 
     private boolean alreadyChecked = false;
+
 
     public GeneralConstants.colorSensorStates targetColor = GeneralConstants.colorSensorStates.EMPTY;
 
@@ -53,65 +54,81 @@ public class Spindex {
 
         spindexMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         spindexMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-        spindexMotor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
-        spindexMotor.setVelocity(0);
+        spindexMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         spindexMotor.setTargetPosition(0);
+        spindexMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        spindexMotor.setVelocity(0);
 
         spindexTransferServo.setPower(0);
     }
 
     public void runSpindex() {
+        spindexMotor.setTargetPosition(spindexMotor.getCurrentPosition() + 40);
+        spindexMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
         spindexMotor.setVelocity(spindexMotorVelocity);
     }
 
-    public void runSpindexToTransfer() {
+    public void runSpindexToIntake() {
         /*
-        spindexMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-        spindexMotor.setVelocity(spindexMotorVelocity);
-
         int offset = spindexMotor.getCurrentPosition() % spindexFullRevolution;
 
 
-        while (offset >= spindexThirdRevolution) {
+        if (offset >= spindexThirdRevolution) {
+            offset -= spindexThirdRevolution;
+        }
+        if (offset >= spindexThirdRevolution) {
+            offset -= spindexThirdRevolution;
+        }
+        if (offset >= spindexThirdRevolution) {
             offset -= spindexThirdRevolution;
         }
 
         //If offset is closer to other side, it will lock onto that side
-        if (offset - (spindexThirdRevolution/2) >= 0) {
+        //if (offset - (spindexThirdRevolution/2) >= 0) {
             offset = spindexThirdRevolution - offset;
-        } else {
-            offset *= -1;
-        }
+        //} else {
+            //offset *= -1;
+        //}
 
         spindexMotor.setTargetPosition(spindexMotor.getCurrentPosition() + offset);
-
-        spindexMotor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
-         */
-        spindexMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        spindexMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
         spindexMotor.setVelocity(spindexMotorVelocity);
+         */
+
+        spindexMotor.setTargetPosition(spindexMotor.getCurrentPosition() + spindexThirdRevolution);
+        spindexMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        spindexMotor.setVelocity(spindexMotorVelocity);
+
+
+        /*
         spindexMotor.setTargetPosition(spindexMotor.getCurrentPosition() + 600);
-        spindexMotor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+        spindexMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        spindexMotor.setVelocity(spindexMotorVelocity);
 
-
+         */
     }
 
-    public void runSpindexToEmpty() {
-        spindexMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-        spindexMotor.setVelocity(spindexMotorVelocity);
-
+    public void runSpindexToTransfer() {
         int offset = spindexMotor.getCurrentPosition() % spindexFullRevolution;
         int target = spindexThirdRevolution/2;
 
 
-        while (offset >= spindexThirdRevolution) {
+        if (offset >= spindexThirdRevolution) {
+            offset -= spindexThirdRevolution;
+        }
+        if (offset >= spindexThirdRevolution) {
+            offset -= spindexThirdRevolution;
+        }
+        if (offset >= spindexThirdRevolution) {
             offset -= spindexThirdRevolution;
         }
 
         offset = target - offset;
 
         spindexMotor.setTargetPosition(spindexMotor.getCurrentPosition() + offset);
+        spindexMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        spindexMotor.setVelocity(spindexMotorVelocity);
 
-        spindexMotor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
     }
 
 
