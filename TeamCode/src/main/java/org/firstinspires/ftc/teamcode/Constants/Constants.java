@@ -12,6 +12,8 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
  */
 @Config
 public class Constants {
+    public static boolean onBlueAlliance = true;
+    public static boolean ranAuto = false;
 
     public static enum VERSIONS {
         V1(new V1Constants()),

@@ -1,6 +1,9 @@
 package org.firstinspires.ftc.teamcode;
 
 
+import static org.firstinspires.ftc.teamcode.Constants.Constants.onBlueAlliance;
+import static org.firstinspires.ftc.teamcode.Constants.Constants.ranAuto;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
@@ -40,8 +43,6 @@ public class Teleop extends OpMode {
     private double intakePower = 0.0;
 
     public static int shooterDesiredVelocity = 1750;
-
-    public static boolean onBlueAlliance = true;
 
     public enum STARTING_ORIENTATION {
         GOAL_SIDE,
@@ -95,23 +96,25 @@ public class Teleop extends OpMode {
         else if (gamepad1.left_bumper)
             onBlueAlliance = true;
 
-        if (onBlueAlliance) {
-            myTelem.addLine("Blue alliance selected. Press right bumper to select red.");
-            if (startingOrientation.equals(STARTING_ORIENTATION.GOAL_SIDE)) {
-                drivebase.offsetYaw(-Math.PI/2);
+        if (!ranAuto) {
+            if (onBlueAlliance) {
+                myTelem.addLine("Blue alliance selected. Press right bumper to select red.");
+                if (startingOrientation.equals(STARTING_ORIENTATION.GOAL_SIDE)) {
+                    drivebase.offsetYaw(-90);
 //                drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, -Math.PI/2));
-            } else {
-                drivebase.offsetYaw(Math.PI/2);
+                } else {
+                    drivebase.offsetYaw(90);
 //                drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, Math.PI/2));
-            }
-        } else {
-            myTelem.addLine("Red alliance selected. Press left bumper to select blue.");
-            if (startingOrientation.equals(STARTING_ORIENTATION.GOAL_SIDE)) {
-                drivebase.offsetYaw(Math.PI/2);
-//                drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, Math.PI/2));
+                }
             } else {
-                drivebase.offsetYaw(-Math.PI/2);
+                myTelem.addLine("Red alliance selected. Press left bumper to select blue.");
+                if (startingOrientation.equals(STARTING_ORIENTATION.GOAL_SIDE)) {
+                    drivebase.offsetYaw(90);
+//                drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, Math.PI/2));
+                } else {
+                    drivebase.offsetYaw(-90);
 //                drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, -Math.PI/2));
+                }
             }
         }
 
@@ -136,6 +139,7 @@ public class Teleop extends OpMode {
         super.start();
         //shooter.setShooterPower(1);
         shooter.setMotorVelocity(0);
+        ranAuto = false;
     }
 
     @Override

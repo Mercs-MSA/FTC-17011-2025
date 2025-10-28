@@ -17,6 +17,9 @@ import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
 import org.firstinspires.ftc.teamcode.mechanisms.Spindex;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+import static org.firstinspires.ftc.teamcode.Constants.Constants.onBlueAlliance;
+import static org.firstinspires.ftc.teamcode.Constants.Constants.ranAuto;
+
 
 @Autonomous
 public class BluePlayerSideAuto extends OpMode {
@@ -77,7 +80,8 @@ public class BluePlayerSideAuto extends OpMode {
 
         dash = FtcDashboard.getInstance();
         telemetryA = new MultipleTelemetry(telemetry, dash.getTelemetry());
-        Teleop.onBlueAlliance = false;
+        onBlueAlliance = false;
+        ranAuto = true;
         Teleop.startingOrientation = Teleop.STARTING_ORIENTATION.GOAL_SIDE;
     }
 
