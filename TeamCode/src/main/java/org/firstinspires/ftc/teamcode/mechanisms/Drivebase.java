@@ -1,12 +1,18 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
+import static org.firstinspires.ftc.teamcode.Constants.Constants.onBlueAlliance;
+
+import com.pedropathing.control.PIDFController;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
+import com.qualcomm.hardware.limelightvision.LLStatus;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.SoftElectronics;
@@ -19,6 +25,10 @@ public class Drivebase {
     private SparkFunOTOS otos;
     private double offset = 0;
     private double IMUheadingTracker = 0;
+
+    private Limelight3A limelight;
+    private LLStatus llStatus;
+    private LLResult llResults;
 
     private double TX = 0;
 
@@ -51,11 +61,25 @@ public class Drivebase {
         otos.calibrateImu();
 
         TX = 0;
+
+        limelight.start();
+        limelight.pipelineSwitch(0);
     }
 
 
     public void offsetYaw(double offset) {
         this.offset = Math.toRadians(offset);
+    }
+
+    public void updateLL() {
+        llStatus = limelight.getStatus();
+        llResults = limelight.getLatestResult();
+
+        if (llResults.isValid()) {
+            double captureLatency = llResults.getCaptureLatency();
+            double targetingLatency = llResults.getTargetingLatency();
+            double parseLatency = llResults.getParseLatency();
+        }
     }
 
     // Field-centric drive
@@ -101,36 +125,37 @@ public class Drivebase {
     }
 
 
-    public void turnToGoal (boolean onBlueAlliance, LLResult llResult) {
-        double botHeading = Math.toDegrees(otos.getPosition().h);
-        if (llResult.isValid())
-            TX = llResult.getFiducialResults().get(0).getTargetXDegrees();
+    public void turnToGoal() {
+        double botHeading = Math.toDegrees(SoftElectronics.getYaw());
+        if (llResults.isValid())
+            TX = llResults.getFiducialResults().get(0).getTargetXDegrees();
+
 
         if (onBlueAlliance) {
-            if (!llResult.isValid()) {
-                if (botHeading < 44 && botHeading > -135) {
+            if (!llResults.isValid()) {
+                if (botHeading > -44 && botHeading < 135) {
                     drive(0, 0, -.5 * (Math.abs(45 - botHeading) / 10));
                 } else {
                     drive(0, 0, .5 * (Math.abs(45 - botHeading) / 10));
                 }
-            } else if (botHeading > 24 && botHeading < 64) {
-                if (TX < -.5) {
+            } else if (botHeading > -44 && botHeading < 135) {
+                if (TX < -.25) {
                     drive(0, 0, -.5 * (Math.abs(TX) / 50));
-                } else if (TX > .5) {
+                } else if (TX > .25) {
                     drive(0, 0, .5 * (Math.abs(TX) / 50));
                 }
             }
         } else {
-            if (!llResult.isValid()) {
-                if (botHeading > -44 && botHeading < 135) {
+            if (!llResults.isValid()) {
+                if (botHeading < 44 && botHeading > -135) {
                     drive(0, 0, .5 * (Math.abs(-45 - botHeading) / 10));
                 } else {
                     drive(0, 0, -.5 * (Math.abs(-45 - botHeading) / 10));
                 }
-            } else if (botHeading < -24 && botHeading > -64) {
-                if (TX < -.5) {
+            } else if (botHeading < 44 && botHeading > -135) {
+                if (TX < -.25) {
                     drive(0, 0, -.5 * (Math.abs(TX) / 50));
-                } else if (TX > .5) {
+                } else if (TX > .25) {
                     drive(0, 0, .5 * (Math.abs(TX) / 50));
                 }
             }

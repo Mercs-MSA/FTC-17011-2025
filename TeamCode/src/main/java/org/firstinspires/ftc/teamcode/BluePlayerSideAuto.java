@@ -60,10 +60,12 @@ public class BluePlayerSideAuto extends OpMode {
     public static final Pose startPose = new Pose(0, 0, 0);
     public static final Pose shootPose = new Pose(64.67,0,Math.toRadians(45));
     public static final Pose intakePose1 = new Pose(70.298,47.134,Math.toRadians(90));
+    public static final Pose intakePose2 = new Pose(0, 0, Math.toRadians(90));
 
     public static final Path shootPath1 = new Path(new BezierLine(startPose, shootPose));
     public static final Path intakePath1 = new Path(new BezierLine(shootPose, intakePose1));
-    public static final Path shootPath2 = new Path(new BezierLine(intakePose1, shootPose ));
+    public static final Path shootPath2 = new Path(new BezierLine(intakePose1, shootPose));
+    public static final Path intakePath2 = new Path(new BezierLine(shootPose, intakePose2));
 
     @Override
     public void init() {

@@ -52,11 +52,7 @@ public class Shooter {
             double captureLatency =llResults.getCaptureLatency();
             double targetingLatency = llResults.getTargetingLatency();
             double parseLatency = llResults.getParseLatency();
-
-
         }
-
-
     }
      */
 
