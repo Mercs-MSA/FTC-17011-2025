@@ -243,7 +243,7 @@ public class Spindex {
         float g = colorSensor.green();
         float b = colorSensor.blue();
 
-        if (r < 185) {
+        if (r < 185) { //Green: 234, 428, 382 || Purple: 250, 410, 403
             return GeneralConstants.colorSensorStates.OCCUPIED;
         } else {
             return GeneralConstants.colorSensorStates.EMPTY;

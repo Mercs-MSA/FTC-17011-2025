@@ -42,7 +42,7 @@ public class Teleop extends OpMode {
 
     private double intakePower = 0.0;
 
-    public static int shooterDesiredVelocity = 1750;
+    public static int shooterDesiredVelocity = 1750; //1450 for close triangle's end
 
     public static int spindexFullRevolution = -540; //Amount of encoder positions for one full revolution of spindex
     public static int spindexThirdRevolution = spindexFullRevolution/3; //Amount of encoder positions for one full revolution of spindex
@@ -150,7 +150,7 @@ public class Teleop extends OpMode {
         updateDrivebase();
         updateMechanisms();
         updateTelemetry();
-        //shooter.updateLL();
+        drivebase.updateLL();
     }
 
     private void updateTelemetry() {
@@ -159,9 +159,9 @@ public class Teleop extends OpMode {
         myTelem.addData("Robot Offset:", drivebase.getOffset());
 //        myTelem.addData("Spinning to Color?", spinningToColor);
 //        myTelem.addData("Num of artifacts in robot:", spindex.getNumOfArtifactsInRobot());
-        myTelem.addData("Right Color:", spindex.getColor(spindex.spindexColorRight));
-        myTelem.addData("Left Color:", spindex.getColor(spindex.spindexColorLeft));
-        myTelem.addData("Back Color:", spindex.getColor(spindex.spindexColorBack));
+        myTelem.addData("Right Color:", spindex.getColor(spindex.spindexColorRight, true));
+        myTelem.addData("Left Color:", spindex.getColor(spindex.spindexColorLeft, true));
+        myTelem.addData("Back Color:", spindex.getColor(spindex.spindexColorBack, true));
         myTelem.addData("single shot state:", singleShotState.toString());
         myTelem.addData("rapid fire state:", rapidFireState.toString());
         myTelem.addData("rapid fire timer:", rapidFireTimer.time(TimeUnit.SECONDS));
@@ -207,6 +207,10 @@ public class Teleop extends OpMode {
             drivebase.stop();
         } else {
             drivebase.drive(drive, strafe, turn);
+        }
+
+        if (gamepad1.left_bumper) {
+            drivebase.turnToGoal();
         }
     }
 
