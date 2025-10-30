@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
-import static org.firstinspires.ftc.teamcode.Teleop.spinningToColor;
-
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorRangeSensor;
@@ -10,6 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.Constants.GeneralConstants;
+import org.firstinspires.ftc.teamcode.Teleop;
 
 @Config
 public class Spindex {
@@ -17,8 +16,9 @@ public class Spindex {
     public ColorRangeSensor spindexColorBack; //Closest to wheel
     public ColorRangeSensor spindexColorRight; //Right of the wheel
     public ColorRangeSensor spindexColorLeft; //Left of the wheel
-    public static int spindexFullRevolution = 540; //Amount of encoder positions for one full revolution of spindex
-    public static int spindexThirdRevolution = (int)(spindexFullRevolution/3.0); //Amount of encoder positions for one full revolution of spindex
+
+
+    public static int currentSpindexPosition = 0;
 
 
 
@@ -55,81 +55,89 @@ public class Spindex {
         spindexMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         spindexMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         spindexMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        spindexMotor.setTargetPosition(0);
+        spindexMotor.setTargetPosition(currentSpindexPosition);
         spindexMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        spindexMotor.setVelocity(0);
+        spindexMotor.setVelocity(spindexMotorVelocity);
 
         spindexTransferServo.setPower(0);
     }
 
-    public void runSpindex() {
-        spindexMotor.setTargetPosition(spindexMotor.getCurrentPosition() + 40);
+//    public void runSpindexThird() {
+//        /*
+//        int offset = spindexMotor.getCurrentPosition() % spindexFullRevolution;
+//
+//
+//        if (offset >= spindexThirdRevolution) {
+//            offset -= spindexThirdRevolution;
+//        }
+//        if (offset >= spindexThirdRevolution) {
+//            offset -= spindexThirdRevolution;
+//        }
+//        if (offset >= spindexThirdRevolution) {
+//            offset -= spindexThirdRevolution;
+//        }
+//
+//        //If offset is closer to other side, it will lock onto that side
+//        //if (offset - (spindexThirdRevolution/2) >= 0) {
+//            offset = spindexThirdRevolution - offset;
+//        //} else {
+//            //offset *= -1;
+//        //}
+//
+//        spindexMotor.setTargetPosition(spindexMotor.getCurrentPosition() + offset);
+//        spindexMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+//        spindexMotor.setVelocity(spindexMotorVelocity);
+//         */
+//        //idealPosition += 0;
+//        spindexMotor.setTargetPosition(idealPosition);
+//        spindexMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+//        spindexMotor.setVelocity(spindexMotorVelocity);
+//
+//
+//        /*
+//        spindexMotor.setTargetPosition(spindexMotor.getCurrentPosition() + 600);
+//        spindexMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+//        spindexMotor.setVelocity(spindexMotorVelocity);
+//
+//         */
+//    }
+
+    public void changeIdealPositionBy(int positionChange) {
+        currentSpindexPosition += positionChange;
+        spindexMotor.setTargetPosition(currentSpindexPosition);
         spindexMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
         spindexMotor.setVelocity(spindexMotorVelocity);
     }
 
-    public void runSpindexToIntake() {
-        /*
-        int offset = spindexMotor.getCurrentPosition() % spindexFullRevolution;
-
-
-        if (offset >= spindexThirdRevolution) {
-            offset -= spindexThirdRevolution;
+    public void runSpindexToTransferThird() {
+        if (currentSpindexPosition % Teleop.spindexThirdRevolution != Teleop.spindexThirdRevolution/2) {
+            changeIdealPositionBy(Teleop.spindexThirdRevolution/2);
         }
-        if (offset >= spindexThirdRevolution) {
-            offset -= spindexThirdRevolution;
-        }
-        if (offset >= spindexThirdRevolution) {
-            offset -= spindexThirdRevolution;
-        }
-
-        //If offset is closer to other side, it will lock onto that side
-        //if (offset - (spindexThirdRevolution/2) >= 0) {
-            offset = spindexThirdRevolution - offset;
-        //} else {
-            //offset *= -1;
-        //}
-
-        spindexMotor.setTargetPosition(spindexMotor.getCurrentPosition() + offset);
-        spindexMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-        spindexMotor.setVelocity(spindexMotorVelocity);
-         */
-
-        spindexMotor.setTargetPosition(spindexMotor.getCurrentPosition() + spindexThirdRevolution);
-        spindexMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-        spindexMotor.setVelocity(spindexMotorVelocity);
-
-
-        /*
-        spindexMotor.setTargetPosition(spindexMotor.getCurrentPosition() + 600);
-        spindexMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-        spindexMotor.setVelocity(spindexMotorVelocity);
-
-         */
     }
 
-    public void runSpindexToTransfer() {
-        int offset = spindexMotor.getCurrentPosition() % spindexFullRevolution;
-        int target = spindexThirdRevolution/2;
-
-
-        if (offset >= spindexThirdRevolution) {
-            offset -= spindexThirdRevolution;
-        }
-        if (offset >= spindexThirdRevolution) {
-            offset -= spindexThirdRevolution;
-        }
-        if (offset >= spindexThirdRevolution) {
-            offset -= spindexThirdRevolution;
-        }
-
-        offset = target - offset;
-
-        spindexMotor.setTargetPosition(spindexMotor.getCurrentPosition() + offset);
-        spindexMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-        spindexMotor.setVelocity(spindexMotorVelocity);
-
-    }
+//    public void runSpindexHalfThird() {
+////        int offset = spindexMotor.getCurrentPosition() % spindexFullRevolution;
+////        int target = spindexThirdRevolution/2;
+////
+////
+////        if (offset >= spindexThirdRevolution) {
+////            offset -= spindexThirdRevolution;
+////        }
+////        if (offset >= spindexThirdRevolution) {
+////            offset -= spindexThirdRevolution;
+////        }
+////        if (offset >= spindexThirdRevolution) {
+////            offset -= spindexThirdRevolution;
+////        }
+////
+////        offset = target - offset;
+//
+//        idealPosition += spindexThirdRevolution/2;
+//        spindexMotor.setTargetPosition(idealPosition);
+//        spindexMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+//        spindexMotor.setVelocity(spindexMotorVelocity);
+//
+//    }
 
 
 
@@ -176,51 +184,51 @@ public class Spindex {
         alreadyChecked = false;
     }
 
-    public void runSpindexToColor() {
-        updateSpinColorSensors();
-        if (numSnapshot == 0) {
-            if (!((Math.abs(spindexMotor.getCurrentPosition()) / spindexFullRevolution) < 3.05) && !((Math.abs(spindexMotor.getCurrentPosition()) / spindexFullRevolution) > 2.95)) {
-                runSpindex();
-                if (numOfArtifactsInRobot > 0)
-                    numSnapshot = numOfArtifactsInRobot;
-            } else {
-                //STOP
-                stopSpindex();
-                spinningToColor = false;
-                targetColor = GeneralConstants.colorSensorStates.EMPTY;
-            }
-//        } else if (!spindexColorRightState.equals(targetColor) && !spindexColorLeftState.equals(targetColor) && !spindexColorBackState.equals(targetColor)) {
-//            stopSpindex();
-//            spinningToColor = false;
-//            targetColor = GeneralConstants.artifactColors.EMPTY;
-//        } else {
-//            if (spindexColorBackState.equals(targetColor)) {
-//                stopSpindex();
-//                spinningToColor = false;
-//                targetColor = GeneralConstants.artifactColors.EMPTY;
-//            }
-//            else {
-//                spindexMotor.setVelocity(spindexVelocity);
-//            }
-//        }
-
-        } else {
-//            if (!spindexColorRightState.equals(targetColor) && !spindexColorLeftState.equals(targetColor) && !spindexColorBackState.equals(targetColor) && !alreadyChecked) {
-//                stopSpindex();
-//                spinningToColor = false;
-//                targetColor = GeneralConstants.artifactColors.EMPTY;
+//    public void runSpindexToColor() {
+//        updateSpinColorSensors();
+//        if (numSnapshot == 0) {
+//            if (!((Math.abs(spindexMotor.getCurrentPosition()) / spindexFullRevolution) < 3.05) && !((Math.abs(spindexMotor.getCurrentPosition()) / spindexFullRevolution) > 2.95)) {
+//                runSpindex();
+//                if (numOfArtifactsInRobot > 0)
+//                    numSnapshot = numOfArtifactsInRobot;
 //            } else {
-//                alreadyChecked = true;
-                if (spindexColorBackState.equals(targetColor)) {
-                    stopSpindex();
-                    spinningToColor = false;
-                    targetColor = GeneralConstants.colorSensorStates.EMPTY;
-                } else {
-                    spindexMotor.setVelocity(spindexMotorVelocity);
-                }
+//                //STOP
+//                stopSpindex();
+//                spinningToColor = false;
+//                targetColor = GeneralConstants.colorSensorStates.EMPTY;
 //            }
-        }
-    }
+////        } else if (!spindexColorRightState.equals(targetColor) && !spindexColorLeftState.equals(targetColor) && !spindexColorBackState.equals(targetColor)) {
+////            stopSpindex();
+////            spinningToColor = false;
+////            targetColor = GeneralConstants.artifactColors.EMPTY;
+////        } else {
+////            if (spindexColorBackState.equals(targetColor)) {
+////                stopSpindex();
+////                spinningToColor = false;
+////                targetColor = GeneralConstants.artifactColors.EMPTY;
+////            }
+////            else {
+////                spindexMotor.setVelocity(spindexVelocity);
+////            }
+////        }
+//
+//        } else {
+////            if (!spindexColorRightState.equals(targetColor) && !spindexColorLeftState.equals(targetColor) && !spindexColorBackState.equals(targetColor) && !alreadyChecked) {
+////                stopSpindex();
+////                spinningToColor = false;
+////                targetColor = GeneralConstants.artifactColors.EMPTY;
+////            } else {
+////                alreadyChecked = true;
+//                if (spindexColorBackState.equals(targetColor)) {
+//                    stopSpindex();
+//                    spinningToColor = false;
+//                    targetColor = GeneralConstants.colorSensorStates.EMPTY;
+//                } else {
+//                    spindexMotor.setVelocity(spindexMotorVelocity);
+//                }
+////            }
+//        }
+//    }
 
     //0 is 0, 1 is negative, 2 is positive.
     public void runSpindexToNextArtifact(int direction) {

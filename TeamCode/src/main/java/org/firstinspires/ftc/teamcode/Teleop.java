@@ -44,6 +44,9 @@ public class Teleop extends OpMode {
 
     public static int shooterDesiredVelocity = 1750;
 
+    public static int spindexFullRevolution = 540; //Amount of encoder positions for one full revolution of spindex
+    public static int spindexThirdRevolution = spindexFullRevolution/3; //Amount of encoder positions for one full revolution of spindex
+
     public enum STARTING_ORIENTATION {
         GOAL_SIDE,
         PLAYER_SIDE
@@ -216,10 +219,9 @@ public class Teleop extends OpMode {
         updateShotDetector();
 
         //Intake
-        if (gamepad1.left_bumper) {
+        if (gamepad2.left_bumper) {
             intakePower = -1;
-            spindex.runSpindex();
-        } else if (gamepad1.right_bumper) {
+        } else if (gamepad2.right_bumper) {
             intakePower = 1;
         } else if (rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
             intakePower = 0;
@@ -227,35 +229,37 @@ public class Teleop extends OpMode {
         intake.setPower(intakePower);
 
         //Shooter
-        if (gamepad1.right_trigger > 0.5 && rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
+        if (gamepad2.right_trigger > 0.5 && rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
             rapidFireState = SHOOTER_STATE.START_STATE;
         }
 
         /* * MOTOR TESTING BUTTONS: * */
 
         //Transfer
-        if (gamepad1.cross) {
+        if (gamepad2.cross) {
             spindex.runTransferWheel();
         } else if (rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
             spindex.stopTransferWheel();
         }
 
         //Spindex
-        if (gamepad1.triangle) {
-            spindex.runSpindex();
-        } else if (gamepad1.dpadDownWasPressed()) {
-            spindex.runSpindexToIntake();
-        } else if (gamepad1.dpadUpWasPressed()) {
-            spindex.runSpindexToTransfer();
+        if (gamepad2.triangle) {
+            spindex.changeIdealPositionBy(40);
+
+        } else if (gamepad2.dpadRightWasPressed()) {
+            spindex.changeIdealPositionBy(spindexThirdRevolution);
+
+        } else if (gamepad2.dpadUpWasPressed()) {
+            spindex.changeIdealPositionBy(spindexThirdRevolution/2);
         }
 
         //Shooter On
-        if (gamepad1.circle) {
+        if (gamepad2.circle) {
             shooter.setMotorVelocity(shooterDesiredVelocity);
         }
 
         //Shooter Off
-        if (gamepad1.square) {
+        if (gamepad2.square) {
             shooter.setMotorVelocity(0);
         }
 
@@ -280,7 +284,7 @@ public class Teleop extends OpMode {
                 break;
 
             case RUN_SPINDEX_STATE:
-                spindex.runSpindex();
+                spindex.runSpindexToTransferThird();
                 spindex.stopTransferWheel(); //might need to comment this
 
                 //Go to next state when Artifact is in position AND shooter has reached desired velocity
