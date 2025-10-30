@@ -63,7 +63,7 @@ public class Drivebase {
         TX = 0;
 
         limelight.start();
-        limelight.pipelineSwitch(0);
+        limelight.pipelineSwitch(onBlueAlliance ? 0 : 1);
     }
 
 
@@ -130,7 +130,7 @@ public class Drivebase {
         if (llResults.isValid())
             TX = llResults.getFiducialResults().get(0).getTargetXDegrees();
 
-
+        //TODO: Make more concise later
         if (onBlueAlliance) {
             if (!llResults.isValid()) {
                 if (botHeading > -44 && botHeading < 135) {
@@ -138,11 +138,13 @@ public class Drivebase {
                 } else {
                     drive(0, 0, .5 * (Math.abs(45 - botHeading) / 10));
                 }
-            } else if (botHeading > -44 && botHeading < 135) {
+            } else {
                 if (TX < -.25) {
                     drive(0, 0, -.5 * (Math.abs(TX) / 50));
                 } else if (TX > .25) {
                     drive(0, 0, .5 * (Math.abs(TX) / 50));
+                } else {
+                    drive(0, 0, 0);
                 }
             }
         } else {
@@ -152,11 +154,13 @@ public class Drivebase {
                 } else {
                     drive(0, 0, -.5 * (Math.abs(-45 - botHeading) / 10));
                 }
-            } else if (botHeading < 44 && botHeading > -135) {
+            } else {
                 if (TX < -.25) {
                     drive(0, 0, -.5 * (Math.abs(TX) / 50));
                 } else if (TX > .25) {
                     drive(0, 0, .5 * (Math.abs(TX) / 50));
+                } else {
+                    drive(0, 0, 0);
                 }
             }
         }
