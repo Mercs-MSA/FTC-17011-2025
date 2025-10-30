@@ -55,6 +55,7 @@ public class Spindex {
         spindexMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         spindexMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         spindexMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        currentSpindexPosition = 0;
         spindexMotor.setTargetPosition(currentSpindexPosition);
         spindexMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         spindexMotor.setVelocity(spindexMotorVelocity);
@@ -102,7 +103,7 @@ public class Spindex {
 //         */
 //    }
 
-    public void changeIdealPositionBy(int positionChange) {
+    public void changeCurrentPositionBy(int positionChange) {
         currentSpindexPosition += positionChange;
         spindexMotor.setTargetPosition(currentSpindexPosition);
         spindexMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
@@ -110,8 +111,8 @@ public class Spindex {
     }
 
     public void runSpindexToTransferThird() {
-        if (currentSpindexPosition % Teleop.spindexThirdRevolution != Teleop.spindexThirdRevolution/2) {
-            changeIdealPositionBy(Teleop.spindexThirdRevolution/2);
+        if (currentSpindexPosition % Teleop.spindexThirdRevolution != 0 ) {
+            changeCurrentPositionBy(Teleop.spindexThirdRevolution/2);
         }
     }
 

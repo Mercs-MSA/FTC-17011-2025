@@ -44,7 +44,7 @@ public class Teleop extends OpMode {
 
     public static int shooterDesiredVelocity = 1750;
 
-    public static int spindexFullRevolution = 540; //Amount of encoder positions for one full revolution of spindex
+    public static int spindexFullRevolution = -540; //Amount of encoder positions for one full revolution of spindex
     public static int spindexThirdRevolution = spindexFullRevolution/3; //Amount of encoder positions for one full revolution of spindex
 
     public enum STARTING_ORIENTATION {
@@ -54,7 +54,7 @@ public class Teleop extends OpMode {
 
     public static STARTING_ORIENTATION startingOrientation = STARTING_ORIENTATION.GOAL_SIDE;
 
-    private enum SHOOTER_STATE {START_STATE, POINT_AT_GOAL_STATE, RUN_SHOOTER_MOTOR_STATE, CLOSE_GATE_STATE, RUN_TRANSFER_STATE, RUN_SPINDEX_STATE, RELEASE_STATE, INACTIVE_STATE, END_STATE}
+    private enum SHOOTER_STATE {START_STATE, POINT_AT_GOAL_STATE, RUN_SHOOTER_MOTOR_STATE, WAIT_UNTIL_SHOOTER_SPINDEX_READY_STATE, CLOSE_GATE_STATE, RUN_TRANSFER_STATE, RUN_SPINDEX_STATE, RELEASE_STATE, INACTIVE_STATE, END_STATE}
     private static SHOOTER_STATE rapidFireState = SHOOTER_STATE.INACTIVE_STATE;
     private static SHOOTER_STATE motifRapidFireState = SHOOTER_STATE.INACTIVE_STATE;
     private static SHOOTER_STATE singleShotState = SHOOTER_STATE.INACTIVE_STATE;
@@ -243,14 +243,12 @@ public class Teleop extends OpMode {
         }
 
         //Spindex
-        if (gamepad2.triangle) {
-            spindex.changeIdealPositionBy(40);
 
-        } else if (gamepad2.dpadRightWasPressed()) {
-            spindex.changeIdealPositionBy(spindexThirdRevolution);
+        if (gamepad2.dpadRightWasPressed()) {
+            spindex.changeCurrentPositionBy(spindexThirdRevolution);
 
         } else if (gamepad2.dpadUpWasPressed()) {
-            spindex.changeIdealPositionBy(spindexThirdRevolution/2);
+            spindex.changeCurrentPositionBy(spindexThirdRevolution/2);
         }
 
         //Shooter On
@@ -273,9 +271,10 @@ public class Teleop extends OpMode {
 
             case RUN_SHOOTER_MOTOR_STATE:
                 shooter.setMotorVelocity(shooterDesiredVelocity);
+                spindex.runSpindexToTransferThird();
 
                 //Go to Next State
-                rapidFireState = SHOOTER_STATE.RUN_SPINDEX_STATE;
+                rapidFireState = SHOOTER_STATE.WAIT_UNTIL_SHOOTER_SPINDEX_READY_STATE;
 
                 //Cancel State Machine
                 if (drive > .1 || drive < -.1 || strafe > .1 || strafe < -.1 || turn > .1 || turn < -.1) {
@@ -284,11 +283,16 @@ public class Teleop extends OpMode {
                 break;
 
             case RUN_SPINDEX_STATE:
-                spindex.runSpindexToTransferThird();
-                spindex.stopTransferWheel(); //might need to comment this
+                spindex.changeCurrentPositionBy(spindexThirdRevolution);
+                rapidFireState = SHOOTER_STATE.WAIT_UNTIL_SHOOTER_SPINDEX_READY_STATE;
+                break;
+
+            case WAIT_UNTIL_SHOOTER_SPINDEX_READY_STATE:
+                spindex.stopTransferWheel();
 
                 //Go to next state when Artifact is in position AND shooter has reached desired velocity
-                if (!spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.colorSensorStates.EMPTY) && shooter.getRightVelocity() > shooterDesiredVelocity * .95) {
+                if (/*!spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.colorSensorStates.EMPTY) &&*/ shooter.getRightVelocity() > shooterDesiredVelocity * .95 && Math.abs(spindex.spindexMotor.getCurrentPosition() - Spindex.currentSpindexPosition) < 3) {
+
                     rapidFireState = SHOOTER_STATE.RUN_TRANSFER_STATE;
                     rapidFireTimer.reset();
                 }
@@ -297,14 +301,14 @@ public class Teleop extends OpMode {
                 if (drive > .1 || drive < -.1 || strafe > .1 || strafe < -.1 || turn > .1 || turn < -.1) {
                     rapidFireState = SHOOTER_STATE.END_STATE;
                 }
+
                 break;
 
             case RUN_TRANSFER_STATE:
-                spindex.stopSpindex();
                 spindex.runTransferWheel();
 
                 //Repeat RUN_SPINDEX State when timer has reached 3 seconds or when artifact is shot
-                if (rapidFireTimer.time(TimeUnit.SECONDS) > 3) {
+                if (/*rapidFireTimer.time(TimeUnit.SECONDS) > 3 ||*/ gamepad2.right_trigger > 0.5) {
                     rapidFireTimer.reset();
                     rapidFireState = SHOOTER_STATE.RUN_SPINDEX_STATE;
                 }
@@ -315,6 +319,8 @@ public class Teleop extends OpMode {
                 }
 
                 break;
+
+
 
             case END_STATE:
                 shooter.stop();
