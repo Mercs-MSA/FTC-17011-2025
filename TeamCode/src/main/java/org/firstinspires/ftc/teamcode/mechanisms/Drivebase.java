@@ -62,6 +62,7 @@ public class Drivebase {
 
         TX = 0;
 
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.start();
         limelight.pipelineSwitch(onBlueAlliance ? 0 : 1);
     }

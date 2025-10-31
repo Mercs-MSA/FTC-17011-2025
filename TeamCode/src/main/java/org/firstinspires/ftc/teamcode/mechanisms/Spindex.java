@@ -31,7 +31,7 @@ public class Spindex {
     private static int numOfArtifactsInRobot = 0;
     private int numSnapshot = 0;
 
-    public static double spindexMotorVelocity = 800;
+    public static double spindexMotorVelocity = 400;
 
     private boolean alreadyChecked = false;
 
@@ -243,10 +243,10 @@ public class Spindex {
         float g = colorSensor.green();
         float b = colorSensor.blue();
 
-        if (r < 185) { //Green: 234, 428, 382 || Purple: 250, 410, 403
-            return GeneralConstants.colorSensorStates.OCCUPIED;
-        } else {
+        if (r < 200 && g < 380 && b < 360) { //Green: 234, 428, 382 || Purple: 250, 410, 403
             return GeneralConstants.colorSensorStates.EMPTY;
+        } else {
+            return GeneralConstants.colorSensorStates.OCCUPIED;
         }
 
         /*

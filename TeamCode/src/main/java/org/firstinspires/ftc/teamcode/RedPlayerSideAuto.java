@@ -18,6 +18,9 @@ import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
 import org.firstinspires.ftc.teamcode.mechanisms.Spindex;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;import static org.firstinspires.ftc.teamcode.Constants.Constants.onBlueAlliance;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.ranAuto;
+import static org.firstinspires.ftc.teamcode.Teleop.spindexThirdRevolution;
+
+import java.util.concurrent.TimeUnit;
 
 
 @Autonomous
@@ -45,9 +48,8 @@ public class RedPlayerSideAuto extends OpMode {
         PATH_TO_SHOOT2,
     }
 
-    private enum SHOOTER_STATE {REMOVE_USER_CONTROL, RUN_SHOOTER_MOTOR_STATE, RUN_TRANSFER_STATE, RUN_SPINDEX_STATE, INACTIVE_STATE}
-    private static SHOOTER_STATE singleShotState = SHOOTER_STATE.INACTIVE_STATE;
-    public static int shooterDesiredVelocity = 1800;
+    private static Teleop.SHOOTER_STATE rapidFireState = Teleop.SHOOTER_STATE.INACTIVE_STATE;
+    public static int shooterDesiredVelocity = 1450;
     private int timesShot = 0;
 
 
@@ -101,12 +103,18 @@ public class RedPlayerSideAuto extends OpMode {
         currentState = AUTO_STATES.PATH_ACTIVE;
         nextState = AUTO_STATES.SHOOT_STATE;
     }
+
+
+    private void shoot() {
+        updateRapidFireStateMachine();
+    }
+
     private void shootState() {
-        intake.setPower(1);
+        intake.setPower(.25);
         shooter.setMotorVelocity(shooterDesiredVelocity);
         if (shooter.getRightVelocity() > shooterDesiredVelocity * .8) {
-            spindex.runSpindexToNextArtifact(2);
-            if (!spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.colorSensorStates.EMPTY) && shooter.getRightVelocity() > shooterDesiredVelocity * .95) {
+            spindex.changeCurrentPositionBy(spindexThirdRevolution);
+            if (spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.colorSensorStates.OCCUPIED) && shooter.getRightVelocity() > shooterDesiredVelocity * .95) {
                 currentState = AUTO_STATES.SHOOT_STATE_TWO;
                 shootTimer.reset();
             }
@@ -114,10 +122,10 @@ public class RedPlayerSideAuto extends OpMode {
     }
 
     private void shootStatePart2() {
-        intake.setPower(1);
+        intake.setPower(.25);
         spindex.stopSpindex();
         spindex.runTransferWheel();
-        if (singleShotState.equals(SHOOTER_STATE.INACTIVE_STATE) && shootTimer.time() > 3.76) {
+        if (rapidFireState.equals(Teleop.SHOOTER_STATE.INACTIVE_STATE) && shootTimer.time() > 3.76) {
             timesShot += 1;
             shootTimer.reset();
             if (timesShot < 3)
@@ -206,30 +214,63 @@ public class RedPlayerSideAuto extends OpMode {
 
 
 
-    private void updateSingleShotStateMachine() {
-        switch (singleShotState) {
+    private void updateRapidFireStateMachine() {
+        switch (rapidFireState) {
+            case START_STATE:
+                rapidFireState = Teleop.SHOOTER_STATE.RUN_SHOOTER_MOTOR_STATE;
+                break;
+
             case RUN_SHOOTER_MOTOR_STATE:
-                intake.setPower(1);
                 shooter.setMotorVelocity(shooterDesiredVelocity);
-                if (shooter.getRightVelocity() > shooterDesiredVelocity * .8) {
-                    singleShotState = SHOOTER_STATE.RUN_SPINDEX_STATE;
+                spindex.runSpindexToTransferThird();
+
+                //Go to Next State
+                rapidFireState = Teleop.SHOOTER_STATE.WAIT_UNTIL_SHOOTER_SPINDEX_READY_STATE;
+
+                break;
+
+            case RUN_SPINDEX_STATE:
+                spindex.changeCurrentPositionBy(spindexThirdRevolution);
+                rapidFireState = Teleop.SHOOTER_STATE.WAIT_UNTIL_SHOOTER_SPINDEX_READY_STATE;
+                break;
+
+            case WAIT_UNTIL_SHOOTER_SPINDEX_READY_STATE:
+                spindex.stopTransferWheel();
+
+                //Go to next state when Artifact is in position AND shooter has reached desired velocity
+                if (shooter.getRightVelocity() > shooterDesiredVelocity * .95 && Math.abs(spindex.spindexMotor.getCurrentPosition() - Spindex.currentSpindexPosition) < 3) {
+                    if (spindex.getColor(spindex.spindexColorRight).equals(GeneralConstants.colorSensorStates.OCCUPIED))
+                        rapidFireState = Teleop.SHOOTER_STATE.RUN_TRANSFER_STATE;
+                    else
+                        rapidFireState = Teleop.SHOOTER_STATE.RUN_SPINDEX_STATE;
+                    shootTimer.reset();
                 }
                 break;
-            case RUN_SPINDEX_STATE:
-                intake.setPower(1);
-                spindex.runSpindexToNextArtifact(2);
-                spindex.stopTransferWheel();
-                if (!spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.colorSensorStates.EMPTY) && shooter.getRightVelocity() > shooterDesiredVelocity * .95)
-                    singleShotState = SHOOTER_STATE.RUN_TRANSFER_STATE;
-                break;
+
             case RUN_TRANSFER_STATE:
-                intake.setPower(1);
-                spindex.stopSpindex();
                 spindex.runTransferWheel();
+
+                //Repeat RUN_SPINDEX State when timer has reached 3 seconds or when artifact is shot
+                if (shootTimer.time(TimeUnit.SECONDS) > 3 && timesShot < 3) {
+                    shootTimer.reset();
+                    timesShot++;
+                    rapidFireState = Teleop.SHOOTER_STATE.RUN_SPINDEX_STATE;
+                } else if (timesShot == 3){
+                    rapidFireState = Teleop.SHOOTER_STATE.END_STATE;
+                }
                 break;
-            case INACTIVE_STATE:
+
+            case END_STATE:
                 shooter.stop();
                 spindex.stopTransferWheel();
+                spindex.stopSpindex();
+                timesShot = 0;
+
+                rapidFireState = Teleop.SHOOTER_STATE.INACTIVE_STATE;
+
+                break;
+
+            case INACTIVE_STATE:
                 break;
         }
     }
