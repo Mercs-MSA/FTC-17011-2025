@@ -210,6 +210,7 @@ public class Teleop extends OpMode {
         }
 
         if (gamepad1.left_bumper) {
+            if (drivebase.getTargetSeen()) gamepad1.rumble(50);
             drivebase.turnToGoal();
         }
     }

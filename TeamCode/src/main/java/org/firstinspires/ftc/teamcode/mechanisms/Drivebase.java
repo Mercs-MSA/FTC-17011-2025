@@ -133,32 +133,28 @@ public class Drivebase {
         //TODO: Make more concise later
         if (onBlueAlliance) {
             if (!llResults.isValid()) {
-                if (botHeading > -44 && botHeading < 135) {
-                    drive(0, 0, -.5 * (Math.abs(45 - botHeading) / 10));
-                } else {
-                    drive(0, 0, .5 * (Math.abs(45 - botHeading) / 10));
-                }
+
             } else {
-                if (TX < -.25) {
-                    drive(0, 0, -.5 * (Math.abs(TX) / 50));
-                } else if (TX > .25) {
-                    drive(0, 0, .5 * (Math.abs(TX) / 50));
+                if (TX < -.5) {
+                    drive(0, 0, -.25 * (Math.abs(TX) / 50));
+                } else if (TX > .5) {
+                    drive(0, 0, .25 * (Math.abs(TX) / 50));
                 } else {
                     drive(0, 0, 0);
                 }
             }
         } else {
             if (!llResults.isValid()) {
-                if (botHeading < 44 && botHeading > -135) {
-                    drive(0, 0, .5 * (Math.abs(-45 - botHeading) / 10));
-                } else {
-                    drive(0, 0, -.5 * (Math.abs(-45 - botHeading) / 10));
-                }
+//                if (botHeading < 44 && botHeading > -135) {
+//                    drive(0, 0, .5 * (Math.abs(-45 - botHeading) / 10));
+//                } else {
+//                    drive(0, 0, -.5 * (Math.abs(-45 - botHeading) / 10));
+//                }
             } else {
-                if (TX < -.25) {
-                    drive(0, 0, -.5 * (Math.abs(TX) / 50));
-                } else if (TX > .25) {
-                    drive(0, 0, .5 * (Math.abs(TX) / 50));
+                if (TX < -.5) {
+                    drive(0, 0, -.25 * (Math.abs(TX) / 50));
+                } else if (TX > .5) {
+                    drive(0, 0, .25 * (Math.abs(TX) / 50));
                 } else {
                     drive(0, 0, 0);
                 }
@@ -183,7 +179,8 @@ public class Drivebase {
     public double getBotHeading() {
         return IMUheadingTracker;
     }
-
+    public boolean getTXInRange() {return llResults.getFiducialResults().get(0).getTargetXDegrees() <= .5 && llResults.getFiducialResults().get(0).getTargetXDegrees() >= -.5;}
+    public boolean getTargetSeen() {return llResults.isValid();}
     public double getOffset() {
         return offset;
     }
