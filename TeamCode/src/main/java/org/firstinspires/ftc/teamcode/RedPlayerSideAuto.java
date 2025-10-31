@@ -59,7 +59,7 @@ public class RedPlayerSideAuto extends OpMode {
 
     /// ALL POINTS/PATHS HERE
     public static final Pose startPose = new Pose(0, 0, 0);
-    public static final Pose shootPose = new Pose(66.67,0,Math.toRadians(-45));
+    public static final Pose shootPose = new Pose(64.67, -8.5,Math.toRadians(-45));
     public static final Pose intakePose1 = new Pose(70.298,-47.134,Math.toRadians(-90));
     public static final Pose intakePose2 = new Pose(0, 0, Math.toRadians(90));
 
@@ -105,38 +105,43 @@ public class RedPlayerSideAuto extends OpMode {
     }
 
 
-    private void shoot() {
-        updateRapidFireStateMachine();
-    }
-
     private void shootState() {
-        intake.setPower(.25);
-        shooter.setMotorVelocity(shooterDesiredVelocity);
-        if (shooter.getRightVelocity() > shooterDesiredVelocity * .8) {
-            spindex.changeCurrentPositionBy(spindexThirdRevolution);
-            if (spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.colorSensorStates.OCCUPIED) && shooter.getRightVelocity() > shooterDesiredVelocity * .95) {
-                currentState = AUTO_STATES.SHOOT_STATE_TWO;
-                shootTimer.reset();
-            }
+        if (rapidFireState.equals(Teleop.SHOOTER_STATE.INACTIVE_STATE))
+            rapidFireState = Teleop.SHOOTER_STATE.START_STATE;
+        updateRapidFireStateMachine();
+        if (rapidFireState.equals(Teleop.SHOOTER_STATE.END_STATE)) {
+            currentState = AUTO_STATES.PATH_TO_INTAKE1;
         }
     }
 
-    private void shootStatePart2() {
-        intake.setPower(.25);
-        spindex.stopSpindex();
-        spindex.runTransferWheel();
-        if (rapidFireState.equals(Teleop.SHOOTER_STATE.INACTIVE_STATE) && shootTimer.time() > 3.76) {
-            timesShot += 1;
-            shootTimer.reset();
-            if (timesShot < 3)
-                currentState = AUTO_STATES.SHOOT_STATE;
-            else {
-                timesShot = 0;
-                previousState = AUTO_STATES.SHOOT_STATE_TWO;
-                currentState = AUTO_STATES.PATH_TO_INTAKE1;
-            }
-        }
-    }
+//    private void shootState() {
+//        intake.setPower(.25);
+//        shooter.setMotorVelocity(shooterDesiredVelocity);
+//        if (shooter.getRightVelocity() > shooterDesiredVelocity * .8) {
+//            spindex.changeCurrentPositionBy(spindexThirdRevolution);
+//            if (spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.colorSensorStates.OCCUPIED) && shooter.getRightVelocity() > shooterDesiredVelocity * .95) {
+//                currentState = AUTO_STATES.SHOOT_STATE_TWO;
+//                shootTimer.reset();
+//            }
+//        }
+//    }
+//
+//    private void shootStatePart2() {
+//        intake.setPower(.25);
+//        spindex.stopSpindex();
+//        spindex.runTransferWheel();
+//        if (rapidFireState.equals(Teleop.SHOOTER_STATE.INACTIVE_STATE) && shootTimer.time() > 3.76) {
+//            timesShot += 1;
+//            shootTimer.reset();
+//            if (timesShot < 3)
+//                currentState = AUTO_STATES.SHOOT_STATE;
+//            else {
+//                timesShot = 0;
+//                previousState = AUTO_STATES.SHOOT_STATE_TWO;
+//                currentState = AUTO_STATES.PATH_TO_INTAKE1;
+//            }
+//        }
+//    }
     private void pathIntake1() {
         setupPath(intakePath1, intakePose1.getHeading());
         follower.setMaxPower(.5);
@@ -191,7 +196,7 @@ public class RedPlayerSideAuto extends OpMode {
             case START: startState(); break;
             case PATH_ACTIVE: pathActiveState(); break;
             case SHOOT_STATE: shootState(); break;
-            case SHOOT_STATE_TWO: shootStatePart2(); break;
+//            case SHOOT_STATE_TWO: shootStatePart2(); break;
             case PATH_TO_INTAKE1: pathIntake1(); break;
             case INTAKE_STATE: intakeState(); break;
             case PATH_TO_SHOOT2: pathShoot2(); break;
