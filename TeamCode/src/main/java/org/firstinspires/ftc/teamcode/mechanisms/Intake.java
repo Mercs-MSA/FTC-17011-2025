@@ -17,8 +17,10 @@ public class Intake {
     // Control the continuous rotation servo
     public void setPower(double power) {
         intakeMotor.setPower(power);
-        if (power != 0)
+        if (power > 0)
             intakeMotor.setVelocity(400);
+        else if (power < 0)
+            intakeMotor.setVelocity(-400);
         else
             intakeMotor.setVelocity(0);
     }

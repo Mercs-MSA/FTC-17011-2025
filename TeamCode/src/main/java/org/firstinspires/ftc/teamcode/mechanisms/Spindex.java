@@ -13,9 +13,9 @@ import org.firstinspires.ftc.teamcode.Teleop;
 @Config
 public class Spindex {
     public static DcMotorEx spindexMotor;
-    public ColorRangeSensor spindexColorBack; //Closest to wheel
+//    public ColorRangeSensor spindexColorBack; //Closest to wheel
     public ColorRangeSensor spindexColorRight; //Right of the wheel
-    public ColorRangeSensor spindexColorLeft; //Left of the wheel
+//    public ColorRangeSensor spindexColorLeft; //Left of the wheel
 
 
     public static int currentSpindexPosition = 0;
@@ -44,9 +44,9 @@ public class Spindex {
         spindexMotor = hardwareMap.get(DcMotorEx.class, "spindexMotor");
 
         spindexTransferServo = hardwareMap.get(CRServo.class, "spindexTransferServo");
-        spindexColorBack = hardwareMap.get(ColorRangeSensor.class, "spindexColorB");
+//        spindexColorBack = hardwareMap.get(ColorRangeSensor.class, "spindexColorB");
         spindexColorRight = hardwareMap.get(ColorRangeSensor.class, "spindexColorR");
-        spindexColorLeft = hardwareMap.get(ColorRangeSensor.class, "spindexColorL");
+//        spindexColorLeft = hardwareMap.get(ColorRangeSensor.class, "spindexColorL");
 
         spindexColorBackState = GeneralConstants.colorSensorStates.EMPTY;
         spindexColorRightState = GeneralConstants.colorSensorStates.EMPTY;
@@ -110,6 +110,13 @@ public class Spindex {
         spindexMotor.setVelocity(spindexMotorVelocity);
     }
 
+    public void resetSpindexToZero() {
+        currentSpindexPosition = 0;
+        spindexMotor.setTargetPosition(currentSpindexPosition);
+        spindexMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        spindexMotor.setVelocity(800);
+    }
+
     public void runSpindexToTransferThird() {
         if (currentSpindexPosition % Teleop.spindexThirdRevolution != 0 ) {
             changeCurrentPositionBy(Teleop.spindexThirdRevolution/2);
@@ -156,6 +163,14 @@ public class Spindex {
     public void runTransferWheel() {
         spindexTransferServo.setPower(1);
     }
+
+    public void reverseTransfer() {
+        spindexTransferServo.setPower(-1);
+    }
+
+//    public void reverseTransferWheel() {
+//     spindexMotor
+//    }
 
     public void stopTransferWheel() {
         spindexTransferServo.setPower(0);
@@ -232,11 +247,11 @@ public class Spindex {
 //    }
 
     //0 is 0, 1 is negative, 2 is positive.
-    public void runSpindexToNextArtifact(int direction) {
-        if (getColor(spindexColorBack).equals(GeneralConstants.colorSensorStates.EMPTY)) {
-            spindexMotor.setVelocity(spindexMotorVelocity);
-        }
-    }
+//    public void runSpindexToNextArtifact(int direction) {
+//        if (getColor(spindexColorBack).equals(GeneralConstants.colorSensorStates.EMPTY)) {
+//            spindexMotor.setVelocity(spindexMotorVelocity);
+//        }
+//    }
 
     public GeneralConstants.colorSensorStates getColor(ColorRangeSensor colorSensor) {
         float r = colorSensor.red();
@@ -290,8 +305,8 @@ public class Spindex {
 
     public void updateSpinColorSensors() {
         numOfArtifactsInRobot = 0;
-        spindexColorBackState = getColor(spindexColorBack);
-        spindexColorLeftState = getColor(spindexColorLeft);
+//        spindexColorBackState = getColor(spindexColorBack);
+//        spindexColorLeftState = getColor(spindexColorLeft);
         spindexColorRightState = getColor(spindexColorRight);
 
         numOfArtifactsInRobot += (spindexColorBackState.equals(GeneralConstants.colorSensorStates.EMPTY)) ? 0 : 1;

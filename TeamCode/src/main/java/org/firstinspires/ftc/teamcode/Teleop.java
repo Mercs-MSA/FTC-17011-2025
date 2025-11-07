@@ -8,6 +8,7 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.bylazar.ftcontrol.panels.integration.TelemetryManager;
+import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -42,10 +43,10 @@ public class Teleop extends OpMode {
 
     private double intakePower = 0.0;
 
-    public static int farZoneVelocity = 1750;
+    public static int farZoneVelocity = 1667;
     public static int closeZoneVelocity = 1450;
 
-    public static int shooterDesiredVelocity = 1750; //1450 for close triangle's end
+    public static int shooterDesiredVelocity = 1667; //1450 for close triangle's end
 
     public static int spindexFullRevolution = -540; //Amount of encoder positions for one full revolution of spindex
     public static int spindexThirdRevolution = spindexFullRevolution/3; //Amount of encoder positions for one full revolution of spindex
@@ -97,32 +98,33 @@ public class Teleop extends OpMode {
 
     @Override
     public void init_loop() {
-        if (gamepad1.right_bumper)
+        if (gamepad1.right_bumper) {
             onBlueAlliance = false;
-        else if (gamepad1.left_bumper)
+        } else if (gamepad1.left_bumper) {
             onBlueAlliance = true;
+        }
 
-        if (!ranAuto) {
+//        if (!ranAuto) {
             if (onBlueAlliance) {
                 myTelem.addLine("Blue alliance selected. Press right bumper to select red.");
                 if (startingOrientation.equals(STARTING_ORIENTATION.GOAL_SIDE)) {
-                    drivebase.offsetYaw(-90);
-//                drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, -Math.PI/2));
+//                    drivebase.offsetYaw(-90);
+                    drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, -Math.PI/2));
                 } else {
-                    drivebase.offsetYaw(90);
-//                drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, Math.PI/2));
+//                    drivebase.offsetYaw(90);
+                    drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, Math.PI/2));
                 }
             } else {
                 myTelem.addLine("Red alliance selected. Press left bumper to select blue.");
                 if (startingOrientation.equals(STARTING_ORIENTATION.GOAL_SIDE)) {
-                    drivebase.offsetYaw(90);
-//                drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, Math.PI/2));
+//                    drivebase.offsetYaw(90);
+                    drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, Math.PI/2));
                 } else {
-                    drivebase.offsetYaw(-90);
-//                drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, -Math.PI/2));
+//                    drivebase.offsetYaw(-90);
+                    drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, -Math.PI/2));
                 }
             }
-        }
+//        }
 
 //        if (startingOrientation.equals(STARTING_ORIENTATION.PLAYER_SIDE)) {
 //            myTelem.addLine("Facing towards player side. Press dpad up to select goal side.");
@@ -144,6 +146,7 @@ public class Teleop extends OpMode {
     public void start() {
         super.start();
         //shooter.setShooterPower(1);
+//        spindex.reverseTransfer();
         shooter.setMotorVelocity(0);
         ranAuto = false;
     }
@@ -159,13 +162,13 @@ public class Teleop extends OpMode {
 
     private void updateTelemetry() {
         //        myTelem.addData("Robot Yaw:", Math.toDegrees(drivebase.getPosition().h));
-        myTelem.addData("Robot Heading:", drivebase.getBotHeading());
+        myTelem.addData("Robot Heading:", Math.toDegrees(drivebase.getPosition().h));
         myTelem.addData("Robot Offset:", drivebase.getOffset());
 //        myTelem.addData("Spinning to Color?", spinningToColor);
 //        myTelem.addData("Num of artifacts in robot:", spindex.getNumOfArtifactsInRobot());
         myTelem.addData("Right Color:", spindex.getColor(spindex.spindexColorRight, true));
-        myTelem.addData("Left Color:", spindex.getColor(spindex.spindexColorLeft, true));
-        myTelem.addData("Back Color:", spindex.getColor(spindex.spindexColorBack, true));
+//        myTelem.addData("Left Color:", spindex.getColor(spindex.spindexColorLeft, true));
+//        myTelem.addData("Back Color:", spindex.getColor(spindex.spindexColorBack, true));
         myTelem.addData("single shot state:", singleShotState.toString());
         myTelem.addData("rapid fire state:", rapidFireState.toString());
         myTelem.addData("rapid fire timer:", rapidFireTimer.time(TimeUnit.SECONDS));
@@ -213,9 +216,18 @@ public class Teleop extends OpMode {
             drivebase.drive(drive, strafe, turn);
         }
 
-        if (gamepad1.circle) {
-            if (drivebase.getTargetSeen()) gamepad1.rumble(50);
-            drivebase.turnToGoal();
+        if (gamepad1.dpad_up) {
+//            if (drivebase.getTargetSeen()) gamepad1.rumble(50);
+//            drivebase.turnToGoal();
+            drivebase.resetYaw();
+        }
+
+        if (gamepad1.circle) drivebase.turnToGoal();
+
+        if (gamepad1.right_bumper) {
+            drive *= .6;
+            strafe *= .6;
+            turn *= .6;
         }
     }
 
@@ -273,9 +285,9 @@ public class Teleop extends OpMode {
         updateRapidFireStateMachine();
         updateShotDetector();
 
-        if (gamepad1.left_bumper) {
+        if (gamepad2.left_bumper) {
             intakePower = -1;
-        } else if (gamepad1.right_bumper) {
+        } else if (gamepad2.right_bumper) {
             intakePower = 1;
         } else if (rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
             intakePower = 0;
@@ -286,17 +298,32 @@ public class Teleop extends OpMode {
             rapidFireState = SHOOTER_STATE.START_STATE;
         }
 
+        if (gamepad2.right_trigger > .5) {
+            spindex.reverseTransfer();
+        } else if (!rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
+        } else {
+            spindex.stopTransferWheel();
+        }
+
         if (gamepad1.left_trigger > 0.5) {
             shooterDesiredVelocity = closeZoneVelocity;
         } else
             shooterDesiredVelocity = farZoneVelocity;
 
-        if (gamepad1.leftStickButtonWasPressed()) {
+        if (gamepad2.crossWasPressed()) {
             spindex.changeCurrentPositionBy(spindexThirdRevolution);
         }
 
-        if (gamepad1.rightStickButtonWasPressed()) {
+        if (gamepad2.circleWasPressed()) {
             spindex.changeCurrentPositionBy(spindexThirdRevolution/2);
+        }
+
+        if (gamepad2.squareWasPressed()) {
+            spindex.resetSpindexToZero();
+        }
+
+        if (gamepad1.dpadUpWasPressed()) {
+            drivebase.resetYaw();
         }
     }
 
@@ -357,6 +384,8 @@ public class Teleop extends OpMode {
                     rapidFireState = SHOOTER_STATE.END_STATE;
                 }
 
+//                if (gamepad1.triangle) rapidFireState = SHOOTER_STATE.END_STATE;
+
                 break;
 
             case END_STATE:
@@ -388,10 +417,10 @@ public class Teleop extends OpMode {
 
             case RUN_SPINDEX_STATE:
                 intake.setPower(1);
-                spindex.runSpindexToNextArtifact(2);
-                spindex.stopTransferWheel();
-                if (!spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.colorSensorStates.EMPTY) && shooter.getRightVelocity() > shooterDesiredVelocity * .95)
-                    singleShotState = SHOOTER_STATE.RUN_TRANSFER_STATE;
+//                spindex.runSpindexToNextArtifact(2);
+//                spindex.stopTransferWheel();
+//                if (!spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.colorSensorStates.EMPTY) && shooter.getRightVelocity() > shooterDesiredVelocity * .95)
+//                    singleShotState = SHOOTER_STATE.RUN_TRANSFER_STATE;
                 break;
 
             case RUN_TRANSFER_STATE:
