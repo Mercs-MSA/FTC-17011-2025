@@ -1,5 +1,9 @@
 package org.firstinspires.ftc.teamcode;
 
+import static org.firstinspires.ftc.teamcode.Constants.Constants.onBlueAlliance;
+import static org.firstinspires.ftc.teamcode.Constants.Constants.ranAuto;
+import static org.firstinspires.ftc.teamcode.Teleop.spindexThirdRevolution;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.pedropathing.follower.Follower;
@@ -16,15 +20,13 @@ import org.firstinspires.ftc.teamcode.Constants.GeneralConstants;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
 import org.firstinspires.ftc.teamcode.mechanisms.Spindex;
-import org.firstinspires.ftc.teamcode.pedroPathing.Constants;import static org.firstinspires.ftc.teamcode.Constants.Constants.onBlueAlliance;
-import static org.firstinspires.ftc.teamcode.Constants.Constants.ranAuto;
-import static org.firstinspires.ftc.teamcode.Teleop.spindexThirdRevolution;
+import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import java.util.concurrent.TimeUnit;
 
 
 @Autonomous
-public class BluePlayerSideAuto extends OpMode {
+public class BlueLongRangeAuto extends OpMode {
     private Follower follower;
     private SoftElectronics softElectronics;
     private Spindex spindex;
@@ -40,17 +42,21 @@ public class BluePlayerSideAuto extends OpMode {
     private enum AUTO_STATES {
         PATH_ACTIVE,
         START,
+        WAIT,
         INACTIVE,
         SHOOT_STATE,
         SHOOT_STATE_TWO,
         PATH_TO_INTAKE1,
         INTAKE_STATE,
         PATH_TO_SHOOT2,
+        LEAVE,
+        END
     }
 
     private static Teleop.SHOOTER_STATE rapidFireState = Teleop.SHOOTER_STATE.INACTIVE_STATE;
-    public static int shooterDesiredVelocity = 1450;
+    public static int shooterDesiredVelocity = 1700;
     private int timesShot = 0;
+    private int waitTime = 6;
 
 
     private AUTO_STATES currentState = AUTO_STATES.START;
@@ -59,15 +65,19 @@ public class BluePlayerSideAuto extends OpMode {
 
     /// ALL POINTS/PATHS HERE
     public static final Pose startPose = new Pose(0, 0, 0);
-    public static final Pose shootPose = new Pose(64.67, -8.5,Math.toRadians(45));
-    public static final Pose intakePose1 = new Pose(70.298,-47.134,Math.toRadians(90));
+    public static final Pose shootPose = new Pose(5, 0,Math.toRadians(21.8));
+    public static final Pose intakePose1 = new Pose(25,25,Math.toRadians(0));
     public static final Pose intakePose2 = new Pose(0, 0, Math.toRadians(90));
+    public static final Pose intakePose3 = new Pose(0,0, Math.toRadians(90));
+    public static final Pose leavePose = new Pose(10, 10, Math.toRadians(90));
+
 
 
     public static final Path shootPath1 = new Path(new BezierLine(startPose, shootPose));
     public static final Path intakePath1 = new Path(new BezierLine(shootPose, intakePose1));
     public static final Path shootPath2 = new Path(new BezierLine(intakePose1, shootPose ));
     public static final Path intakePath2 = new Path(new BezierLine(shootPose, intakePose2));
+    public static final Path leavePath = new Path(new BezierLine(shootPose, leavePose));
 
 
     @Override
@@ -85,9 +95,25 @@ public class BluePlayerSideAuto extends OpMode {
 
         dash = FtcDashboard.getInstance();
         telemetryA = new MultipleTelemetry(telemetry, dash.getTelemetry());
-        onBlueAlliance = false;
+        onBlueAlliance = true;
         ranAuto = true;
         Teleop.startingOrientation = Teleop.STARTING_ORIENTATION.GOAL_SIDE;
+    }
+
+    @Override
+    public void init_loop() {
+        if (gamepad1.dpadUpWasPressed()) {
+            waitTime++;
+        } else if (gamepad1.dpadDownWasPressed()) {
+            if (waitTime < 0) {
+                waitTime = 0;
+            } else {
+                waitTime--;
+            }
+        }
+
+        telemetryA.addLine("To increase wait time by 1 press dpad up. Press dpad down to decrease by 1.");
+        telemetryA.addData("Current wait time (in seconds):", waitTime);
     }
 
     @Override
@@ -110,15 +136,17 @@ public class BluePlayerSideAuto extends OpMode {
             rapidFireState = Teleop.SHOOTER_STATE.START_STATE;
         updateRapidFireStateMachine();
         if (rapidFireState.equals(Teleop.SHOOTER_STATE.END_STATE)) {
-            currentState = AUTO_STATES.PATH_TO_INTAKE1;
+            spindex.resetSpindexToZero();
+            currentState = AUTO_STATES.LEAVE;
         }
     }
 
-    //    private void shootState() {
+//    private void shootState() {
 //        intake.setPower(.25);
 //        shooter.setMotorVelocity(shooterDesiredVelocity);
 //        if (shooter.getRightVelocity() > shooterDesiredVelocity * .8) {
 //            spindex.changeCurrentPositionBy(spindexThirdRevolution);
+
 //            if (spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.colorSensorStates.OCCUPIED) && shooter.getRightVelocity() > shooterDesiredVelocity * .95) {
 //                currentState = AUTO_STATES.SHOOT_STATE_TWO;
 //                shootTimer.reset();
@@ -145,9 +173,11 @@ public class BluePlayerSideAuto extends OpMode {
     private void pathIntake1() {
         setupPath(intakePath1, intakePose1.getHeading());
         follower.setMaxPower(.5);
+        intake.setPower(1);
         shooter.stop();
-        currentState = AUTO_STATES.PATH_ACTIVE;
-        nextState = AUTO_STATES.INTAKE_STATE;
+//        currentState = AUTO_STATES.PATH_ACTIVE;
+//        nextState = AUTO_STATES.INTAKE_STATE;
+        currentState = AUTO_STATES.END;
     }
     private void intakeState() {
         //Intakes Balls here
@@ -159,6 +189,13 @@ public class BluePlayerSideAuto extends OpMode {
         //Sort Balls while moving
         currentState = AUTO_STATES.PATH_ACTIVE;
         nextState = AUTO_STATES.SHOOT_STATE;
+    }
+
+    private void leaveState() {
+        setupPath(leavePath, leavePose.getHeading());
+
+        currentState = AUTO_STATES.PATH_ACTIVE;
+        nextState = AUTO_STATES.END;
     }
 
     private void pathActiveState() {
@@ -201,6 +238,11 @@ public class BluePlayerSideAuto extends OpMode {
             case INTAKE_STATE: intakeState(); break;
             case PATH_TO_SHOOT2: pathShoot2(); break;
             case INACTIVE: inactiveState(); break;
+            case LEAVE: leaveState(); break;
+            case END:
+                if (spindex.spindexMotor.getCurrentPosition() < 5)
+                    stop();
+                break;
         }
     }
 

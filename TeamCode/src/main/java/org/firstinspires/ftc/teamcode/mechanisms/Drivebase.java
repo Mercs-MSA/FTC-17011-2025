@@ -54,9 +54,9 @@ public class Drivebase {
 
         otos = hardwareMap.get(SparkFunOTOS.class, "otos");
         otos.setAngularUnit(AngleUnit.RADIANS);
-        SparkFunOTOS.Pose2D offset = new SparkFunOTOS.Pose2D(0, 0, Math.PI);
+        SparkFunOTOS.Pose2D offset = new SparkFunOTOS.Pose2D(0, 0, 0);
         otos.setOffset(offset);
-        otos.setAngularScalar(.98946);
+        otos.setAngularScalar(.985889);
         otos.resetTracking();
         otos.calibrateImu();
 
@@ -70,6 +70,11 @@ public class Drivebase {
 
     public void offsetYaw(double offset) {
         this.offset = Math.toRadians(offset);
+//        otos.setOffset(new SparkFunOTOS.Pose2D(0,0,Math.toRadians(offset)));
+    }
+
+    public void resetYaw() {
+        otos.setPosition(new SparkFunOTOS.Pose2D(0,0,0));
     }
 
     public void updateLL() {
@@ -86,8 +91,8 @@ public class Drivebase {
     // Field-centric drive
     public void drive(double drive, double strafe, double turn) {
         // Get current heading
-        double botHeading = SoftElectronics.getYaw() + offset;
-//        double botHeading = otos.getPosition().h;
+//        double botHeading = SoftElectronics.getYaw() + offset;
+        double botHeading = otos.getPosition().h;
         IMUheadingTracker = botHeading;
 
         // Rotate joystick input to be field-centric
@@ -127,40 +132,54 @@ public class Drivebase {
 
 
     public void turnToGoal() {
-        double botHeading = Math.toDegrees(SoftElectronics.getYaw());
-        if (llResults.isValid())
-            TX = llResults.getFiducialResults().get(0).getTargetXDegrees();
-
-        //TODO: Make more concise later
+        double heading = Math.toDegrees(otos.getPosition().h);
         if (onBlueAlliance) {
-            if (!llResults.isValid()) {
-
+            if (heading > 62 && heading < 72) {
+                drive (0, 0, 0);
             } else {
-                if (TX < -.5) {
-                    drive(0, 0, -.25 * (Math.abs(TX) / 50));
-                } else if (TX > .5) {
-                    drive(0, 0, .25 * (Math.abs(TX) / 50));
-                } else {
-                    drive(0, 0, 0);
-                }
+                drive (0, 0, -0.05 * (67-heading));
             }
         } else {
-            if (!llResults.isValid()) {
+            if (heading > 62 && heading < 72) {
+                drive (0, 0, 0);
+            } else {
+                drive (0, 0, -0.05 * (67-heading));
+            }
+        }
+//        double botHeading = Math.toDegrees(SoftElectronics.getYaw());
+//        if (llResults.isValid())
+//            TX = llResults.getFiducialResults().get(0).getTargetXDegrees();
+//
+//        //TODO: Make more concise later
+//        if (onBlueAlliance) {
+//            if (!llResults.isValid()) {
+//
+//            } else {
+//                if (TX < -.5) {
+//                    drive(0, 0, -.25 * (Math.abs(TX) / 50));
+//                } else if (TX > .5) {
+//                    drive(0, 0, .25 * (Math.abs(TX) / 50));
+//                } else {
+//                    drive(0, 0, 0);
+//                }
+//            }
+//        } else {
+//            if (!llResults.isValid()) {
 //                if (botHeading < 44 && botHeading > -135) {
 //                    drive(0, 0, .5 * (Math.abs(-45 - botHeading) / 10));
 //                } else {
 //                    drive(0, 0, -.5 * (Math.abs(-45 - botHeading) / 10));
 //                }
-            } else {
-                if (TX < -.5) {
-                    drive(0, 0, -.25 * (Math.abs(TX) / 50));
-                } else if (TX > .5) {
-                    drive(0, 0, .25 * (Math.abs(TX) / 50));
-                } else {
-                    drive(0, 0, 0);
-                }
-            }
-        }
+//            } else {
+//                if (TX < -.5) {
+//                    drive(0, 0, -.25 * (Math.abs(TX) / 50));
+//                } else if (TX > .5) {
+//                    drive(0, 0, .25 * (Math.abs(TX) / 50));
+//                } else {
+//                    drive(0, 0, 0);
+//                }
+//            }
+//        }
     }
 
 
