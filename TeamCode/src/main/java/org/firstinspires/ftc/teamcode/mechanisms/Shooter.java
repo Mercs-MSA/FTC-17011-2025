@@ -19,12 +19,6 @@ import org.firstinspires.ftc.teamcode.Constants.GeneralConstants;
 
 public class Shooter {
     private DcMotorEx shooterMotorLeft, shooterMotorRight;
-//    private ColorRangeSensor exitSensor;
-//    private Servo shooterServoPitch;
-
-    //private Limelight3A limelight;
-    //private LLStatus llStatus;
-    //private LLResult llResults;
 
     private static int goalAngle = 0;
     private static int currentAngle = 0;
@@ -35,34 +29,10 @@ public class Shooter {
 
 
 
-    public int getCurrentAngle() {
-        return currentAngle;
-    }
-
-    public int getGoalAngle() {
-        return goalAngle;
-    }
-
-    /*
-    public void updateLL() {
-        llStatus = limelight.getStatus();
-        llResults = limelight.getLatestResult();
-
-        if (llResults.isValid()) {
-            double captureLatency =llResults.getCaptureLatency();
-            double targetingLatency = llResults.getTargetingLatency();
-            double parseLatency = llResults.getParseLatency();
-        }
-    }
-     */
-
 
     public Shooter(HardwareMap hardwareMap) {
         shooterMotorLeft = hardwareMap.get(DcMotorEx.class, "shooterMotorLeft");
         shooterMotorRight = hardwareMap.get(DcMotorEx.class, "shooterMotorRight");
-
-        //limelight.start();
-        //limelight.pipelineSwitch(0); //TODO: Edit pipelines to filter out tags in Limelight Dash
 
         // Configure initial settings
         shooterMotorLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
