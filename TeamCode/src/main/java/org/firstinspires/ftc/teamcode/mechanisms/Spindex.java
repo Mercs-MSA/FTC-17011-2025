@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorRangeSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.Constants.GeneralConstants;
@@ -20,6 +21,8 @@ public class Spindex {
 
     public static int currentSpindexPosition = 0;
 
+    public static int spindexPositionFromAuto = 0;
+
 
 
 
@@ -31,7 +34,7 @@ public class Spindex {
     private static int numOfArtifactsInRobot = 0;
     private int numSnapshot = 0;
 
-    public static double spindexMotorVelocity = 400;
+    public static double spindexMotorVelocity = 600;
 
     private boolean alreadyChecked = false;
 
@@ -60,48 +63,10 @@ public class Spindex {
         spindexMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         spindexMotor.setVelocity(spindexMotorVelocity);
 
+        spindexTransferServo.setDirection(CRServo.Direction.REVERSE);
         spindexTransferServo.setPower(0);
     }
 
-//    public void runSpindexThird() {
-//        /*
-//        int offset = spindexMotor.getCurrentPosition() % spindexFullRevolution;
-//
-//
-//        if (offset >= spindexThirdRevolution) {
-//            offset -= spindexThirdRevolution;
-//        }
-//        if (offset >= spindexThirdRevolution) {
-//            offset -= spindexThirdRevolution;
-//        }
-//        if (offset >= spindexThirdRevolution) {
-//            offset -= spindexThirdRevolution;
-//        }
-//
-//        //If offset is closer to other side, it will lock onto that side
-//        //if (offset - (spindexThirdRevolution/2) >= 0) {
-//            offset = spindexThirdRevolution - offset;
-//        //} else {
-//            //offset *= -1;
-//        //}
-//
-//        spindexMotor.setTargetPosition(spindexMotor.getCurrentPosition() + offset);
-//        spindexMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-//        spindexMotor.setVelocity(spindexMotorVelocity);
-//         */
-//        //idealPosition += 0;
-//        spindexMotor.setTargetPosition(idealPosition);
-//        spindexMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-//        spindexMotor.setVelocity(spindexMotorVelocity);
-//
-//
-//        /*
-//        spindexMotor.setTargetPosition(spindexMotor.getCurrentPosition() + 600);
-//        spindexMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-//        spindexMotor.setVelocity(spindexMotorVelocity);
-//
-//         */
-//    }
 
     public void changeCurrentPositionBy(int positionChange) {
         currentSpindexPosition += positionChange;
@@ -122,30 +87,6 @@ public class Spindex {
             changeCurrentPositionBy(Teleop.spindexThirdRevolution/2);
         }
     }
-
-//    public void runSpindexHalfThird() {
-////        int offset = spindexMotor.getCurrentPosition() % spindexFullRevolution;
-////        int target = spindexThirdRevolution/2;
-////
-////
-////        if (offset >= spindexThirdRevolution) {
-////            offset -= spindexThirdRevolution;
-////        }
-////        if (offset >= spindexThirdRevolution) {
-////            offset -= spindexThirdRevolution;
-////        }
-////        if (offset >= spindexThirdRevolution) {
-////            offset -= spindexThirdRevolution;
-////        }
-////
-////        offset = target - offset;
-//
-//        idealPosition += spindexThirdRevolution/2;
-//        spindexMotor.setTargetPosition(idealPosition);
-//        spindexMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-//        spindexMotor.setVelocity(spindexMotorVelocity);
-//
-//    }
 
 
 

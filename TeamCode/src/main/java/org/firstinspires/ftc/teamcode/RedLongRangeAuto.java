@@ -272,6 +272,7 @@ public class RedLongRangeAuto extends OpMode {
     public void loop() {
         follower.update();
         stateMachine();
+        Spindex.spindexPositionFromAuto = spindex.currentSpindexPosition;
 
         telemetryA.addData("rapidfirestate:", rapidFireState);
         telemetryA.addData("current state", currentState);
