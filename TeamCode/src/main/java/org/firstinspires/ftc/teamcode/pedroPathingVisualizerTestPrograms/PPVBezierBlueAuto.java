@@ -42,11 +42,11 @@ public class PPVBezierBlueAuto extends OpMode {
     private enum AUTO_STATE {
         INIT,
         PATH_ACTIVE_WAIT,
-        StartToShootFar,
-        IntakeLevel1Ball1,
-        IntakeLevel1Ball2,
-        IntakeLevel1Ball3,
-        IntakeLevel1ToShootFar,
+        startToShootFar,
+        intakeLevel1Ball1,
+        intakeLevel1Ball2,
+        intakeLevel1Ball3,
+        intakeLevel1ToShootFar,
         intakeLevel2Ball1,
         intakeLevel2Ball2,
         intakeLevel2Ball3,
@@ -60,7 +60,8 @@ public class PPVBezierBlueAuto extends OpMode {
         FULL_ROTATE_SPINDEX,
         HALF_ROTATE_SPINDEX,
         SHOOT,
-        WAIT_UNTIL_SHOOT_DONE
+        WAIT_UNTIL_SHOOT_DONE,
+        END
     }
 
     private AUTO_STATE PAW_NextState; //Path Active Wait Next State
@@ -107,11 +108,11 @@ public class PPVBezierBlueAuto extends OpMode {
 
     public static class Paths {
 
-        public PathChain StartToShootFar;
-        public PathChain IntakeLevel1Ball1;
-        public PathChain IntakeLevel1Ball2;
-        public PathChain IntakeLevel1Ball3;
-        public PathChain IntakeLevel1ToShootFar;
+        public PathChain startToShootFar;
+        public PathChain intakeLevel1Ball1;
+        public PathChain intakeLevel1Ball2;
+        public PathChain intakeLevel1Ball3;
+        public PathChain intakeLevel1ToShootFar;
         public PathChain intakeLevel2Ball1;
         public PathChain intakeLevel2Ball2;
         public PathChain intakeLevel2Ball3;
@@ -123,7 +124,7 @@ public class PPVBezierBlueAuto extends OpMode {
         public PathChain parkByGate;
 
         public Paths(Follower follower) {
-            StartToShootFar = follower
+            startToShootFar = follower
                     .pathBuilder()
                     .addPath(
                             new BezierCurve(
@@ -135,7 +136,7 @@ public class PPVBezierBlueAuto extends OpMode {
                     .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(115))
                     .build();
 
-            IntakeLevel1Ball1 = follower
+            intakeLevel1Ball1 = follower
                     .pathBuilder()
                     .addPath(
                             new BezierCurve(
@@ -147,7 +148,7 @@ public class PPVBezierBlueAuto extends OpMode {
                     .setLinearHeadingInterpolation(Math.toRadians(115), Math.toRadians(180))
                     .build();
 
-            IntakeLevel1Ball2 = follower
+            intakeLevel1Ball2 = follower
                     .pathBuilder()
                     .addPath(
                             new BezierLine(new Pose(35.054, 35.383), new Pose(29.952, 35.383))
@@ -155,7 +156,7 @@ public class PPVBezierBlueAuto extends OpMode {
                     .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
                     .build();
 
-            IntakeLevel1Ball3 = follower
+            intakeLevel1Ball3 = follower
                     .pathBuilder()
                     .addPath(
                             new BezierLine(new Pose(29.952, 35.383), new Pose(24.500, 35.383))
@@ -163,7 +164,7 @@ public class PPVBezierBlueAuto extends OpMode {
                     .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
                     .build();
 
-            IntakeLevel1ToShootFar = follower
+            intakeLevel1ToShootFar = follower
                     .pathBuilder()
                     .addPath(
                             new BezierCurve(
@@ -332,7 +333,7 @@ public class PPVBezierBlueAuto extends OpMode {
         // Refer to the Pedro Pathing Docs (Auto Example) for an example state machine
 
         switch (autoState) {
-            // General Cases
+            /// General Cases
             case PATH_ACTIVE_WAIT:
                 if (!follower.isBusy()) {
                     autoState = PAW_NextState;
@@ -364,38 +365,138 @@ public class PPVBezierBlueAuto extends OpMode {
 
                 break;
 
-            // Ordered Cases
-            case StartToShootFar:
-                follower.followPath(paths.StartToShootFar);
+            /// Ordered Cases
+            case startToShootFar:
+                follower.followPath(paths.startToShootFar);
 
                 PAW_NextState = AUTO_STATE.SHOOT;
                 S_NextState = AUTO_STATE.HALF_ROTATE_SPINDEX;
-                HR_NextState = AUTO_STATE.IntakeLevel1Ball1;
+                HR_NextState = AUTO_STATE.intakeLevel1Ball1;
 
                 autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
                 break;
 
-            case IntakeLevel1Ball1:
+            case intakeLevel1Ball1:
                 intake.setPower(1);
-                follower.followPath(paths.IntakeLevel1Ball1);
+                follower.followPath(paths.intakeLevel1Ball1);
+
+                PAW_NextState = AUTO_STATE.FULL_ROTATE_SPINDEX;
+                FR_NextState = AUTO_STATE.intakeLevel1Ball2;
 
                 autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
-                PAW_NextState = AUTO_STATE.IntakeLevel1Ball2;
                 break;
 
-            case IntakeLevel1Ball2:
-                follower.followPath(paths.IntakeLevel1Ball2);
+            case intakeLevel1Ball2:
+                follower.followPath(paths.intakeLevel1Ball2);
+
+                PAW_NextState = AUTO_STATE.FULL_ROTATE_SPINDEX;
+                FR_NextState = AUTO_STATE.intakeLevel1Ball3;
 
                 autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
-                PAW_NextState = AUTO_STATE.IntakeLevel1Ball3;
                 break;
 
-            case IntakeLevel1Ball3:
-                follower.followPath(paths.IntakeLevel1Ball3);
+            case intakeLevel1Ball3:
+                follower.followPath(paths.intakeLevel1Ball3);
+
+                PAW_NextState = AUTO_STATE.HALF_ROTATE_SPINDEX;
+                HR_NextState = AUTO_STATE.intakeLevel1ToShootFar;
 
                 autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
-                PAW_NextState = AUTO_STATE.IntakeLevel1ToShootFar;
                 break;
+
+            case intakeLevel1ToShootFar:
+                intake.setPower(0);
+                follower.followPath(paths.intakeLevel1ToShootFar);
+
+                spindex.changeCurrentPositionBy(spindexThirdRevolution);
+                PAW_NextState = AUTO_STATE.SHOOT;
+                S_NextState = AUTO_STATE.HALF_ROTATE_SPINDEX;
+                HR_NextState = AUTO_STATE.intakeLevel2Ball1;
+
+                autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+                break;
+
+            case intakeLevel2Ball1:
+                intake.setPower(1);
+                follower.followPath(paths.intakeLevel2Ball1);
+
+                PAW_NextState = AUTO_STATE.FULL_ROTATE_SPINDEX;
+                FR_NextState = AUTO_STATE.intakeLevel2Ball2;
+
+                autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+                break;
+
+            case intakeLevel2Ball2:
+                follower.followPath(paths.intakeLevel2Ball2);
+
+                PAW_NextState = AUTO_STATE.FULL_ROTATE_SPINDEX;
+                FR_NextState = AUTO_STATE.intakeLevel2Ball3;
+
+                autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+                break;
+
+            case intakeLevel2Ball3:
+                follower.followPath(paths.intakeLevel2Ball3);
+
+                PAW_NextState = AUTO_STATE.FULL_ROTATE_SPINDEX;
+                FR_NextState = AUTO_STATE.intakeLevel2ToShootClose;
+
+                autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+                break;
+
+            case intakeLevel2ToShootClose:
+                intake.setPower(0);
+                follower.followPath(paths.intakeLevel2ToShootClose);
+
+                spindex.changeCurrentPositionBy(spindexThirdRevolution);
+                PAW_NextState = AUTO_STATE.SHOOT;
+                S_NextState = AUTO_STATE.HALF_ROTATE_SPINDEX;
+                HR_NextState = AUTO_STATE.intakeLevel3Ball1;
+
+                autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+                break;
+
+            case intakeLevel3Ball1:
+                intake.setPower(1);
+                follower.followPath(paths.intakeLevel3Ball1);
+
+                PAW_NextState = AUTO_STATE.FULL_ROTATE_SPINDEX;
+                FR_NextState = AUTO_STATE.intakeLevel3Ball2;
+
+                autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+                break;
+
+            case intakeLevel3Ball2:
+                follower.followPath(paths.intakeLevel3Ball2);
+
+                PAW_NextState = AUTO_STATE.FULL_ROTATE_SPINDEX;
+                FR_NextState = AUTO_STATE.intakeLevel3Ball3;
+
+                autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+                break;
+
+            case intakeLevel3Ball3:
+                follower.followPath(paths.intakeLevel3Ball3);
+
+                PAW_NextState = AUTO_STATE.FULL_ROTATE_SPINDEX;
+                FR_NextState = AUTO_STATE.intakeLevel3ToShootClose;
+
+                autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+                break;
+            case intakeLevel3ToShootClose:
+                intake.setPower(0);
+                follower.followPath(paths.intakeLevel3ToShootClose);
+
+                spindex.changeCurrentPositionBy(spindexThirdRevolution);
+                PAW_NextState = AUTO_STATE.SHOOT;
+                S_NextState = AUTO_STATE.END;
+
+                autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+                break;
+
+            case END:
+                break;
+
         }
 
         return autoState;
