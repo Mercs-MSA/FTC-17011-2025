@@ -73,6 +73,8 @@ public class Teleop extends OpMode {
 
     private double intakePower = 0.0;
 
+    private boolean autoSpun = false;
+
     public static int farZoneVelocity = 1667;
     public static int closeZoneVelocity = 1450;
 
@@ -197,6 +199,7 @@ public class Teleop extends OpMode {
         //telemetry.addData("pipeline", shooter.getLLStatus().getPipelineIndex());
         //telemetry.addData("TX", shooter.getTX() == null ? "null" : shooter.getTX());
         //telemetry.addData("inRange", shooter.inRange());
+        myTelem.addData("entry sensor: ", spindex.checkIfIntaked());
         myTelem.update();
     }
 
@@ -254,13 +257,23 @@ public class Teleop extends OpMode {
         updateRapidFireStateMachine();
         updateShotDetector();
 
-        if (gamepad2.left_bumper) {
+        if (gamepad2.left_bumper) { //Outake
             intakePower = -1;
-        } else if (gamepad2.right_bumper) {
+        } else if (gamepad2.right_bumper && !spindex.checkIfIntaked()) { //Intake
             intakePower = 1;
-        } else if (rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
+        } else if (rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE) || spindex.checkIfIntaked()) {
             intakePower = 0;
         }
+
+        //Auto Intake
+        if (false) {
+            intakePower = 1;
+            if (spindex.checkIfIntaked()) {
+
+            }
+        }
+
+
         intake.setPower(intakePower);
 
         if (gamepad1.right_trigger > 0.5 && rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE)) {

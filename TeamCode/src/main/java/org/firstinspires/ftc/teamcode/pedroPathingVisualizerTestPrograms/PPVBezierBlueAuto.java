@@ -38,6 +38,7 @@ public class PPVBezierBlueAuto extends OpMode {
     private Shooter shooter;
     private ElapsedTime shootTimer;
     private int timesShot;
+    private double shooterVelocity = 1667;
     private static Teleop.SHOOTER_STATE rapidFireState = Teleop.SHOOTER_STATE.INACTIVE_STATE;
     private enum AUTO_STATE {
         INIT,
@@ -97,9 +98,11 @@ public class PPVBezierBlueAuto extends OpMode {
     public void loop() {
         follower.update(); // Update Pedro Pathing
         autoState = autonomousPathUpdate(); // Update autonomous state machine
+        updateRapidFireStateMachine();
 
         // Log values to Panels and Driver Station
         panelsTelemetry.debug("Auto State", autoState);
+        panelsTelemetry.debug("Shooter State:", rapidFireState);
         panelsTelemetry.debug("X", follower.getPose().getX());
         panelsTelemetry.debug("Y", follower.getPose().getY());
         panelsTelemetry.debug("Heading", follower.getPose().getHeading());
@@ -273,7 +276,7 @@ public class PPVBezierBlueAuto extends OpMode {
                 break;
 
             case RUN_SHOOTER_MOTOR_STATE:
-                shooter.setMotorVelocity(Teleop.shooterDesiredVelocity);
+                shooter.setMotorVelocity(shooterVelocity);
                 spindex.runSpindexToTransferThird();
 
                 //Go to Next State
@@ -291,10 +294,7 @@ public class PPVBezierBlueAuto extends OpMode {
 
                 //Go to next state when Artifact is in position AND shooter has reached desired velocity
                 if (shooter.getRightVelocity() > Teleop.shooterDesiredVelocity * .95 && Math.abs(spindex.spindexMotor.getCurrentPosition() - Spindex.currentSpindexPosition) < 3) {
-                    if (spindex.getColor(spindex.spindexColorRight).equals(GeneralConstants.colorSensorStates.OCCUPIED))
                         rapidFireState = Teleop.SHOOTER_STATE.RUN_TRANSFER_STATE;
-                    else
-                        rapidFireState = Teleop.SHOOTER_STATE.RUN_SPINDEX_STATE;
                     shootTimer.reset();
                 }
                 break;
@@ -303,7 +303,7 @@ public class PPVBezierBlueAuto extends OpMode {
                 spindex.runTransferWheel();
 
                 //Repeat RUN_SPINDEX State when timer has reached 3 seconds or when artifact is shot
-                if (shootTimer.time(TimeUnit.SECONDS) > 3 && timesShot < 3) {
+                if (shootTimer.time(TimeUnit.SECONDS) > .8 && timesShot < 3) {
                     shootTimer.reset();
                     timesShot++;
                     rapidFireState = Teleop.SHOOTER_STATE.RUN_SPINDEX_STATE;
@@ -446,6 +446,7 @@ public class PPVBezierBlueAuto extends OpMode {
 
             case intakeLevel2ToShootClose:
                 intake.setPower(0);
+                shooterVelocity = Teleop.closeZoneVelocity;
                 follower.followPath(paths.intakeLevel2ToShootClose);
 
                 spindex.changeCurrentPositionBy(spindexThirdRevolution);
@@ -492,6 +493,10 @@ public class PPVBezierBlueAuto extends OpMode {
                 S_NextState = AUTO_STATE.END;
 
                 autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+                break;
+
+            case INIT:
+                autoState = AUTO_STATE.startToShootFar;
                 break;
 
             case END:

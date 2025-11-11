@@ -24,10 +24,10 @@ public class Constants {
             .mass(11.65)
 //            .forwardZeroPowerAcceleration(-147.96974366507212) /// Pinpoint
 //            .lateralZeroPowerAcceleration(-91) /// Pinpoint
-//            .forwardZeroPowerAcceleration(-45.319468) /// OTOS
-//            .lateralZeroPowerAcceleration(-70) /// OTOS
-//            .translationalPIDFCoefficients(new PIDFCoefficients(0.1, 0, 0.01, 0)) /// Pinpoint
-//            .headingPIDFCoefficients(new PIDFCoefficients(2, 0.8, 0.01, 0)) /// Pinpoint
+            .forwardZeroPowerAcceleration(-30.268997) /// OTOS
+            .lateralZeroPowerAcceleration(-68.553967) /// OTOS
+            .translationalPIDFCoefficients(new PIDFCoefficients(0.1, 0, 0.01, 0)) /// Pinpoint
+            .headingPIDFCoefficients(new PIDFCoefficients(2, 0.8, 0.01, 0)) /// Pinpoint
             ;
 
 
@@ -61,10 +61,11 @@ public class Constants {
             .leftRearMotorDirection(DcMotorEx.Direction.FORWARD)
             .rightFrontMotorDirection(DcMotorEx.Direction.REVERSE)
             .rightRearMotorDirection(DcMotorEx.Direction.REVERSE)
-//            .xVelocity(61.634717325525955) /// Pinpoint //105.83698 //77.411078 //117.9421 //
-//            .xVelocity(69.81556809) /// OTOS
+            .useBrakeModeInTeleOp(true)
+//            .xVelocity(70.433729) /// Pinpoint
+            .xVelocity(78.682756) /// OTOS
 //            .yVelocity(46.190167764908) /// Pinpoint
-//            .yVelocity(53.1546525) /// OTOS
+            .yVelocity(57.198679) /// OTOS
             ;
 
     public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
