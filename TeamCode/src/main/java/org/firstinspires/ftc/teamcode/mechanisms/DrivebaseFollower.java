@@ -4,6 +4,7 @@ import static org.firstinspires.ftc.teamcode.Constants.Constants.ranAuto;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.onBlueAlliance;
 
 import com.bylazar.configurables.annotations.Configurable;
+import com.bylazar.field.Line;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 
@@ -35,6 +36,7 @@ public class DrivebaseFollower {
     public static Pose startingPose = new Pose(88, 8, 90); //See ExampleAuto to understand how to use this
     private boolean automatedDrive;
     private Supplier<PathChain> pathChain;
+    private Supplier<PathChain> aimChain;
     private TelemetryManager telemetryM;
     private boolean slowMode = false;
     private double slowModeMultiplier = 0.5;
@@ -52,7 +54,10 @@ public class DrivebaseFollower {
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry(); //TODO: Integrate softelectronics?
         pathChain = () -> follower.pathBuilder() //Lazy Curve Generation
                 .addPath(new Path(new BezierLine(follower::getPose, new Pose(38.5, 33.5)))) //TODO: Update pose as needed
-                .setHeadingInterpolation(HeadingInterpolator.linearFromPoint(follower::getHeading, Math.toRadians(0), 0.8))
+                .setHeadingInterpolation(HeadingInterpolator.linearFromPoint(follower::getHeading, Math.toRadians(90), 2))
+                .build();
+        aimChain = () -> follower.pathBuilder() //Lazy Curve Generation
+                .setHeadingInterpolation(HeadingInterpolator.linearFromPoint(follower::getHeading, Math.toRadians(67), 3))
                 .build();
 
         TX = 0;
@@ -99,6 +104,21 @@ public class DrivebaseFollower {
         //Automated PathFollowing
         if (enable) {
             follower.followPath(pathChain.get());
+            automatedDrive = true;
+        }
+        //Stop automated following if the follower is done
+        if (automatedDrive && (!enable || !follower.isBusy())) {
+            follower.startTeleopDrive();
+            automatedDrive = false;
+        }
+
+        telemetryM.debug("automatedDrive", automatedDrive);
+    }
+
+    public void autoAimLoop(boolean enable) {
+        //Automated PathFollowing
+        if (enable) {
+            follower.followPath(aimChain.get());
             automatedDrive = true;
         }
         //Stop automated following if the follower is done
