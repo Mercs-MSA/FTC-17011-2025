@@ -225,7 +225,7 @@ public class TeleopPedroFollower extends OpMode {
 
     private void updateDrivebase() {
         // Field-centric driving
-        drive = -gamepad1.left_stick_y; // forward/back
+        drive = gamepad1.left_stick_y; // forward/back
         strafe = gamepad1.left_stick_x; // left/right
         turn = gamepad1.right_stick_x;  // rotation
 

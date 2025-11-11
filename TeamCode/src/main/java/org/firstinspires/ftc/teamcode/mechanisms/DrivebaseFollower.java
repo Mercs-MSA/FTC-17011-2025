@@ -32,7 +32,7 @@ import java.util.function.Supplier;
 public class DrivebaseFollower {
 
     private Follower follower;
-    public static Pose startingPose; //See ExampleAuto to understand how to use this
+    public static Pose startingPose = new Pose(88, 8, 90); //See ExampleAuto to understand how to use this
     private boolean automatedDrive;
     private Supplier<PathChain> pathChain;
     private TelemetryManager telemetryM;
@@ -52,7 +52,7 @@ public class DrivebaseFollower {
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry(); //TODO: Integrate softelectronics?
         pathChain = () -> follower.pathBuilder() //Lazy Curve Generation
                 .addPath(new Path(new BezierLine(follower::getPose, new Pose(38.5, 33.5)))) //TODO: Update pose as needed
-                .setHeadingInterpolation(HeadingInterpolator.linearFromPoint(follower::getHeading, Math.toRadians(45), 0.8))
+                .setHeadingInterpolation(HeadingInterpolator.linearFromPoint(follower::getHeading, Math.toRadians(0), 0.8))
                 .build();
 
         TX = 0;
@@ -77,16 +77,16 @@ public class DrivebaseFollower {
             //In case the drivers want to use a "slowMode" you can scale the vectors
             //This is the normal version to use in the TeleOp
             if (!slowMode) follower.setTeleOpDrive(
-                    drive,
-                    strafe,
-                    turn,
+                    -drive,
+                    -strafe,
+                    -turn,
                     false // Field Centric
             );
                 //This is how it looks with slowMode on
             else follower.setTeleOpDrive(
-                    drive * slowModeMultiplier,
-                    strafe * slowModeMultiplier,
-                    turn * slowModeMultiplier,
+                    -drive * slowModeMultiplier,
+                    -strafe * slowModeMultiplier,
+                    -turn * slowModeMultiplier,
                     false // Field Centric
             );
         }
