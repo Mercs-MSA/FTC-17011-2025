@@ -294,6 +294,10 @@ public class Teleop extends OpMode {
         if (gamepad1.dpadUpWasPressed()) {
             drivebase.resetYaw();
         }
+
+        if (gamepad2.left_trigger > .5) {
+            spindex.runTransferWheel();
+        }
     }
 
     private void updateRapidFireStateMachine() {
@@ -321,12 +325,11 @@ public class Teleop extends OpMode {
                 break;
 
             case WAIT_UNTIL_SHOOTER_SPINDEX_READY_STATE:
-                spindex.stopTransferWheel();
 
                 //Go to next state when Artifact is in position AND shooter has reached desired velocity
-                if (/*!spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.colorSensorStates.EMPTY) &&*/ shooter.getRightVelocity() > shooterDesiredVelocity * .95 && Math.abs(spindex.spindexMotor.getCurrentPosition() - Spindex.currentSpindexPosition) < 3) {
+                if (shooter.getRightVelocity() > shooterDesiredVelocity * .95 && Math.abs(spindex.spindexMotor.getCurrentPosition() - Spindex.currentSpindexPosition) < 3) {
 //                    if (spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.colorSensorStates.OCCUPIED))
-                        rapidFireState = SHOOTER_STATE.RUN_TRANSFER_STATE;
+                    rapidFireState = SHOOTER_STATE.RUN_TRANSFER_STATE;
 //                    else
 //                        rapidFireState = SHOOTER_STATE.RUN_SPINDEX_STATE;
                     rapidFireTimer.reset();

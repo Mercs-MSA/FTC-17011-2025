@@ -102,11 +102,11 @@ public class Spindex {
 
 
     public void runTransferWheel() {
-        spindexTransferServo.setPower(1);
+        spindexTransferServo.setPower(-1);
     }
 
     public void reverseTransfer() {
-        spindexTransferServo.setPower(-1);
+        spindexTransferServo.setPower(1);
     }
 
 //    public void reverseTransferWheel() {
