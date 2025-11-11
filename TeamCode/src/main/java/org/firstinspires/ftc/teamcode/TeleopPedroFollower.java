@@ -233,6 +233,9 @@ public class TeleopPedroFollower extends OpMode {
 
         drivebase.parkPathfollowerLoop(gamepad1.triangle);
 
+        drivebase.autoAimLoop(gamepad1.circle);
+
+
         if (gamepad1.leftBumperWasPressed()) {
             drivebase.toggleSlowMode();
         }
