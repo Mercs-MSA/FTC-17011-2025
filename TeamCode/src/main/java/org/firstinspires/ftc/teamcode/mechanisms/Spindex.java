@@ -28,7 +28,6 @@ public class Spindex {
 
 
 
-
     private GeneralConstants.colorSensorStates spindexColorBackState;
     private GeneralConstants.colorSensorStates spindexColorRightState;
     private GeneralConstants.colorSensorStates spindexColorLeftState;
@@ -71,6 +70,10 @@ public class Spindex {
 
         spindexTransferServo.setDirection(CRServo.Direction.REVERSE);
         spindexTransferServo.setPower(0);
+    }
+
+    public boolean isSpindexMoving() {
+        return !(Math.abs(currentSpindexPosition - spindexMotor.getCurrentPosition()) < 5);
     }
 
 
@@ -191,7 +194,7 @@ public class Spindex {
         return numOfArtifactsInRobot;
     }
 
-    public boolean checkIfIntaked() {
-        return entrySensor.getState();
-    }
+//    public boolean checkIfIntaked() {
+//        return entrySensor.getState();
+//    }
 }

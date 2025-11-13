@@ -91,6 +91,8 @@ public class PPVBezierBlueAuto extends OpMode {
         panelsTelemetry.debug("Status", "Initialized");
         panelsTelemetry.update(telemetry);
 
+        telemetry.addData("Current Robot Position:", "67");
+
         autoState = AUTO_STATE.INIT;
     }
 

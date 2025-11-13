@@ -48,7 +48,6 @@ import org.firstinspires.ftc.teamcode.mechanisms.Drivebase;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
 import org.firstinspires.ftc.teamcode.mechanisms.Spindex;
-import org.firstinspires.ftc.teamcode.Constants.GeneralConstants;
 
 import java.util.concurrent.TimeUnit;
 
@@ -176,6 +175,7 @@ public class Teleop extends OpMode {
     @Override
     public void loop() {
         updateDrivebase();
+        updateSpindex();
         updateMechanisms();
         updateTelemetry();
         drivebase.updateLL();
@@ -199,7 +199,7 @@ public class Teleop extends OpMode {
         //telemetry.addData("pipeline", shooter.getLLStatus().getPipelineIndex());
         //telemetry.addData("TX", shooter.getTX() == null ? "null" : shooter.getTX());
         //telemetry.addData("inRange", shooter.inRange());
-        myTelem.addData("entry sensor: ", spindex.checkIfIntaked());
+        myTelem.addData("entry sensor: ", intake.isBallInIntake());
         myTelem.update();
     }
 
@@ -222,6 +222,12 @@ public class Teleop extends OpMode {
         // optional: clear flag after a short window so you can edge-trigger it
         if (shotDetected && shotTimer.seconds() > 0.25) {
             shotDetected = false;
+        }
+    }
+
+    private void updateSpindex() {
+        if (!spindex.isSpindexMoving() && intake.isBallInIntake()) {
+            spindex.changeCurrentPositionBy(spindexThirdRevolution);
         }
     }
 
@@ -259,18 +265,19 @@ public class Teleop extends OpMode {
 
         if (gamepad2.left_bumper) { //Outake
             intakePower = -1;
-        } else if (gamepad2.right_bumper && !spindex.checkIfIntaked()) { //Intake
+        } else if (gamepad2.right_bumper /* && !spindex.checkIfIntaked()*/) { //Intake
             intakePower = 1;
-        } else if (rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE) || spindex.checkIfIntaked()) {
+        } else if (rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE) /*|| spindex.checkIfIntaked()*/) {
             intakePower = 0;
         }
 
         //Auto Intake
         if (false) {
             intakePower = 1;
-            if (spindex.checkIfIntaked()) {
+            /*if (spindex.checkIfIntaked()) {
 
             }
+             */
         }
 
 
