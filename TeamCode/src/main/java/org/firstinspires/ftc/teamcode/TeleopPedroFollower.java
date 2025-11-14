@@ -55,8 +55,8 @@ import java.util.concurrent.TimeUnit;
 @Config
 @TeleOp
 public class TeleopPedroFollower extends OpMode {
-//    public FtcDashboard dash;
-//    private SoftElectronics softElectronics;
+    public FtcDashboard dash;
+    private SoftElectronics softElectronics;
     private DrivebaseFollower drivebase;
 //    private Spindex spindex;
 //    private Intake intake;
@@ -68,7 +68,7 @@ public class TeleopPedroFollower extends OpMode {
 //
 //    private ElapsedTime rapidFireTimer;
 //
-//    private static Telemetry myTelem;
+    private static Telemetry myTelem;
 //    private static TelemetryManager myPanels;
 //
 //    private double intakePower = 0.0;
@@ -106,9 +106,9 @@ public class TeleopPedroFollower extends OpMode {
     @Override
     public void init() {
 //        // Initialize SoftElectronics
-//        softElectronics = new SoftElectronics(hardwareMap, this.telemetry);
-//        dash = FtcDashboard.getInstance();
-//        myTelem = new MultipleTelemetry(dash.getTelemetry(), softElectronics.getTelemetry());
+        softElectronics = new SoftElectronics(hardwareMap, this.telemetry);
+        dash = FtcDashboard.getInstance();
+        myTelem = new MultipleTelemetry(dash.getTelemetry(), softElectronics.getTelemetry());
 //        myPanels = softElectronics.getPanelsTelemetry();
 
         // Initialize Drive base
@@ -120,8 +120,8 @@ public class TeleopPedroFollower extends OpMode {
 //        rapidFireTimer = new ElapsedTime();
 //
 //        rapidFireState = SHOOTER_STATE.INACTIVE_STATE;
-//        myTelem.addData("Status", "Initialized");
-//        myTelem.update();
+        myTelem.addData("Status", "Initialized");
+        myTelem.update();
     }
 
     @Override
@@ -233,12 +233,21 @@ public class TeleopPedroFollower extends OpMode {
 
         drivebase.parkPathfollowerLoop(gamepad1.triangle);
 
+        if (gamepad1.circleWasPressed()) {
+            drivebase.setPoseLock();
+        }
+
         drivebase.autoAimLoop(gamepad1.circle);
 
 
         if (gamepad1.leftBumperWasPressed()) {
             drivebase.toggleSlowMode();
         }
+
+        myTelem.addData("posex", drivebase.getPose().getX());
+        myTelem.addData("posey", drivebase.getPose().getY());
+        myTelem.addData("lockx", drivebase.getPoseLock().getX());
+        myTelem.addData("locky", drivebase.getPoseLock().getY());
 //        if (rapidFireState != SHOOTER_STATE.INACTIVE_STATE || motifRapidFireState != SHOOTER_STATE.INACTIVE_STATE) {
 //            drivebase.stop();
 //        } else {
