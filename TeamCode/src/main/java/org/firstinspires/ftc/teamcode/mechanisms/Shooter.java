@@ -64,6 +64,9 @@ public class Shooter {
         shooterMotorRight.setVelocity(velocity);
     }
 
+    public double getLeftVelocity() {
+        return shooterMotorLeft.getVelocity();
+    }
 
     public double getRightVelocity() {
         return shooterMotorRight.getVelocity();

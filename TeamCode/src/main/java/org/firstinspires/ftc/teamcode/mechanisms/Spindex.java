@@ -19,6 +19,9 @@ public class Spindex {
     public ColorRangeSensor spindexColorRight; //Right of the wheel
 //    public ColorRangeSensor spindexColorLeft; //Left of the wheel
 
+    private DigitalChannel entrySensor;
+
+
     public static int currentSpindexPosition = 0;
 
     public static int spindexPositionFromAuto = 0;
@@ -49,6 +52,9 @@ public class Spindex {
 //        spindexColorBack = hardwareMap.get(ColorRangeSensor.class, "spindexColorB");
         spindexColorRight = hardwareMap.get(ColorRangeSensor.class, "spindexColorR");
 //        spindexColorLeft = hardwareMap.get(ColorRangeSensor.class, "spindexColorL");
+
+        entrySensor = hardwareMap.get(DigitalChannel.class, "entrySensor");
+        entrySensor.setMode(DigitalChannel.Mode.INPUT);
 
         spindexColorBackState = GeneralConstants.colorSensorStates.EMPTY;
         spindexColorRightState = GeneralConstants.colorSensorStates.EMPTY;
@@ -187,4 +193,8 @@ public class Spindex {
         updateSpinColorSensors();
         return numOfArtifactsInRobot;
     }
+
+//    public boolean checkIfIntaked() {
+//        return entrySensor.getState();
+//    }
 }
