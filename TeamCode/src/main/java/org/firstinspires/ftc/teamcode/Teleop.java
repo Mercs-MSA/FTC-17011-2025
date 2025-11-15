@@ -268,11 +268,9 @@ public class Teleop extends OpMode {
             case CYCLING_BALL:
                 numOfBallsInRobot++;
 
-                if (numOfBallsInRobot == 3) {
-                    spindex.changeCurrentPositionBy(spindexThirdRevolution/2);
+                if (numOfBallsInRobot >= 3) {
                 } else {
                     spindex.changeCurrentPositionBy(spindexThirdRevolution);
-
                 }
                 intakeState = INTAKE_STATE.EMPTY;
 
@@ -301,7 +299,7 @@ public class Teleop extends OpMode {
             drivebase.resetYaw();
         }
 
-        if (gamepad1.circle) drivebase.turnToGoal();
+        if (gamepad1.triangle) drivebase.turnToGoal();
 
         if (gamepad1.right_bumper) {
             drive *= .6;
@@ -339,12 +337,6 @@ public class Teleop extends OpMode {
             rapidFireState = SHOOTER_STATE.START_STATE;
         }
 
-        if (gamepad1.dpad_left) {
-            spindex.reverseTransfer();
-        } else {
-            spindex.stopTransferWheel();
-        }
-
         if (gamepad1.left_trigger > 0.5) {
             shooterDesiredVelocity = closeZoneVelocity;
         } else
@@ -364,12 +356,6 @@ public class Teleop extends OpMode {
 
         if (gamepad1.dpadUpWasPressed()) {
             drivebase.resetYaw();
-        }
-
-        if (gamepad1.dpad_right) {
-            spindex.runTransferWheel();
-        } else {
-            spindex.stopTransferWheel();
         }
     }
 
@@ -422,8 +408,10 @@ public class Teleop extends OpMode {
                 //Repeat RUN_SPINDEX State when timer has reached 3 seconds or when artifact is shot
                 if (lastShooterVelocity - shooter.getRightVelocity() > shooterVelocityDropThreshold || gamepad1.right_trigger > 0.5) {
                     rapidFireTimer.reset();
+                    numOfBallsInRobot--;
+                    if (numOfBallsInRobot < 0)
+                        numOfBallsInRobot = 0;
                     rapidFireState = SHOOTER_STATE.RUN_SPINDEX_STATE;
-                    numOfBallsInRobot -= 1;
                 }
 
                 lastShooterVelocity = shooter.getRightVelocity();
