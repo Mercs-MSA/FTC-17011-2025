@@ -38,6 +38,7 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.bylazar.ftcontrol.panels.integration.TelemetryManager;
+import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -58,28 +59,28 @@ public class TeleopPedroFollower extends OpMode {
     public FtcDashboard dash;
     private SoftElectronics softElectronics;
     private DrivebaseFollower drivebase;
-//    private Spindex spindex;
-//    private Intake intake;
-//    private Shooter shooter;
-//
+    private Spindex spindex;
+    private Intake intake;
+    private Shooter shooter;
+
     private double drive = 0; // forward/back
     private double strafe = 0; // left/right
     private double turn = 0;  // rotation
-//
-//    private ElapsedTime rapidFireTimer;
-//
+
+    private ElapsedTime rapidFireTimer;
+
     private static Telemetry myTelem;
-//    private static TelemetryManager myPanels;
-//
-//    private double intakePower = 0.0;
-//
-//    public static int farZoneVelocity = 1667;
-//    public static int closeZoneVelocity = 1450;
-//
-//    public static int shooterDesiredVelocity = 1667; //1450 for close triangle's end
-//
-//    public static int spindexFullRevolution = -540; //Amount of encoder positions for one full revolution of spindex
-//    public static int spindexThirdRevolution = spindexFullRevolution/3; //Amount of encoder positions for one full revolution of spindex
+    private static TelemetryManager myPanels;
+
+    private double intakePower = 0.0;
+
+    public static int farZoneVelocity = 1667;
+    public static int closeZoneVelocity = 1450;
+
+    public static int shooterDesiredVelocity = 1667; //1450 for close triangle's end
+
+    public static int spindexFullRevolution = -540; //Amount of encoder positions for one full revolution of spindex
+    public static int spindexThirdRevolution = spindexFullRevolution/3; //Amount of encoder positions for one full revolution of spindex
 
     public enum STARTING_ORIENTATION {
         GOAL_SIDE,
@@ -109,50 +110,51 @@ public class TeleopPedroFollower extends OpMode {
         softElectronics = new SoftElectronics(hardwareMap, this.telemetry);
         dash = FtcDashboard.getInstance();
         myTelem = new MultipleTelemetry(dash.getTelemetry(), softElectronics.getTelemetry());
-//        myPanels = softElectronics.getPanelsTelemetry();
+        myPanels = softElectronics.getPanelsTelemetry();
 
         // Initialize Drive base
         drivebase = new DrivebaseFollower(hardwareMap);
-//        spindex = new Spindex(hardwareMap);
-//        intake = new Intake(hardwareMap);
-//        shooter = new Shooter(hardwareMap);
+        spindex = new Spindex(hardwareMap);
+        intake = new Intake(hardwareMap);
+        shooter = new Shooter(hardwareMap);
 
-//        rapidFireTimer = new ElapsedTime();
-//
-//        rapidFireState = SHOOTER_STATE.INACTIVE_STATE;
+        rapidFireTimer = new ElapsedTime();
+
+        rapidFireState = SHOOTER_STATE.INACTIVE_STATE;
         myTelem.addData("Status", "Initialized");
         myTelem.update();
     }
 
     @Override
     public void init_loop() {
-//        if (gamepad1.right_bumper) {
-//            onBlueAlliance = false;
-//        } else if (gamepad1.left_bumper) {
-//            onBlueAlliance = true;
-//        }
+        if (gamepad1.right_bumper) {
+            onBlueAlliance = false;
+        } else if (gamepad1.left_bumper) {
+            onBlueAlliance = true;
+        }
 //
 ////        if (!ranAuto) {
-//            if (onBlueAlliance) {
-//                myTelem.addLine("Blue alliance selected. Press right bumper to select red.");
-//                if (startingOrientation.equals(STARTING_ORIENTATION.GOAL_SIDE)) {
-////                    drivebase.offsetYaw(-90);
-//                    drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, -Math.PI/2));
-//                } else {
-////                    drivebase.offsetYaw(90);
+            if (onBlueAlliance) {
+                myTelem.addLine("Blue alliance selected. Press right bumper to select red.");
+                if (startingOrientation.equals(STARTING_ORIENTATION.GOAL_SIDE)) {
+//                    drivebase.offsetYaw(-90);
+//                    drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, -Math.PI/2);
+                    drivebase.setStartingPose(new Pose());
+                } else {
+//                    drivebase.offsetYaw(90);
+                    drivebase.setStartingPose(new Pose());
+                }
+            } else {
+                myTelem.addLine("Red alliance selected. Press left bumper to select blue.");
+                if (startingOrientation.equals(STARTING_ORIENTATION.GOAL_SIDE)) {
+//                    drivebase.offsetYaw(90);
 //                    drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, Math.PI/2));
-//                }
-//            } else {
-//                myTelem.addLine("Red alliance selected. Press left bumper to select blue.");
-//                if (startingOrientation.equals(STARTING_ORIENTATION.GOAL_SIDE)) {
-////                    drivebase.offsetYaw(90);
-//                    drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, Math.PI/2));
-//                } else {
-////                    drivebase.offsetYaw(-90);
+                } else {
+//                    drivebase.offsetYaw(-90);
 //                    drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, -Math.PI/2));
-//                }
-//            }
-////        }
+                }
+            }
+//        }
 //
 //        if (gamepad1.dpadUpWasPressed()) {
 //            if (startingOrientation.equals(STARTING_ORIENTATION.PLAYER_SIDE))

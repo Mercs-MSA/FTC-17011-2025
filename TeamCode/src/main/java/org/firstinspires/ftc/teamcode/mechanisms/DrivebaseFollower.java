@@ -161,6 +161,14 @@ public class DrivebaseFollower {
         return poseLock;
     }
 
+    public void setStartingPose(Pose pose) {
+        startingPose = pose;
+    }
+
+    public void setPose(Pose pose) {
+        follower.setPose(pose);
+    }
+
 //    public void turnToGoal() {
 //        double heading = Math.toDegrees(otos.getPosition().h);
 //        if (onBlueAlliance) {
