@@ -22,8 +22,10 @@ public class Intake {
     }
 
     public boolean isBallInIntake() {
-        return (((intakeSensor.getVoltage() / 3.3) * 1000) > 800);
+        return (((intakeSensor.getVoltage() / 3.3) * 1000) < 90);
     }
+
+    public double intakeRange() {return intakeSensor.getVoltage() / 3.3 * 1000;}
 
     // Control the continuous rotation servo
     public void setPower(double power) {

@@ -133,6 +133,8 @@ public class Teleop extends OpMode {
         lastShooterVelocity = shooter.getRightVelocity();
 
         rapidFireState = SHOOTER_STATE.INACTIVE_STATE;
+        intakeState = INTAKE_STATE.EMPTY;
+        numOfBallsInRobot = 0;
         myTelem.addData("Status", "Initialized");
         myTelem.update();
     }
@@ -213,7 +215,10 @@ public class Teleop extends OpMode {
         //telemetry.addData("TX", shooter.getTX() == null ? "null" : shooter.getTX());
         //telemetry.addData("inRange", shooter.inRange());
         myTelem.addData("entry sensor: ", intake.isBallInIntake());
+        myTelem.addData("entry range: ", intake.intakeRange());
         myTelem.addData("intake timer:", intakeTimer.time(TimeUnit.SECONDS));
+        myTelem.addData("intake/spindex state: ", intakeState);
+        myTelem.addData("numOfBalls: ", numOfBallsInRobot);
         myTelem.update();
     }
 
@@ -240,10 +245,9 @@ public class Teleop extends OpMode {
     }
 
     private void updateSpindexAndIntake() {
-
         switch (intakeState) {
             case EMPTY:
-                if (!spindex.isSpindexMoving() && intake.isBallInIntake() && numOfBallsInRobot != 3 && rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
+                if (!spindex.isSpindexMoving() && intake.isBallInIntake() && numOfBallsInRobot < 3 && rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
                     intakeTimer.reset();
                     intakeState = INTAKE_STATE.JUST_INTOOK_BALL;
                 }
@@ -262,7 +266,7 @@ public class Teleop extends OpMode {
                 break;
 
             case CYCLING_BALL:
-                numOfBallsInRobot += 1;
+                numOfBallsInRobot++;
 
                 if (numOfBallsInRobot == 3) {
                     spindex.changeCurrentPositionBy(spindexThirdRevolution/2);
