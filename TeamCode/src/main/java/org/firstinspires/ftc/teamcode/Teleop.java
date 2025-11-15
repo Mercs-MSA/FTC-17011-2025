@@ -66,14 +66,12 @@ public class Teleop extends OpMode {
     private double turn = 0;  // rotation
 
     private ElapsedTime rapidFireTimer;
+    private ElapsedTime intakeTimer;
 
     private static Telemetry myTelem;
     private static TelemetryManager myPanels;
 
     private double intakePower = 0.0;
-
-    private boolean autoSpun = false;
-
     public static int farZoneVelocity = 1667;
     public static int closeZoneVelocity = 1450;
 
@@ -81,6 +79,8 @@ public class Teleop extends OpMode {
 
     public static int spindexFullRevolution = -540; //Amount of encoder positions for one full revolution of spindex
     public static int spindexThirdRevolution = spindexFullRevolution/3; //Amount of encoder positions for one full revolution of spindex
+    private boolean checkAgain = true;
+    public static double shooterVelocityDropThreshold = 150;
 
     public enum STARTING_ORIENTATION {
         GOAL_SIDE,
@@ -92,6 +92,13 @@ public class Teleop extends OpMode {
     public enum SHOOTER_STATE {START_STATE, POINT_AT_GOAL_STATE, RUN_SHOOTER_MOTOR_STATE, WAIT_UNTIL_SHOOTER_SPINDEX_READY_STATE, CLOSE_GATE_STATE, RUN_TRANSFER_STATE, RUN_SPINDEX_STATE, RELEASE_STATE, INACTIVE_STATE, END_STATE}
     private static SHOOTER_STATE rapidFireState = SHOOTER_STATE.INACTIVE_STATE;
     private static SHOOTER_STATE motifRapidFireState = SHOOTER_STATE.INACTIVE_STATE;
+
+    public enum SPINDEX_STATE {NO_BALLS, ONE_BALL, TWO_BALLS, THREE_BALLS,}
+    public enum INTAKE_STATE {EMPTY, JUST_INTOOK_BALL, CYCLING_BALL}
+
+    private static int numOfBallsInRobot = 0;
+    private static INTAKE_STATE intakeState = INTAKE_STATE.EMPTY;
+
     public static boolean spinningToColor = false;
 
     ElapsedTime shotTimer = new ElapsedTime();
@@ -103,6 +110,8 @@ public class Teleop extends OpMode {
     boolean shotDetected = false;
 
     boolean spindexRunPosition = false;
+
+    private static double lastShooterVelocity;
 
     @Override
     public void init() {
@@ -119,6 +128,9 @@ public class Teleop extends OpMode {
         shooter = new Shooter(hardwareMap);
 
         rapidFireTimer = new ElapsedTime();
+        intakeTimer = new ElapsedTime();
+
+        lastShooterVelocity = shooter.getRightVelocity();
 
         rapidFireState = SHOOTER_STATE.INACTIVE_STATE;
         myTelem.addData("Status", "Initialized");
@@ -175,7 +187,7 @@ public class Teleop extends OpMode {
     @Override
     public void loop() {
         updateDrivebase();
-        updateSpindex();
+        updateSpindexAndIntake();
         updateMechanisms();
         updateTelemetry();
         drivebase.updateLL();
@@ -192,6 +204,7 @@ public class Teleop extends OpMode {
 //        myTelem.addData("Back Color:", spindex.getColor(spindex.spindexColorBack, true));
         myTelem.addData("rapid fire state:", rapidFireState.toString());
         myTelem.addData("rapid fire timer:", rapidFireTimer.time(TimeUnit.SECONDS));
+
         myTelem.addData("shooter velocity:", shooter.getRightVelocity());
         myTelem.addData("spindex velocity:", spindex.getSpindexVelocity());
         myTelem.addData("spindex position:", spindex.spindexMotor.getCurrentPosition());
@@ -200,35 +213,70 @@ public class Teleop extends OpMode {
         //telemetry.addData("TX", shooter.getTX() == null ? "null" : shooter.getTX());
         //telemetry.addData("inRange", shooter.inRange());
         myTelem.addData("entry sensor: ", intake.isBallInIntake());
+        myTelem.addData("intake timer:", intakeTimer.time(TimeUnit.SECONDS));
         myTelem.update();
     }
 
     private void updateShotDetector() {
-        double rpm = shooter.getRpm();
-        ema = (ALPHA * rpm) + (1 - ALPHA) * ema;
-
-        // arm when we’re basically at speed
-        if (!shotArmed && ema > shooterDesiredVelocity * (1.0 - RECOVER_PCT)) {
-            shotArmed = true;
-        }
-
-        // detect dip
-        if (shotArmed && ema < shooterDesiredVelocity * (1.0 - DROP_PCT)) {
-            shotDetected = true;
-            shotArmed = false;               // prevent double-count
-            shotTimer.reset();
-        }
-
-        // optional: clear flag after a short window so you can edge-trigger it
-        if (shotDetected && shotTimer.seconds() > 0.25) {
-            shotDetected = false;
-        }
+//        double rpm = shooter.getRpm();
+//        ema = (ALPHA * rpm) + (1 - ALPHA) * ema;
+//
+//        // arm when we’re basically at speed
+//        if (!shotArmed && ema > shooterDesiredVelocity * (1.0 - RECOVER_PCT)) {
+//            shotArmed = true;
+//        }
+//
+//        // detect dip
+//        if (shotArmed && ema < shooterDesiredVelocity * (1.0 - DROP_PCT)) {
+//            shotDetected = true;
+//            shotArmed = false;               // prevent double-count
+//            shotTimer.reset();
+//        }
+//
+//        // optional: clear flag after a short window so you can edge-trigger it
+//        if (shotDetected && shotTimer.seconds() > 0.25) {
+//            shotDetected = false;
+//        }
     }
 
-    private void updateSpindex() {
-        if (!spindex.isSpindexMoving() && intake.isBallInIntake()) {
-            spindex.changeCurrentPositionBy(spindexThirdRevolution);
+    private void updateSpindexAndIntake() {
+
+        switch (intakeState) {
+            case EMPTY:
+                if (!spindex.isSpindexMoving() && intake.isBallInIntake() && numOfBallsInRobot != 3 && rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
+                    intakeTimer.reset();
+                    intakeState = INTAKE_STATE.JUST_INTOOK_BALL;
+                }
+                break;
+
+            case JUST_INTOOK_BALL:
+                if (intakeTimer.time(TimeUnit.SECONDS) > 0.2 || checkAgain == true) {
+                    if (checkAgain) {
+                        intakeState = INTAKE_STATE.CYCLING_BALL;
+                        checkAgain = false;
+                    } else {
+                        intakeState = INTAKE_STATE.EMPTY;
+                        checkAgain = true;
+                    }
+                }
+                break;
+
+            case CYCLING_BALL:
+                numOfBallsInRobot += 1;
+
+                if (numOfBallsInRobot == 3) {
+                    spindex.changeCurrentPositionBy(spindexThirdRevolution/2);
+                } else {
+                    spindex.changeCurrentPositionBy(spindexThirdRevolution);
+
+                }
+                intakeState = INTAKE_STATE.EMPTY;
+
+                break;
+
         }
+
+
     }
 
     private void updateDrivebase() {
@@ -263,9 +311,9 @@ public class Teleop extends OpMode {
         updateRapidFireStateMachine();
         updateShotDetector();
 
-        if (gamepad2.left_bumper) { //Outake
+        if (gamepad1.left_bumper) { //Outake
             intakePower = -1;
-        } else if (gamepad2.right_bumper /* && !spindex.checkIfIntaked()*/) { //Intake
+        } else if (gamepad1.right_bumper /* && !spindex.checkIfIntaked()*/) { //Intake
             intakePower = 1;
         } else if (rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE) /*|| spindex.checkIfIntaked()*/) {
             intakePower = 0;
@@ -287,9 +335,8 @@ public class Teleop extends OpMode {
             rapidFireState = SHOOTER_STATE.START_STATE;
         }
 
-        if (gamepad2.right_trigger > .5) {
+        if (gamepad1.dpad_left) {
             spindex.reverseTransfer();
-        } else if (!rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
         } else {
             spindex.stopTransferWheel();
         }
@@ -299,15 +346,15 @@ public class Teleop extends OpMode {
         } else
             shooterDesiredVelocity = farZoneVelocity;
 
-        if (gamepad2.crossWasPressed()) {
+        if (gamepad1.crossWasPressed()) {
             spindex.changeCurrentPositionBy(spindexThirdRevolution);
         }
 
-        if (gamepad2.circleWasPressed()) {
+        if (gamepad1.circleWasPressed()) {
             spindex.changeCurrentPositionBy(spindexThirdRevolution/2);
         }
 
-        if (gamepad2.squareWasPressed()) {
+        if (gamepad1.squareWasPressed()) {
             spindex.resetSpindexToZero();
         }
 
@@ -315,12 +362,15 @@ public class Teleop extends OpMode {
             drivebase.resetYaw();
         }
 
-        if (gamepad2.left_trigger > .5) {
+        if (gamepad1.dpad_right) {
             spindex.runTransferWheel();
+        } else {
+            spindex.stopTransferWheel();
         }
     }
 
     private void updateRapidFireStateMachine() {
+
         switch (rapidFireState) {
             case START_STATE:
                 rapidFireState = SHOOTER_STATE.RUN_SHOOTER_MOTOR_STATE;
@@ -366,24 +416,25 @@ public class Teleop extends OpMode {
                 spindex.runTransferWheel();
 
                 //Repeat RUN_SPINDEX State when timer has reached 3 seconds or when artifact is shot
-                if (/*rapidFireTimer.time(TimeUnit.SECONDS) > 3 ||*/ gamepad1.right_trigger > 0.5) {
+                if (lastShooterVelocity - shooter.getRightVelocity() > shooterVelocityDropThreshold || gamepad1.right_trigger > 0.5) {
                     rapidFireTimer.reset();
                     rapidFireState = SHOOTER_STATE.RUN_SPINDEX_STATE;
+                    numOfBallsInRobot -= 1;
                 }
+
+                lastShooterVelocity = shooter.getRightVelocity();
 
                 //Cancel State Machine
                 if (drive > .1 || drive < -.1 || strafe > .1 || strafe < -.1) {
                     rapidFireState = SHOOTER_STATE.END_STATE;
                 }
 
-//                if (gamepad1.triangle) rapidFireState = SHOOTER_STATE.END_STATE;
-
                 break;
 
             case END_STATE:
                 shooter.stop();
                 spindex.stopTransferWheel();
-                spindex.stopSpindex();
+                spindex.changeCurrentPositionBy(spindexThirdRevolution/2);
 
                 rapidFireState = SHOOTER_STATE.INACTIVE_STATE;
 
