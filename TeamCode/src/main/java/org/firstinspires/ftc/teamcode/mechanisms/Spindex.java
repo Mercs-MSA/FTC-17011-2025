@@ -5,8 +5,6 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorRangeSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.Constants.GeneralConstants;
@@ -19,9 +17,10 @@ public class Spindex {
     public ColorRangeSensor spindexColorRight; //Right of the wheel
 //    public ColorRangeSensor spindexColorLeft; //Left of the wheel
 
-    public static int currentSpindexPosition = 0;
+    public static double currentSpindexPosition = 0;
+    private static double currentSpindexPositionAccurate = 0;
 
-    public static int spindexPositionFromAuto = 0;
+    public static double spindexPositionFromAuto = 0;
 
 
 
@@ -58,7 +57,7 @@ public class Spindex {
         spindexMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         spindexMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         currentSpindexPosition = 0;
-        spindexMotor.setTargetPosition(currentSpindexPosition);
+        spindexMotor.setTargetPosition((int)(currentSpindexPosition));
         spindexMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         spindexMotor.setVelocity(spindexMotorVelocity);
 
@@ -71,23 +70,23 @@ public class Spindex {
     }
 
 
-    public void changeCurrentPositionBy(int positionChange) {
+    public void changeCurrentPositionBy(double positionChange) {
         currentSpindexPosition += positionChange;
-        spindexMotor.setTargetPosition(currentSpindexPosition);
+        spindexMotor.setTargetPosition( (int) (Math.round(currentSpindexPosition)) );
         spindexMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
         spindexMotor.setVelocity(spindexMotorVelocity);
     }
 
     public void resetSpindexToZero() {
         currentSpindexPosition = 0;
-        spindexMotor.setTargetPosition(currentSpindexPosition);
+        spindexMotor.setTargetPosition((int) (Math.round(currentSpindexPosition)));
         spindexMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
         spindexMotor.setVelocity(800);
     }
 
     public void runSpindexToTransferThird() {
         if (currentSpindexPosition % Teleop.spindexThirdRevolution != 0 ) {
-            changeCurrentPositionBy(Teleop.spindexThirdRevolution/2);
+            changeCurrentPositionBy(Teleop.spindexThirdRevolution/2.0);
         }
     }
 

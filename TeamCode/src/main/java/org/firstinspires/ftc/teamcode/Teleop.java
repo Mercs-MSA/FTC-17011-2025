@@ -77,10 +77,13 @@ public class Teleop extends OpMode {
 
     public static int shooterDesiredVelocity = 1667; //1450 for close triangle's end
 
-    public static int spindexFullRevolution = -540; //Amount of encoder positions for one full revolution of spindex
-    public static int spindexThirdRevolution = spindexFullRevolution/3; //Amount of encoder positions for one full revolution of spindex
+    //12,905 for 24 full revolutions = 537.70833333
+    //16,129 for for 30 full revolutions = 537.633333
+    //avg = 537.67 (i cant even make this up)
+    public static double spindexFullRevolution = -537.67; //Amount of encoder positions for one full revolution of spindex
+    public static double spindexThirdRevolution = spindexFullRevolution/3.0; //Amount of encoder positions for one full revolution of spindex
     private boolean checkAgain = true;
-    public static double shooterVelocityDropThreshold = 150;
+    public static double shooterVelocityDropThreshold = 100.6741;
 
     public enum STARTING_ORIENTATION {
         GOAL_SIDE,
@@ -90,7 +93,7 @@ public class Teleop extends OpMode {
     public static STARTING_ORIENTATION startingOrientation = STARTING_ORIENTATION.GOAL_SIDE;
 
     public enum SHOOTER_STATE {START_STATE, POINT_AT_GOAL_STATE, RUN_SHOOTER_MOTOR_STATE, WAIT_UNTIL_SHOOTER_SPINDEX_READY_STATE, CLOSE_GATE_STATE, RUN_TRANSFER_STATE, RUN_SPINDEX_STATE, RELEASE_STATE, INACTIVE_STATE, END_STATE}
-    private static SHOOTER_STATE rapidFireState = SHOOTER_STATE.INACTIVE_STATE;
+    private static SHOOTER_STATE shooterState = SHOOTER_STATE.INACTIVE_STATE;
     private static SHOOTER_STATE motifRapidFireState = SHOOTER_STATE.INACTIVE_STATE;
 
     public enum SPINDEX_STATE {NO_BALLS, ONE_BALL, TWO_BALLS, THREE_BALLS,}
@@ -132,7 +135,7 @@ public class Teleop extends OpMode {
 
         lastShooterVelocity = shooter.getRightVelocity();
 
-        rapidFireState = SHOOTER_STATE.INACTIVE_STATE;
+        shooterState = SHOOTER_STATE.INACTIVE_STATE;
         intakeState = INTAKE_STATE.EMPTY;
         numOfBallsInRobot = 0;
         myTelem.addData("Status", "Initialized");
@@ -198,24 +201,16 @@ public class Teleop extends OpMode {
     private void updateTelemetry() {
         //        myTelem.addData("Robot Yaw:", Math.toDegrees(drivebase.getPosition().h));
         myTelem.addData("Robot Heading:", Math.toDegrees(drivebase.getPosition().h));
-        myTelem.addData("Robot Offset:", drivebase.getOffset());
-//        myTelem.addData("Spinning to Color?", spinningToColor);
-//        myTelem.addData("Num of artifacts in robot:", spindex.getNumOfArtifactsInRobot());
-        myTelem.addData("Right Color:", spindex.getColor(spindex.spindexColorRight, true));
-//        myTelem.addData("Left Color:", spindex.getColor(spindex.spindexColorLeft, true));
-//        myTelem.addData("Back Color:", spindex.getColor(spindex.spindexColorBack, true));
-        myTelem.addData("rapid fire state:", rapidFireState.toString());
+        //myTelem.addData("Robot Offset:", drivebase.getOffset());
+        //myTelem.addData("Right Color:", spindex.getColor(spindex.spindexColorRight, true));
+        myTelem.addData("rapid fire state:", shooterState.toString());
         myTelem.addData("rapid fire timer:", rapidFireTimer.time(TimeUnit.SECONDS));
 
         myTelem.addData("shooter velocity:", shooter.getRightVelocity());
-        myTelem.addData("spindex velocity:", spindex.getSpindexVelocity());
-        myTelem.addData("spindex position:", spindex.spindexMotor.getCurrentPosition());
-        //telemetry.addData("result valid?", shooter.getLLResults().isValid());
-        //telemetry.addData("pipeline", shooter.getLLStatus().getPipelineIndex());
-        //telemetry.addData("TX", shooter.getTX() == null ? "null" : shooter.getTX());
-        //telemetry.addData("inRange", shooter.inRange());
+        myTelem.addData("spindex actual position:", spindex.spindexMotor.getCurrentPosition());
+        myTelem.addData("spindex desired position:", Spindex.currentSpindexPosition);
         myTelem.addData("entry sensor: ", intake.isBallInIntake());
-        myTelem.addData("entry range: ", intake.intakeRange());
+
         myTelem.addData("intake timer:", intakeTimer.time(TimeUnit.SECONDS));
         myTelem.addData("intake/spindex state: ", intakeState);
         myTelem.addData("numOfBalls: ", numOfBallsInRobot);
@@ -247,14 +242,14 @@ public class Teleop extends OpMode {
     private void updateSpindexAndIntake() {
         switch (intakeState) {
             case EMPTY:
-                if (!spindex.isSpindexMoving() && intake.isBallInIntake() && numOfBallsInRobot < 3 && rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
+                if (!spindex.isSpindexMoving() && intake.isBallInIntake() && numOfBallsInRobot < 3 && shooterState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
                     intakeTimer.reset();
                     intakeState = INTAKE_STATE.JUST_INTOOK_BALL;
                 }
                 break;
 
             case JUST_INTOOK_BALL:
-                if (intakeTimer.time(TimeUnit.SECONDS) > 0.2 || checkAgain == true) {
+                if (intakeTimer.time(TimeUnit.SECONDS) > 0.1 || checkAgain == true) {
                     if (checkAgain) {
                         intakeState = INTAKE_STATE.CYCLING_BALL;
                         checkAgain = false;
@@ -287,21 +282,15 @@ public class Teleop extends OpMode {
         strafe = gamepad1.left_stick_x; // left/right
         turn = gamepad1.right_stick_x;  // rotation
 
-        if (rapidFireState != SHOOTER_STATE.INACTIVE_STATE || motifRapidFireState != SHOOTER_STATE.INACTIVE_STATE) {
+        if (shooterState != SHOOTER_STATE.INACTIVE_STATE || motifRapidFireState != SHOOTER_STATE.INACTIVE_STATE) {
             drivebase.stop();
         } else {
             drivebase.drive(drive, strafe, turn);
         }
 
-        if (gamepad1.dpad_up) {
-//            if (drivebase.getTargetSeen()) gamepad1.rumble(50);
-//            drivebase.turnToGoal();
-            drivebase.resetYaw();
-        }
-
         if (gamepad1.triangle) drivebase.turnToGoal();
 
-        if (gamepad1.right_bumper) {
+        if (gamepad1.left_bumper) {
             drive *= .6;
             strafe *= .6;
             turn *= .6;
@@ -310,31 +299,22 @@ public class Teleop extends OpMode {
 
 
     private void updateMechanisms() {
-        updateRapidFireStateMachine();
+        updateShooterStateMachine();
         updateShotDetector();
 
         if (gamepad1.left_bumper) { //Outake
             intakePower = -1;
         } else if (gamepad1.right_bumper /* && !spindex.checkIfIntaked()*/) { //Intake
             intakePower = 1;
-        } else if (rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE) /*|| spindex.checkIfIntaked()*/) {
+        } else if (shooterState.equals(SHOOTER_STATE.INACTIVE_STATE) /*|| spindex.checkIfIntaked()*/) {
             intakePower = 0;
-        }
-
-        //Auto Intake
-        if (false) {
-            intakePower = 1;
-            /*if (spindex.checkIfIntaked()) {
-
-            }
-             */
         }
 
 
         intake.setPower(intakePower);
 
-        if (gamepad1.right_trigger > 0.5 && rapidFireState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
-            rapidFireState = SHOOTER_STATE.START_STATE;
+        if (gamepad1.right_trigger > 0.5 && shooterState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
+            shooterState = SHOOTER_STATE.START_STATE;
         }
 
         if (gamepad1.left_trigger > 0.5) {
@@ -347,11 +327,11 @@ public class Teleop extends OpMode {
         }
 
         if (gamepad1.circleWasPressed()) {
-            spindex.changeCurrentPositionBy(spindexThirdRevolution/2);
+            spindex.changeCurrentPositionBy(spindexThirdRevolution/2.0);
         }
 
         if (gamepad1.squareWasPressed()) {
-            spindex.resetSpindexToZero();
+            numOfBallsInRobot = 0;
         }
 
         if (gamepad1.dpadUpWasPressed()) {
@@ -359,29 +339,29 @@ public class Teleop extends OpMode {
         }
     }
 
-    private void updateRapidFireStateMachine() {
+    private void updateShooterStateMachine() {
 
-        switch (rapidFireState) {
+        switch (shooterState) {
             case START_STATE:
-                rapidFireState = SHOOTER_STATE.RUN_SHOOTER_MOTOR_STATE;
+                shooterState = SHOOTER_STATE.RUN_SHOOTER_MOTOR_STATE;
                 break;
 
             case RUN_SHOOTER_MOTOR_STATE:
                 shooter.setMotorVelocity(shooterDesiredVelocity);
-                spindex.runSpindexToTransferThird();
+                spindex.changeCurrentPositionBy(spindexThirdRevolution/2.0);
 
                 //Go to Next State
-                rapidFireState = SHOOTER_STATE.WAIT_UNTIL_SHOOTER_SPINDEX_READY_STATE;
+                shooterState = SHOOTER_STATE.WAIT_UNTIL_SHOOTER_SPINDEX_READY_STATE;
 
                 //Cancel State Machine
                 if (drive > .1 || drive < -.1 || strafe > .1 || strafe < -.1) {
-                    rapidFireState = SHOOTER_STATE.END_STATE;
+                    shooterState = SHOOTER_STATE.END_STATE;
                 }
                 break;
 
             case RUN_SPINDEX_STATE:
                 spindex.changeCurrentPositionBy(spindexThirdRevolution);
-                rapidFireState = SHOOTER_STATE.WAIT_UNTIL_SHOOTER_SPINDEX_READY_STATE;
+                shooterState = SHOOTER_STATE.WAIT_UNTIL_SHOOTER_SPINDEX_READY_STATE;
                 break;
 
             case WAIT_UNTIL_SHOOTER_SPINDEX_READY_STATE:
@@ -389,7 +369,7 @@ public class Teleop extends OpMode {
                 //Go to next state when Artifact is in position AND shooter has reached desired velocity
                 if (shooter.getRightVelocity() > shooterDesiredVelocity * .95 && Math.abs(spindex.spindexMotor.getCurrentPosition() - Spindex.currentSpindexPosition) < 3) {
 //                    if (spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.colorSensorStates.OCCUPIED))
-                    rapidFireState = SHOOTER_STATE.RUN_TRANSFER_STATE;
+                    shooterState = SHOOTER_STATE.RUN_TRANSFER_STATE;
 //                    else
 //                        rapidFireState = SHOOTER_STATE.RUN_SPINDEX_STATE;
                     rapidFireTimer.reset();
@@ -397,7 +377,7 @@ public class Teleop extends OpMode {
 
                 //Cancel State Machine
                 if (drive > .1 || drive < -.1 || strafe > .1 || strafe < -.1) {
-                    rapidFireState = SHOOTER_STATE.END_STATE;
+                    shooterState = SHOOTER_STATE.END_STATE;
                 }
 
                 break;
@@ -411,14 +391,14 @@ public class Teleop extends OpMode {
                     numOfBallsInRobot--;
                     if (numOfBallsInRobot < 0)
                         numOfBallsInRobot = 0;
-                    rapidFireState = SHOOTER_STATE.RUN_SPINDEX_STATE;
+                    shooterState = SHOOTER_STATE.RUN_SPINDEX_STATE;
                 }
 
                 lastShooterVelocity = shooter.getRightVelocity();
 
                 //Cancel State Machine
                 if (drive > .1 || drive < -.1 || strafe > .1 || strafe < -.1) {
-                    rapidFireState = SHOOTER_STATE.END_STATE;
+                    shooterState = SHOOTER_STATE.END_STATE;
                 }
 
                 break;
@@ -426,9 +406,9 @@ public class Teleop extends OpMode {
             case END_STATE:
                 shooter.stop();
                 spindex.stopTransferWheel();
-                spindex.changeCurrentPositionBy(spindexThirdRevolution/2);
+                spindex.changeCurrentPositionBy(spindexThirdRevolution/2.0);
 
-                rapidFireState = SHOOTER_STATE.INACTIVE_STATE;
+                shooterState = SHOOTER_STATE.INACTIVE_STATE;
 
                 break;
 
