@@ -60,7 +60,7 @@ public class RedLongRangeAuto extends OpMode {
     private int timesShot = 0;
     private int waitTime = 6;
 
-    public static int spinAmount = spindexThirdRevolution/3;
+    public static double spinAmount = spindexThirdRevolution/3.0;
 
 
 
