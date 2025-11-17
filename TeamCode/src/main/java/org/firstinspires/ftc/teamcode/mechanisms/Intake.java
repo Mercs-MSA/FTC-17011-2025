@@ -11,19 +11,19 @@ public class Intake {
 
     private static AnalogInput intakeSensor;
     private static final double intakeDistanceTolerance = 2;
-    private static int intakeVelocity = 400;
+    private static int intakeVelocity = 2000;
     public Intake(HardwareMap hardwareMap) {
         intakeMotor = hardwareMap.get(DcMotorEx.class, "intakeMotor");
         intakeMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
         intakeMotor.setDirection(DcMotorEx.Direction.REVERSE);
         intakeMotor.setPower(0);
 
-        intakeSensor = hardwareMap.get(AnalogInput.class, "intakeSensor");
+//        intakeSensor = hardwareMap.get(AnalogInput.class, "intakeSensor");
     }
 
-    public boolean isBallInIntake() {
-        return (((intakeSensor.getVoltage() / 3.3) * 1000) > 800);
-    }
+//    public boolean isBallInIntake() {
+//        return (((intakeSensor.getVoltage() / 3.3) * 1000) > 800);
+//    }
 
     // Control the continuous rotation servo
     public void setPower(double power) {
