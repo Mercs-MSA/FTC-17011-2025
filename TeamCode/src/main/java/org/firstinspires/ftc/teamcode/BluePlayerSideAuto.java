@@ -172,7 +172,7 @@ public class BluePlayerSideAuto extends OpMode {
         telemetryA.addData("Pose X", follower.getPose().getX());
         telemetryA.addData("Pose Y", follower.getPose().getY());
         telemetryA.addData("Heading (deg)", Math.toDegrees(follower.getPose().getHeading()));
-        telemetryA.addData("Shooter vel", shooter.getVelocity());
+        //telemetryA.addData("Shooter vel", shooter.getVelocity());
         telemetryA.addData("Timer", shootTimer.seconds());
         telemetryA.update();
     }
