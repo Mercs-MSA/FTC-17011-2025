@@ -1,38 +1,54 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
+import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class Intake {
 
-    private final DcMotorEx intakeMotor;
+    private static DcMotorEx intakeMotor;
 
+    private static AnalogInput intakeSensor;
+    private static final double intakeDistanceTolerance = 2;
+    private static int intakeVelocity = 400;
     public Intake(HardwareMap hardwareMap) {
         intakeMotor = hardwareMap.get(DcMotorEx.class, "intakeMotor");
-
-        // Currently: NEGATIVE power = intake.
-        // We want:  POSITIVE power = intake.
-        // So flip direction once here and only use positive power in TeleOp.
-        intakeMotor.setDirection(DcMotorEx.Direction.REVERSE);
-
         intakeMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
+        intakeMotor.setDirection(DcMotorEx.Direction.REVERSE);
         intakeMotor.setPower(0);
+
+        intakeSensor = hardwareMap.get(AnalogInput.class, "intakeSensor");
     }
 
-    /**
-     * power > 0 : intake (into robot)
-     * power < 0 : outtake (backwards)
-     * power = 0 : stop
-     */
-    public void setPower(double power) {
-        // Clamp for safety
-        if (power > 1.0) power = 1.0;
-        if (power < -1.0) power = -1.0;
+    public boolean isBallInIntake() {
+        return (((intakeSensor.getVoltage() / 3.3) * 1000) > 800);
+    }
 
-        intakeMotor.setPower(power);
+    // Control the continuous rotation servo
+    public void setPower(double power) {
+        /*
+        final double SLEW_RATE_VELOCITY = 200; // max ticks/sec change per loop
+        double currentVelocity = intakeMotor.getVelocity();
+        double delta = power > 0 ? intakeVelocity : -intakeVelocity - currentVelocity;
+
+        if (power != 0) {
+            // Clamp the change
+            delta = Math.max(-SLEW_RATE_VELOCITY, Math.min(delta, SLEW_RATE_VELOCITY));
+
+            intakeMotor.setVelocity(currentVelocity + delta);
+        }
+         */
+
+        if (power > 0)
+            intakeMotor.setVelocity(intakeVelocity);
+        else if (power < 0)
+            intakeMotor.setVelocity(-intakeVelocity);
+        else
+            intakeMotor.setVelocity(0);
     }
 
     public void stop() {
-        intakeMotor.setPower(0);
-    }
+        intakeMotor.setPower(0);}
+
 }
