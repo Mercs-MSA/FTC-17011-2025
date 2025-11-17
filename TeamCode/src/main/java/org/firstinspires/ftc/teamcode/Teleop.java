@@ -72,10 +72,10 @@ public class Teleop extends OpMode {
     private static TelemetryManager myPanels;
 
     private double intakePower = 0.0;
-    public static int farZoneVelocity = 1667;
-    public static int closeZoneVelocity = 1450;
+    public static int farZoneVelocity = 1600;
+    public static int closeZoneVelocity = 1250;
 
-    public static int shooterDesiredVelocity = 1667; //1450 for close triangle's end
+    public static int shooterDesiredVelocity = 1600; //1450 for close triangle's end
 
     //12,905 for 24 full revolutions = 537.70833333
     //16,129 for for 30 full revolutions = 537.633333
@@ -93,14 +93,17 @@ public class Teleop extends OpMode {
     public static STARTING_ORIENTATION startingOrientation = STARTING_ORIENTATION.GOAL_SIDE;
 
     public enum SHOOTER_STATE {START_STATE, POINT_AT_GOAL_STATE, RUN_SHOOTER_MOTOR_STATE, WAIT_UNTIL_SHOOTER_SPINDEX_READY_STATE, CLOSE_GATE_STATE, RUN_TRANSFER_STATE, RUN_SPINDEX_STATE, RELEASE_STATE, INACTIVE_STATE, END_STATE}
-    private static SHOOTER_STATE shooterState = SHOOTER_STATE.INACTIVE_STATE;
-    private static SHOOTER_STATE motifRapidFireState = SHOOTER_STATE.INACTIVE_STATE;
-
-    public enum SPINDEX_STATE {NO_BALLS, ONE_BALL, TWO_BALLS, THREE_BALLS,}
     public enum INTAKE_STATE {EMPTY, JUST_INTOOK_BALL, CYCLING_BALL}
+
+    public enum AUTO_AIM_STATE {INACTIVE, START, WAIT_FOR_ROBOT_TO_FINISH_TURNING, END,}
 
     private static int numOfBallsInRobot = 0;
     private static INTAKE_STATE intakeState = INTAKE_STATE.EMPTY;
+    private static SHOOTER_STATE shooterState = SHOOTER_STATE.INACTIVE_STATE;
+
+    private static AUTO_AIM_STATE autoAimState = AUTO_AIM_STATE.INACTIVE;
+    private double AA_targetHeading;
+
 
     public static boolean spinningToColor = false;
 
@@ -187,14 +190,26 @@ public class Teleop extends OpMode {
 //        spindex.reverseTransfer();
         shooter.setMotorVelocity(0);
         ranAuto = false;
+
+        if (onBlueAlliance) {
+            drivebase.setPosition(new SparkFunOTOS.Pose2D(136, 8, Math.toRadians(180)));
+        } else {
+            drivebase.setPosition(new SparkFunOTOS.Pose2D(8, 8, Math.toRadians(0)));
+        }
+
     }
 
     @Override
     public void loop() {
         updateDrivebase();
-        updateSpindexAndIntake();
         updateMechanisms();
+
+        updateSpindexAndIntakeStateMahcine();
+        updateAutoAimStateMachine();
+        updateShooterStateMachine();
+
         updateTelemetry();
+
         drivebase.updateLL();
     }
 
@@ -217,29 +232,61 @@ public class Teleop extends OpMode {
         myTelem.update();
     }
 
-    private void updateShotDetector() {
-//        double rpm = shooter.getRpm();
-//        ema = (ALPHA * rpm) + (1 - ALPHA) * ema;
-//
-//        // arm when we’re basically at speed
-//        if (!shotArmed && ema > shooterDesiredVelocity * (1.0 - RECOVER_PCT)) {
-//            shotArmed = true;
-//        }
-//
-//        // detect dip
-//        if (shotArmed && ema < shooterDesiredVelocity * (1.0 - DROP_PCT)) {
-//            shotDetected = true;
-//            shotArmed = false;               // prevent double-count
-//            shotTimer.reset();
-//        }
-//
-//        // optional: clear flag after a short window so you can edge-trigger it
-//        if (shotDetected && shotTimer.seconds() > 0.25) {
-//            shotDetected = false;
-//        }
+
+
+    private void updateAutoAimStateMachine() {
+        switch (autoAimState) {
+
+            case INACTIVE:
+                break;
+
+            case START:
+                // Pick target depending on alliance
+                if (onBlueAlliance) {
+                    AA_targetHeading = Drivebase.getPointsHeading(
+                            Drivebase.blueAimPointX,
+                            Drivebase.blueAimPointy,
+                            Drivebase.otos.getPosition().x,
+                            Drivebase.otos.getPosition().y
+                    );
+                } else {
+                    AA_targetHeading = Drivebase.getPointsHeading(
+                            Drivebase.redAimPointX,
+                            Drivebase.redAimPointy,
+                            Drivebase.otos.getPosition().x,
+                            Drivebase.otos.getPosition().y
+                    );
+                }
+
+                // Start turning toward AA_targetHeading
+                drivebase.turnToHeading(AA_targetHeading);  // ← your custom turn method
+
+                autoAimState = AUTO_AIM_STATE.WAIT_FOR_ROBOT_TO_FINISH_TURNING;
+                break;
+
+
+            case WAIT_FOR_ROBOT_TO_FINISH_TURNING:
+                double botHeading = Drivebase.angleWrap(Math.toDegrees(Drivebase.otos.getPosition().h));
+
+                // You can change this tolerance depending on how crispy you want aim to be
+                double headingError = Math.abs(Drivebase.angleWrap(botHeading - AA_targetHeading));
+
+                if (headingError < 2.0) {   // robot is basically facing the target
+                    drivebase.stop();  // stop motors
+                    autoAimState = AUTO_AIM_STATE.END;
+                }
+
+                break;
+
+
+            case END:
+                autoAimState = AUTO_AIM_STATE.INACTIVE;
+                break;
+        }
     }
 
-    private void updateSpindexAndIntake() {
+
+    private void updateSpindexAndIntakeStateMahcine() {
         switch (intakeState) {
             case EMPTY:
                 if (!spindex.isSpindexMoving() && intake.isBallInIntake() && numOfBallsInRobot < 3 && shooterState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
@@ -282,13 +329,11 @@ public class Teleop extends OpMode {
         strafe = gamepad1.left_stick_x; // left/right
         turn = gamepad1.right_stick_x;  // rotation
 
-        if (shooterState != SHOOTER_STATE.INACTIVE_STATE || motifRapidFireState != SHOOTER_STATE.INACTIVE_STATE) {
-            drivebase.stop();
-        } else {
+        if (shooterState == SHOOTER_STATE.INACTIVE_STATE && autoAimState == AUTO_AIM_STATE.INACTIVE) {
             drivebase.drive(drive, strafe, turn);
         }
 
-        if (gamepad1.triangle) drivebase.turnToGoal();
+        if (gamepad1.triangle) autoAimState = AUTO_AIM_STATE.START;
 
         if (gamepad1.left_bumper) {
             drive *= .6;
@@ -299,9 +344,6 @@ public class Teleop extends OpMode {
 
 
     private void updateMechanisms() {
-        updateShooterStateMachine();
-        updateShotDetector();
-
         if (gamepad1.left_bumper) { //Outake
             intakePower = -1;
         } else if (gamepad1.right_bumper /* && !spindex.checkIfIntaked()*/) { //Intake

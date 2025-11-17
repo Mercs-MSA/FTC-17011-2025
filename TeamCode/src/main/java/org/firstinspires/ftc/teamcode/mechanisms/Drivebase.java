@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.mechanisms;
 
 import static org.firstinspires.ftc.teamcode.Constants.Constants.onBlueAlliance;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.pedropathing.control.PIDFController;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
@@ -18,11 +19,12 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.SoftElectronics;
 
 
+@Config
 public class Drivebase {
 
     // Declare motors
     private static DcMotor frontLeft, frontRight, backLeft, backRight;
-    private SparkFunOTOS otos;
+    public static SparkFunOTOS otos;
     private double offset = 0;
     private double IMUheadingTracker = 0;
 
@@ -31,6 +33,12 @@ public class Drivebase {
     private LLResult llResults;
 
     private double TX = 0;
+
+    public static double blueAimPointX = 7.5;
+    public static double blueAimPointy = 144.0;
+
+    public static double redAimPointX = 160.5;
+    public static double redAimPointy = 144.0;
 
     // Constructor
     public Drivebase(HardwareMap hardwareMap) {
@@ -88,6 +96,15 @@ public class Drivebase {
         }
     }
 
+    public static double getPointsHeading(double x, double y, double xr, double yr)
+    {
+        double calculatedAngleRads = Math.atan2(y-yr, x-xr);
+        double calculatedAngleDegs = Math.toDegrees(calculatedAngleRads);
+        //double correctedAngle = calculatedAngleDegs - 90.0;
+        return calculatedAngleDegs;
+    }
+
+
     // Field-centric drive
     public void drive(double drive, double strafe, double turn) {
         // Get current heading
@@ -129,23 +146,113 @@ public class Drivebase {
     public void setPosition(SparkFunOTOS.Pose2D pose) {
         otos.setPosition(pose);
     }
+    public static double angleWrap(double angle) {
+        angle = angle % 360;
+
+        if (angle > 180)
+            angle -= 360;
+        if (angle <= -180)
+            angle += 360;
+
+        return angle;
+    }
+
+    public void turnToHeading(double targetHeading) {
+        // convert bot heading to [-180, 180]
+        double currentHeading = angleWrap(Math.toDegrees(otos.getPosition().h));
+
+        // wrap target too (just to be safe)
+        targetHeading = angleWrap(targetHeading);
+
+        // smallest rotation
+        double error = angleWrap(targetHeading - currentHeading);
+
+        double kP = 0.01;
+        double turnPower = error * kP;
+
+        turnPower = Math.max(-0.5, Math.min(turnPower, 0.5));
+
+        setDrivePower(turnPower, -turnPower, turnPower, -turnPower);
+    }
+
+    public static void setDrivePower(double fl, double fr, double bl, double br) {
+        frontLeft.setPower(fl);
+        frontRight.setPower(fr);
+        backLeft.setPower(bl);
+        backRight.setPower(br);
+    }
+
 
 
     public void turnToGoal() {
-        double heading = Math.toDegrees(otos.getPosition().h);
+        // 1. Pick target based on alliance
+        double targetHeading;
         if (onBlueAlliance) {
-            if (heading > 62 && heading < 72) {
-                drive (0, 0, 0);
-            } else {
-                drive (0, 0, -0.05 * (67-heading));
-            }
+            targetHeading = getPointsHeading(
+                    blueAimPointX,
+                    blueAimPointy,
+                    otos.getPosition().x,
+                    otos.getPosition().y
+            );
         } else {
-            if (heading > 62 && heading < 72) {
-                drive (0, 0, 0);
-            } else {
-                drive (0, 0, -0.05 * (67-heading));
-            }
+            targetHeading = getPointsHeading(
+                    redAimPointX,
+                    redAimPointy,
+                    otos.getPosition().x,
+                    otos.getPosition().y
+            );
         }
+
+        // 2. Current heading (deg)
+        double botHeading = Math.toDegrees(otos.getPosition().h);
+
+        // 3. Normalize error to [-180, 180]
+        double error = targetHeading - botHeading;
+        error = (error + 540) % 360 - 180;
+
+        // 4. Deadband for stability
+        double deadband = 1.5;  // degrees
+        if (Math.abs(error) < deadband) {
+            drive(0, 0, 0);
+            return;
+        }
+
+        // 5. Proportional turning
+        double kP = 0.015;  // tune this
+        double turnPower = kP * error;
+
+        // 6. Limit turn speed
+        turnPower = Math.max(-0.4, Math.min(turnPower, 0.4));
+
+        // 7. Command robot
+        drive(0, 0, turnPower);
+    }
+
+
+//    public void turnToGoal() {
+//        double heading;
+//
+//        if (onBlueAlliance) {
+//            heading = getPointsHeading(blueAimPointX, blueAimPointy, otos.getPosition().x, otos.getPosition().y);
+//        } else {
+//            heading = getPointsHeading(redAimPointX, redAimPointy, otos.getPosition().x, otos.getPosition().y);
+//        }
+//
+
+//        double heading = Math.toDegrees(otos.getPosition().h);
+//        if (onBlueAlliance) {
+//            if (heading > 62 && heading < 72) {
+//                drive (0, 0, 0);
+//            } else {
+//                drive (0, 0, -0.05 * (67-heading));
+//            }
+//        } else {
+//            if (heading > 62 && heading < 72) {
+//                drive (0, 0, 0);
+//            } else {
+//                drive (0, 0, -0.05 * (67-heading));
+//            }
+//        }
 //        double botHeading = Math.toDegrees(SoftElectronics.getYaw());
 //        if (llResults.isValid())
 //            TX = llResults.getFiducialResults().get(0).getTargetXDegrees();
@@ -180,7 +287,7 @@ public class Drivebase {
 //                }
 //            }
 //        }
-    }
+//    }
 
 
     // Stop all motors
@@ -195,6 +302,7 @@ public class Drivebase {
     public SparkFunOTOS.Pose2D getPosition() {
         return otos.getPosition();
     }
+
 
     public double getBotHeading() {
         return IMUheadingTracker;
