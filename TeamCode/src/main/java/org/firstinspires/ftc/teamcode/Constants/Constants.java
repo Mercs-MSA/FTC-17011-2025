@@ -5,17 +5,19 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 
 /*
  * README
- * Edit "version" to the designated robot version before pushing code
- * Make sure to extend GeneralConstants.java
- * Place all common variables in GeneralConstants.java
- *
+ * - Edit "version" to the designated robot version before pushing code.
+ * - Make sure to extend GeneralConstants.java for each new version.
+ * - Place all common variables in GeneralConstants.java.
  */
 @Config
 public class Constants {
-    public static boolean onBlueAlliance = true;
-    public static boolean ranAuto = false;
 
-    public static enum VERSIONS {
+    // Global match state
+    public static boolean onBlueAlliance = true;
+    public static boolean ranAuto       = false;
+
+    // Robot version selector
+    public enum VERSIONS {
         V1(new V1Constants()),
         V2(new V2Constants()),
         V3(new V3Constants());
@@ -29,31 +31,41 @@ public class Constants {
         public GeneralConstants getConstants() {
             return constants;
         }
-    };
+    }
 
-    //VERSION SELECTOR; USE THIS TO SWITCH ROBOT VERSION, CHANGE NOTHING ELSE
+    // VERSION SELECTOR; USE THIS TO SWITCH ROBOT VERSION, CHANGE NOTHING ELSE
     public static final VERSIONS version = VERSIONS.V1;
 
+    // The active constants instance for the selected version
+    public static final GeneralConstants currentRobotConstants = version.getConstants();
 
-
-    public static V1Constants currentRobotConstants = new V1Constants();
-
+    // Optional: alpha robot type if you ever need one
     public static class AlphaConstants extends GeneralConstants {}
 
     public static class V1Constants extends GeneralConstants {
         public V1Constants() {
+            // IMU orientation
             logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.LEFT;
-            usbDirection = RevHubOrientationOnRobot.UsbFacingDirection.UP;
+            usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.UP;
 
-            limelightTolerance = 2;
+            // Limelight tuning
+            limelightTolerance = 2.0;
 
-            double yawServoForward;
-            double pitchServoZero;
+            // Servo reference angles/positions (fill with real values when you have them)
+            yawServoForward = 0.5;   // example value
+            pitchServoZero  = 0.5;   // example value
         }
     }
 
-    public static class V2Constants extends GeneralConstants {}
+    public static class V2Constants extends GeneralConstants {
+        public V2Constants() {
+            // Put V2 hardware-specific stuff here when you build that robot
+        }
+    }
 
-    public static class V3Constants extends GeneralConstants {}
-
+    public static class V3Constants extends GeneralConstants {
+        public V3Constants() {
+            // Put V3 hardware-specific stuff here when you build that robot
+        }
+    }
 }
