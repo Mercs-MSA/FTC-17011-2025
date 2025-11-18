@@ -91,7 +91,8 @@ public class Teleop extends OpMode {
 
         // Spin-up shooter
         if (gamepad1.right_trigger > 0.5)
-            shooter.setMotorVelocity(shooterDesiredVelocity);
+//            shooter.setMotorVelocity(shooterDesiredVelocity);
+            shooter.setShooterPower(1);
         else
             shooter.stop();
 
@@ -113,6 +114,7 @@ public class Teleop extends OpMode {
         telemetry.addData("Heading (deg)", Math.toDegrees(drivebase.getPosition().h));
         telemetry.addData("Shooter Target Vel", shooterDesiredVelocity);
         telemetry.addData("Shooter Vel", shooter.getVelocity());  // SINGLE MOTOR
+        telemetry.addData("shooter pid", shooter.getPID());
         // telemetry.addData("Shooter Right Vel", shooter.getRightVelocity()); // OLD
         telemetry.addData("Intake Power", intakePower);
         telemetry.update();
