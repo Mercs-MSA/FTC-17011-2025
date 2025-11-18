@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
-import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.LLStatus;
@@ -21,35 +20,46 @@ import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Constants.GeneralConstants;
 
-@Config
 public class Shooter {
     private DcMotorEx shooterMotor;
-    private DcMotorEx shooterTurretMotor;
+    private DcMotorEx turretMotor;
+    private Limelight3A limelight;
 
-    private static double goalAngle = 0;
-    private static double currentAngle = 0;
-    private static double pipeline = 0;
+    private static int goalAngle = 0;
+    private static int currentAngle = 0;
+    private static int pipeline = 0;
 
     private static double goalRange = 4;
 
+    public static double rightMaxPosition = 500;
+    public static double leftMaxPosition = 500;
+
     //5.5:1 turret rev
 
-
-
-
     public Shooter(HardwareMap hardwareMap) {
-        shooterMotor = hardwareMap.get(DcMotorEx.class, "shooterMotor");
+        shooterMotor = hardwareMap.get(DcMotorEx.class, "shooterMotorLeft");
+        turretMotor = hardwareMap.get(DcMotorEx.class, "turretMotor");
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+
         // Configure initial settings
         shooterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         shooterMotor.setDirection(DcMotor.Direction.REVERSE);
 
         shooterMotor.setVelocityPIDFCoefficients(20, 3, 0, 5);
+        turretMotor.setVelocityPIDFCoefficients(1, 0, 0, 0);
 
         shooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        turretMotor.setTargetPosition(0);
+        turretMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         shooterMotor.setVelocity(0);
 
+        limelight.start();
+        limelight.pipelineSwitch(0); //Pipeline 0 = Blue Tag (ID 20), Pipeline 1 = Red Tag (ID 24)
     }
 
     public double getRpm() {
@@ -83,5 +93,22 @@ public class Shooter {
 
     public void stop() {
         shooterMotor.setPower(0);
+    }
+
+    public LLResult getLLResult() {
+        LLResult llResult = limelight.getLatestResult();
+        return llResult;
+    }
+
+    public void lockOn() {
+        double tx = 0;
+        if (getLLResult().isValid())
+            tx = getLLResult().getTx();
+        else
+            return;
+
+        if (tx > .2) {
+            turretMotor.setVelocity(11);
+        }
     }
 }
