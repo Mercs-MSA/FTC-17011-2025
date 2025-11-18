@@ -18,7 +18,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.Transfer;
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
 
 @Config
-@TeleOp(name = "abg teleop", group = "Competition")
+@TeleOp(name = "teleop", group = "Competition")
 public class Teleop extends OpMode {
 
     // Dashboard / telemetry
@@ -43,8 +43,8 @@ public class Teleop extends OpMode {
     private double transferPower = 0.0;
 
     // Shooter velocities
-    public static int FAR_SHOT_VELOCITY = 6000;
-    public static int CLOSE_SHOT_VELOCITY = 6000;
+    public static int FAR_SHOT_VELOCITY = 4000;
+    public static int CLOSE_SHOT_VELOCITY = 2000;
 
     public static int shooterDesiredVelocity = 0;
 

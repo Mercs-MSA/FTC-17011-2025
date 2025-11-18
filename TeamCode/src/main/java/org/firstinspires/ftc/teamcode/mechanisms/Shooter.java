@@ -34,10 +34,11 @@ public class Shooter {
     public static double rightMaxPosition = 500;
     public static double leftMaxPosition = 500;
 
+
     //5.5:1 turret rev
 
     public Shooter(HardwareMap hardwareMap) {
-        shooterMotor = hardwareMap.get(DcMotorEx.class, "shooterMotorLeft");
+        shooterMotor = hardwareMap.get(DcMotorEx.class, "shooterMotor");
         turretMotor = hardwareMap.get(DcMotorEx.class, "turretMotor");
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
 

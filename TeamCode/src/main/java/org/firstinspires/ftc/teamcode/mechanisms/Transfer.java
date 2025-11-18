@@ -14,7 +14,7 @@ public class Transfer {
 
     public static int transferVelocity = 4000;
     public static double openPosition = .25;
-    public static double closedPosition = .55;
+    public static double closedPosition = .40;
 
     public Transfer(HardwareMap hardwareMap) {
         transferMotor = hardwareMap.get(DcMotorEx.class, "transferMotor");
