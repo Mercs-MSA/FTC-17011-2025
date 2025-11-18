@@ -50,9 +50,10 @@ public class Drivebase {
         // OTOS setup
         otos = hardwareMap.get(SparkFunOTOS.class, "otos");
         otos.setAngularUnit(AngleUnit.RADIANS);
-        SparkFunOTOS.Pose2D offsetPose = new SparkFunOTOS.Pose2D(0, 0, 0);
+        SparkFunOTOS.Pose2D offsetPose = new SparkFunOTOS.Pose2D(-0.375, -7.1875, Math.PI);
         otos.setOffset(offsetPose);
-        otos.setAngularScalar(.985889);
+        otos.setLinearScalar(1.04);
+        otos.setAngularScalar(.9855);
         otos.resetTracking();
         otos.calibrateImu();
 
@@ -67,7 +68,7 @@ public class Drivebase {
     }
 
     public void resetYaw() {
-        otos.setPosition(new SparkFunOTOS.Pose2D(0, 0, 0));
+        otos.setPosition(new SparkFunOTOS.Pose2D(0,0,0));
     }
 
     public void setPosition(SparkFunOTOS.Pose2D pose) {

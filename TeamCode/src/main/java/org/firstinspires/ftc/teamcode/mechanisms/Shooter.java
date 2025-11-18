@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.LLStatus;
@@ -20,13 +21,14 @@ import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Constants.GeneralConstants;
 
+@Config
 public class Shooter {
     private DcMotorEx shooterMotor;
     private DcMotorEx shooterTurretMotor;
 
-    private static int goalAngle = 0;
-    private static int currentAngle = 0;
-    private static int pipeline = 0;
+    private static double goalAngle = 0;
+    private static double currentAngle = 0;
+    private static double pipeline = 0;
 
     private static double goalRange = 4;
 
@@ -36,7 +38,7 @@ public class Shooter {
 
 
     public Shooter(HardwareMap hardwareMap) {
-        shooterMotor = hardwareMap.get(DcMotorEx.class, "shooterMotorLeft");
+        shooterMotor = hardwareMap.get(DcMotorEx.class, "shooterMotor");
         // Configure initial settings
         shooterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 

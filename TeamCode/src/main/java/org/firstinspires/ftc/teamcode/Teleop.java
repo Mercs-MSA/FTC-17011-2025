@@ -11,45 +11,62 @@ import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.mechanisms.Drivebase;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
+import org.firstinspires.ftc.teamcode.mechanisms.Transfer;
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
 
 @Config
-@TeleOp(name = "Main TeleOp", group = "Competition")
+@TeleOp(name = "abg teleop", group = "Competition")
 public class Teleop extends OpMode {
 
+    // Dashboard / telemetry
     private FtcDashboard dash;
     private SoftElectronics softElectronics;
+    private static Telemetry myTelem;
+    private static TelemetryManager myPanels;
+
+    // Mechanisms
     private Drivebase drivebase;
     private Intake intake;
+    private Transfer transfer;
     private Shooter shooter;
 
+    // Drive input
     private double drive = 0;
     private double strafe = 0;
     private double turn = 0;
 
+    // Mechanism power
     private double intakePower = 0.0;
+    private double transferPower = 0.0;
 
-    // Shooter velocity presets (ticks/sec)
-    public static int farZoneVelocity   = 2000;
-    public static int closeZoneVelocity = 1250;
-    public static int shooterDesiredVelocity = 2000;
+    // Shooter velocities
+    public static int FAR_SHOT_VELOCITY = 6000;
+    public static int CLOSE_SHOT_VELOCITY = 6000;
+
+    public static int shooterDesiredVelocity = 0;
+
+    public enum STARTING_ORIENTATION {
+        GOAL_SIDE,
+        PLAYER_SIDE
+    }
+    public static STARTING_ORIENTATION startingOrientation = STARTING_ORIENTATION.GOAL_SIDE;
 
     @Override
     public void init() {
         softElectronics = new SoftElectronics(hardwareMap, this.telemetry);
         dash = FtcDashboard.getInstance();
+        myTelem = new MultipleTelemetry(dash.getTelemetry(), softElectronics.getTelemetry());
+        myPanels = softElectronics.getPanelsTelemetry();
 
-        // Telemetry
-        MultipleTelemetry myTelem = new MultipleTelemetry(dash.getTelemetry(), softElectronics.getTelemetry());
-
-        // Mechanisms
         drivebase = new Drivebase(hardwareMap);
-        intake    = new Intake(hardwareMap);
-        shooter   = new Shooter(hardwareMap);
+        intake = new Intake(hardwareMap);
+        transfer = new Transfer(hardwareMap);
+        shooter = new Shooter(hardwareMap);
 
-        shooterDesiredVelocity = farZoneVelocity;
+        shooterDesiredVelocity = 0;
 
         myTelem.addData("Status", "Initialized");
         myTelem.update();
@@ -75,7 +92,6 @@ public class Teleop extends OpMode {
 
     @Override
     public void start() {
-        super.start();
         shooter.setMotorVelocity(0);
         ranAuto = false;
     }
@@ -85,6 +101,7 @@ public class Teleop extends OpMode {
         updateDrivebase();
         updateMechanisms();
         updateTelemetry();
+
         drivebase.updateLL();
     }
 
@@ -95,46 +112,61 @@ public class Teleop extends OpMode {
 
         drivebase.drive(drive, strafe, turn);
 
-        if (gamepad1.dpad_up)   drivebase.resetYaw();
-        if (gamepad1.triangle)  drivebase.turnToGoal();
+        if (gamepad1.dpad_up) {
+            drivebase.resetYaw();
+        }
+
+        if (gamepad1.triangle) {
+            drivebase.turnToGoal();
+        }
     }
 
     private void updateMechanisms() {
 
-        // Select shooting velocity
-        if (gamepad1.left_trigger > 0.5)
-            shooterDesiredVelocity = closeZoneVelocity;
-        else
-            shooterDesiredVelocity = farZoneVelocity;
+        // LT → Far shot (6000)
+        if (gamepad1.left_trigger > 0.3) {
+            shooterDesiredVelocity = FAR_SHOT_VELOCITY;
+            shooter.setMotorVelocity(shooterDesiredVelocity);
+            transfer.openTransferGate();
+        }
 
-        // Spin-up shooter
-        if (gamepad1.right_trigger > 0.5)
-//            shooter.setMotorVelocity(shooterDesiredVelocity);
-            shooter.setShooterPower(1);
-        else
+        // RT → Close shot (4500)
+        if (gamepad1.right_trigger > 0.3) {
+            shooterDesiredVelocity = CLOSE_SHOT_VELOCITY;
+            shooter.setMotorVelocity(shooterDesiredVelocity);
+            transfer.openTransferGate();
+        }
+
+        // Stop shooter ONLY if both triggers released
+        if (gamepad1.left_trigger < 0.3 && gamepad1.right_trigger < 0.3) {
             shooter.stop();
+            transfer.closeTransferGate();
+            shooterDesiredVelocity = 0;
+        }
 
-        // Intake controls
-        if (gamepad1.right_bumper)
-            intakePower = 1.0;
-        else if (gamepad1.left_bumper)
-            intakePower = -1.0;
-        else
-            intakePower = 0.0;
+        if (gamepad1.right_bumper && !gamepad1.left_bumper) {
+            intakePower   = 1.0;
+            transferPower = 1.0;
+        } else if (gamepad1.left_bumper && !gamepad1.right_bumper) {
+            intakePower   = -1.0;
+            transferPower = -1.0;
+        } else {
+            intakePower   = 0.0;
+            transferPower = 0.0;
+        }
+
 
         intake.setPower(intakePower);
-
-        if (gamepad1.dpadUpWasPressed())
-            drivebase.resetYaw();
+        transfer.setPower(transferPower);
     }
 
     private void updateTelemetry() {
-        telemetry.addData("Heading (deg)", Math.toDegrees(drivebase.getPosition().h));
-        telemetry.addData("Shooter Target Vel", shooterDesiredVelocity);
-        telemetry.addData("Shooter Vel", shooter.getVelocity());  // SINGLE MOTOR
-        telemetry.addData("shooter pid", shooter.getPID());
-        // telemetry.addData("Shooter Right Vel", shooter.getRightVelocity()); // OLD
-        telemetry.addData("Intake Power", intakePower);
-        telemetry.update();
+        myTelem.addData("Heading:", Math.toDegrees(drivebase.getPosition().h));
+        myTelem.addData("Shooter current velocity: ", shooter.getVelocity());
+        myTelem.addData("Shooter Target Vel:", shooterDesiredVelocity);
+        myTelem.addData("Intake Power:", intakePower);
+        myTelem.addData("Transfer Power:", transferPower);
+        myTelem.addData("Gate position: ", transfer.getTransferPosition());
+        myTelem.update();
     }
 }
