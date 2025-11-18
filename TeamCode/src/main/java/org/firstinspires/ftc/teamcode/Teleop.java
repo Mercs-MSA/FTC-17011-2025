@@ -56,6 +56,24 @@ public class Teleop extends OpMode {
     }
 
     @Override
+    public void init_loop() {
+        super.init_loop();
+        if (gamepad1.rightBumperWasPressed()) {
+            onBlueAlliance = true;
+        } else if (gamepad1.leftBumperWasPressed()) {
+            onBlueAlliance = false;
+        }
+
+        if (onBlueAlliance) {
+            telemetry.addLine("Blue alliance selected. Press gamepad 1 left bumper to switch.");
+            drivebase.offsetYaw(-90);
+        } else {
+            telemetry.addLine("Red alliance selected. Press gamepad 1 right bumper to switch.");
+            drivebase.offsetYaw(90);
+        }
+    }
+
+    @Override
     public void start() {
         super.start();
         shooter.setMotorVelocity(0);
