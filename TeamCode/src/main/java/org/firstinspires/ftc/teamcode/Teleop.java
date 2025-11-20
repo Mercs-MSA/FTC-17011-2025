@@ -18,7 +18,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.Transfer;
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
 
 @Config
-@TeleOp(name = "abg teleop", group = "Competition")
+@TeleOp(name = "Teleop", group = "Competition")
 public class Teleop extends OpMode {
 
     // Dashboard / telemetry
