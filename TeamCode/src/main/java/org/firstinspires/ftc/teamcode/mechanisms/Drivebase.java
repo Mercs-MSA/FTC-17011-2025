@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode.mechanisms;
 
 import static org.firstinspires.ftc.teamcode.Constants.Constants.onBlueAlliance;
 
+import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLStatus;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
@@ -10,6 +12,9 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+
+import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+
 
 public class Drivebase {
 
@@ -27,6 +32,11 @@ public class Drivebase {
     private LLResult llResults;
 
     private double TX = 0;
+
+    //Odometry
+    private Follower follower;
+    public static Pose startingPose = new Pose(88, 8, 90);
+
 
     public Drivebase(HardwareMap hardwareMap) {
         // Initialize motors
@@ -61,6 +71,11 @@ public class Drivebase {
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.start();
         limelight.pipelineSwitch(onBlueAlliance ? 0 : 1);
+
+        //Odometry setup
+        follower = Constants.createFollower(hardwareMap);
+        follower.setStartingPose(startingPose == null ? new Pose() : startingPose);
+        follower.update();
     }
 
     public void offsetYaw(double offsetDeg) {
@@ -68,7 +83,7 @@ public class Drivebase {
     }
 
     public void resetYaw() {
-        otos.setPosition(new SparkFunOTOS.Pose2D(0,0,0));
+        otos.setPosition(new SparkFunOTOS.Pose2D(0, 0, 0));
     }
 
     public void setPosition(SparkFunOTOS.Pose2D pose) {
@@ -89,6 +104,8 @@ public class Drivebase {
 
     // Field-centric drive
     public void drive(double drive, double strafe, double turn) {
+        follower.update();
+
         // Get current heading (radians)
         double botHeading = otos.getPosition().h + offset;
         IMUheadingTracker = botHeading;
@@ -107,6 +124,7 @@ public class Drivebase {
         frontRight.setPower(frontRightPower);
         backLeft.setPower(backLeftPower);
         backRight.setPower(backRightPower);
+
     }
 
     // Stop all motors
@@ -142,12 +160,24 @@ public class Drivebase {
     }
 
     // Simple proportional turn to an approximate goal heading (67 deg)
-    public void turnToGoal() {
-        double heading = Math.toDegrees(otos.getPosition().h);
-        if (heading > 62 && heading < 72) {
-            drive(0, 0, 0);
-        } else {
-            drive(0, 0, -0.05 * (67 - heading));
-        }
+//    public void turnToGoal() {
+//        double heading = Math.toDegrees(otos.getPosition().h);
+//        if (heading > 62 && heading < 72) {
+//            drive(0, 0, 0);
+//        } else {
+//            drive(0, 0, -0.05 * (67 - heading));
+//        }
+//    }
+
+    public Pose getPose() {
+        return follower.getPose();
     }
-}
+
+    public double getLaserHeading() {
+        return otos.getPosition().h;
+    }
+
+    public void setStartingPose(Pose pose) {
+        startingPose = pose;
+    }
+ }

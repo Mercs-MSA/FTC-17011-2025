@@ -43,16 +43,31 @@ public class Teleop extends OpMode {
     private double transferPower = 0.0;
 
     // Shooter velocities
-    public static int FAR_SHOT_VELOCITY = 6000;
-    public static int CLOSE_SHOT_VELOCITY = 6000;
+    public static int FAR_SHOT_VELOCITY = 1100;
+    public static int CLOSE_SHOT_VELOCITY = 3000;
 
     public static int shooterDesiredVelocity = 0;
+
+    public static double redTargetAngleFar = 67;
+    public static double redTargetAngleClose = 80;
+    public static double blueTargetAngleFar = -67;
+    public static double blueTargetAngleClose = -80;
+
 
     public enum STARTING_ORIENTATION {
         GOAL_SIDE,
         PLAYER_SIDE
     }
     public static STARTING_ORIENTATION startingOrientation = STARTING_ORIENTATION.GOAL_SIDE;
+
+    private enum TURRET_STATE {
+        ZEROED,
+        ZEROING,
+        AIMING_NO_TAG,
+        AIMING_TO_TAG
+    }
+
+    TURRET_STATE turretState = TURRET_STATE.ZEROED;
 
     @Override
     public void init() {
@@ -117,9 +132,32 @@ public class Teleop extends OpMode {
         }
 
         if (gamepad1.triangle) {
-            drivebase.turnToGoal();
+//            drivebase.turnToGoal();
         }
     }
+
+    public void updateTurretState() { //Turret 360: -1484 //Turrent 720: -2954
+        double turretFieldHeading = Math.toDegrees(drivebase.getLaserHeading()) + (double) shooter.getTurretPos() / 4.11 * (-1);
+        switch (turretState) {
+            case ZEROED:
+                shooter.setTurretTarget(0);
+                break;
+            case ZEROING:
+                break;
+            case AIMING_NO_TAG:
+                if (onBlueAlliance) {
+//                    if (turretFieldHeading)
+                } else {
+
+                }
+                break;
+            case AIMING_TO_TAG:
+                break;
+            default:
+                break;
+        }
+    }
+
 
     private void updateMechanisms() {
 
@@ -161,8 +199,9 @@ public class Teleop extends OpMode {
     }
 
     private void updateTelemetry() {
+        double shooterVel = shooter.getVelocity();
         myTelem.addData("Heading:", Math.toDegrees(drivebase.getPosition().h));
-        myTelem.addData("Shooter current velocity: ", shooter.getVelocity());
+        myTelem.addData("Shooter current velocity: ", shooterVel);
         myTelem.addData("Shooter Target Vel:", shooterDesiredVelocity);
         myTelem.addData("Intake Power:", intakePower);
         myTelem.addData("Transfer Power:", transferPower);

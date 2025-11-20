@@ -34,10 +34,19 @@ public class Shooter {
     public static double rightMaxPosition = 500;
     public static double leftMaxPosition = 500;
 
+    private enum TURRET_STATE {
+        ZEROED,
+        ZEROING,
+        AIMING_NO_TAG,
+        AIMING_TO_TAG
+    }
+
+    TURRET_STATE turretState = TURRET_STATE.ZEROED;
+
     //5.5:1 turret rev
 
     public Shooter(HardwareMap hardwareMap) {
-        shooterMotor = hardwareMap.get(DcMotorEx.class, "shooterMotorLeft");
+        shooterMotor = hardwareMap.get(DcMotorEx.class, "shooterMotor");
         turretMotor = hardwareMap.get(DcMotorEx.class, "turretMotor");
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
 
@@ -61,6 +70,8 @@ public class Shooter {
         limelight.start();
         limelight.pipelineSwitch(0); //Pipeline 0 = Blue Tag (ID 20), Pipeline 1 = Red Tag (ID 24)
     }
+
+
 
     public double getRpm() {
         // getVelocity() returns ticks/second; convert to RPM
@@ -99,6 +110,26 @@ public class Shooter {
         LLResult llResult = limelight.getLatestResult();
         return llResult;
     }
+
+    public void setTurretTarget(int pos) {
+        turretMotor.setTargetPosition(pos);
+    }
+
+    public void setTurretMode(DcMotor.RunMode mode) {
+        turretMotor.setMode(mode);
+    }
+
+    public void setTurretVelocity(int vel) {
+        turretMotor.setVelocity(vel);
+    }
+
+    public void setTurretPower(double power) {
+    }
+
+    public int getTurretPos() {
+        return turretMotor.getCurrentPosition();
+    }
+
 
     public void lockOn() {
         double tx = 0;
