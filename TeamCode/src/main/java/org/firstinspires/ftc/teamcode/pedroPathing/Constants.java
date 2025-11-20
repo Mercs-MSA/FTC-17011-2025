@@ -21,13 +21,13 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 @Configurable
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
-            .mass(11.65)
+            .mass(12.35)
 //            .forwardZeroPowerAcceleration(-147.96974366507212) /// Pinpoint
 //            .lateralZeroPowerAcceleration(-91) /// Pinpoint
-            .forwardZeroPowerAcceleration(-30.268997) /// OTOS
-            .lateralZeroPowerAcceleration(-68.553967) /// OTOS
-            .translationalPIDFCoefficients(new PIDFCoefficients(0.1, 0, 0.01, 0)) /// Pinpoint
-            .headingPIDFCoefficients(new PIDFCoefficients(2, 0.8, 0.01, 0)) /// Pinpoint
+            .forwardZeroPowerAcceleration(-71.5992333) /// OTOS
+            .lateralZeroPowerAcceleration(-94.5245) /// OTOS
+            .translationalPIDFCoefficients(new PIDFCoefficients(0.1, 0, 0.01, 0)) /// Both
+            .headingPIDFCoefficients(new PIDFCoefficients(2, 0.8, 0.01, 0)) /// Both
             ;
 
 
@@ -63,9 +63,9 @@ public class Constants {
             .rightRearMotorDirection(DcMotorEx.Direction.REVERSE)
             .useBrakeModeInTeleOp(true)
 //            .xVelocity(70.433729) /// Pinpoint
-            .xVelocity(78.682756) /// OTOS
+            .xVelocity(67.38256) /// OTOS
 //            .yVelocity(46.190167764908) /// Pinpoint
-            .yVelocity(57.198679) /// OTOS
+            .yVelocity(44.73285) /// OTOS
             ;
 
     public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);

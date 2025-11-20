@@ -53,4 +53,8 @@ public class Transfer {
     public double getTransferPosition() {
         return transferGate.getPosition();
     }
+
+    public double getPower() {
+        return transferMotor.getPower();
+    }
 }

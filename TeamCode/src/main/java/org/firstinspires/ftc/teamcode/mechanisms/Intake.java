@@ -32,6 +32,10 @@ public class Intake {
         intakeMotor.setPower(power);
     }
 
+    public double getPower() {
+        return intakeMotor.getPower();
+    }
+
     public void stop() {
         intakeMotor.setPower(0);
     }

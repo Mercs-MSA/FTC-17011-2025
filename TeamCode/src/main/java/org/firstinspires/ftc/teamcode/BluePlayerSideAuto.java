@@ -14,6 +14,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
+import org.firstinspires.ftc.teamcode.mechanisms.Transfer;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import static org.firstinspires.ftc.teamcode.Constants.Constants.onBlueAlliance;
@@ -25,6 +26,7 @@ public class BluePlayerSideAuto extends OpMode {
     private Follower follower;
     private SoftElectronics softElectronics;
     private Intake intake;
+    private Transfer transfer;
     private Shooter shooter;
 
     private FtcDashboard dash;
@@ -41,19 +43,21 @@ public class BluePlayerSideAuto extends OpMode {
 
     private AutoState state = AutoState.START;
 
-    public static int shooterVelocity = 6000;
+    // --- Shooter control ---
+    public static int shooterVelocity = 6000;   // ticks / sec, tune as needed
 
     // -----------------------------
-    // PATH / POSE DEFINITIONS (BLUE)
-    // Same XY, mirrored headings
+    // PATH / POSE DEFINITIONS (RED)
     // -----------------------------
 
+    // Start at the “hub” point, facing 90° (upfield)
     public static final Pose startPose = new Pose(
-            95.8554216, 95.6385542, Math.toRadians(-90)
+            95.8554216, 95.6385542, Math.toRadians(90)
     );
 
+    // End of Path 1: same XY, rotated to 180°
     public static final Pose poseRotateEnd = new Pose(
-            95.8554216, 95.6385542, Math.toRadians(-180)
+            95.8554216, 95.6385542, Math.toRadians(180)
     );
 
     public static final Pose p2 = new Pose(109.0843370, 83.4939759, 0);
@@ -84,9 +88,10 @@ public class BluePlayerSideAuto extends OpMode {
     );
 
     static {
-        // Mirror headings: -90 -> -180
-        path1.setLinearHeadingInterpolation(Math.toRadians(-90), Math.toRadians(-180));
+        // Path 1: explicit 90° -> 180° heading sweep, no translation
+        path1.setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(180));
 
+        // All others: tangential heading like in the composer
         path2.setTangentHeadingInterpolation();
         path3.setTangentHeadingInterpolation();
         path4.setTangentHeadingInterpolation();
@@ -106,6 +111,7 @@ public class BluePlayerSideAuto extends OpMode {
         telemetryA = new MultipleTelemetry(telemetry, dash.getTelemetry());
 
         intake = new Intake(hardwareMap);
+        transfer = new Transfer(hardwareMap);
         shooter = new Shooter(hardwareMap);
         shootTimer = new ElapsedTime();
 
@@ -116,7 +122,7 @@ public class BluePlayerSideAuto extends OpMode {
         onBlueAlliance = true;
         ranAuto = true;
 
-        telemetryA.addLine("Blue Mock Path Auto Init");
+        telemetryA.addLine("Red Mock Path Auto Init");
         telemetryA.update();
     }
 
@@ -134,6 +140,7 @@ public class BluePlayerSideAuto extends OpMode {
 
         switch (state) {
             case START:
+                // Begin following the full chain & start intaking
                 follower.followPath(fullChain);
                 intake.setPower(1.0);
                 state = AutoState.PATH_CHAIN_RUNNING;
@@ -141,6 +148,7 @@ public class BluePlayerSideAuto extends OpMode {
 
             case PATH_CHAIN_RUNNING:
                 if (!follower.isBusy()) {
+                    // Finished the path, stop intake and start shooter spinup
                     intake.setPower(0.0);
                     shooter.setMotorVelocity(shooterVelocity);
                     shootTimer.reset();
@@ -151,7 +159,9 @@ public class BluePlayerSideAuto extends OpMode {
             case SPINUP_AND_SHOOT:
                 double v = shooter.getVelocity();
 
+                // Simple spin-up check + timed feed
                 if (v > shooterVelocity * 0.9) {
+                    // Feed with intake for ~1.5 seconds once at speed
                     if (shootTimer.seconds() < 1.5) {
                         intake.setPower(1.0);
                     } else {
@@ -172,7 +182,7 @@ public class BluePlayerSideAuto extends OpMode {
         telemetryA.addData("Pose X", follower.getPose().getX());
         telemetryA.addData("Pose Y", follower.getPose().getY());
         telemetryA.addData("Heading (deg)", Math.toDegrees(follower.getPose().getHeading()));
-        //telemetryA.addData("Shooter vel", shooter.getVelocity());
+        telemetryA.addData("Shooter vel", shooter.getVelocity());
         telemetryA.addData("Timer", shootTimer.seconds());
         telemetryA.update();
     }

@@ -38,13 +38,10 @@ public class Teleop extends OpMode {
     private double strafe = 0;
     private double turn = 0;
 
-    // Mechanism power
-    private double intakePower = 0.0;
-    private double transferPower = 0.0;
 
     // Shooter velocities
-    public static int FAR_SHOT_VELOCITY = 1100;
-    public static int CLOSE_SHOT_VELOCITY = 3000;
+    public static int FAR_SHOT_VELOCITY = 1850;
+    public static int CLOSE_SHOT_VELOCITY = 1500;
 
     public static int shooterDesiredVelocity = 0;
 
@@ -58,6 +55,15 @@ public class Teleop extends OpMode {
         GOAL_SIDE,
         PLAYER_SIDE
     }
+
+    public enum SHOOTING_STATE {
+        INACTIVE,
+        START,
+        SPIN_UP,
+        SHOOT,
+        END
+    }
+    public static SHOOTING_STATE shootingState = SHOOTING_STATE.INACTIVE;
     public static STARTING_ORIENTATION startingOrientation = STARTING_ORIENTATION.GOAL_SIDE;
 
     private enum TURRET_STATE {
@@ -80,6 +86,8 @@ public class Teleop extends OpMode {
         intake = new Intake(hardwareMap);
         transfer = new Transfer(hardwareMap);
         shooter = new Shooter(hardwareMap);
+
+        shootingState = SHOOTING_STATE.INACTIVE;
 
         shooterDesiredVelocity = 0;
 
@@ -160,42 +168,48 @@ public class Teleop extends OpMode {
 
 
     private void updateMechanisms() {
+        shootingMachine();
 
         // LT → Far shot (6000)
         if (gamepad1.left_trigger > 0.3) {
             shooterDesiredVelocity = FAR_SHOT_VELOCITY;
-            shooter.setMotorVelocity(shooterDesiredVelocity);
-            transfer.openTransferGate();
+//            shooter.setMotorVelocity(shooterDesiredVelocity);
+//            transfer.openTransferGate();
+        } else {
+            shooterDesiredVelocity = CLOSE_SHOT_VELOCITY;
         }
 
         // RT → Close shot (4500)
-        if (gamepad1.right_trigger > 0.3) {
-            shooterDesiredVelocity = CLOSE_SHOT_VELOCITY;
-            shooter.setMotorVelocity(shooterDesiredVelocity);
-            transfer.openTransferGate();
+        if (gamepad1.right_trigger > 0.3 && shootingState.equals(SHOOTING_STATE.INACTIVE)) {
+//            shooterDesiredVelocity = CLOSE_SHOT_VELOCITY;
+//            shooter.setMotorVelocity(shooterDesiredVelocity);
+//            transfer.openTransferGate();
+            shootingState = SHOOTING_STATE.START;
         }
 
         // Stop shooter ONLY if both triggers released
-        if (gamepad1.left_trigger < 0.3 && gamepad1.right_trigger < 0.3) {
-            shooter.stop();
-            transfer.closeTransferGate();
-            shooterDesiredVelocity = 0;
-        }
+//        if (gamepad1.left_trigger < 0.3 && gamepad1.right_trigger < 0.3) {
+//            shooter.stop();
+//            transfer.closeTransferGate();
+//            shooterDesiredVelocity = 0;
+//        }
 
         if (gamepad1.right_bumper && !gamepad1.left_bumper) {
-            intakePower   = 1.0;
-            transferPower = 1.0;
+//            if (gamepad1.left_trigger > 0.3 || gamepad1.right_trigger > 0.3) {
+//                intakePower = 0.9;
+//                transferPower = 0.9;
+//            } else {
+                intake.setPower(1);
+                transfer.setPower(1);
+//            }
         } else if (gamepad1.left_bumper && !gamepad1.right_bumper) {
-            intakePower   = -1.0;
-            transferPower = -1.0;
+            intake.setPower(-1);
+            transfer.setPower(-1);
+        } else if (!shootingState.equals(SHOOTING_STATE.INACTIVE)) {
         } else {
-            intakePower   = 0.0;
-            transferPower = 0.0;
+            intake.setPower(0);
+            transfer.setPower(0);
         }
-
-
-        intake.setPower(intakePower);
-        transfer.setPower(transferPower);
     }
 
     private void updateTelemetry() {
@@ -203,9 +217,51 @@ public class Teleop extends OpMode {
         myTelem.addData("Heading:", Math.toDegrees(drivebase.getPosition().h));
         myTelem.addData("Shooter current velocity: ", shooterVel);
         myTelem.addData("Shooter Target Vel:", shooterDesiredVelocity);
-        myTelem.addData("Intake Power:", intakePower);
-        myTelem.addData("Transfer Power:", transferPower);
+        myTelem.addData("Intake Power:", intake.getPower());
+        myTelem.addData("Transfer Power:", transfer.getPower());
         myTelem.addData("Gate position: ", transfer.getTransferPosition());
+        myTelem.addData("Shooting state: ", shootingState);
+        myTelem.addData("Reached desired velocity? ", desiredVelocityReached());
+        myTelem.addData("Turret Position: ", shooter.getTurretPos());
         myTelem.update();
+    }
+
+    private boolean desiredVelocityReached() {
+        if (shooter.getVelocity() > shooterDesiredVelocity * .96)
+            return true;
+        return false;
+    }
+
+    private void shootingMachine() {
+        switch (shootingState) {
+            case START:
+                shooter.setMotorVelocity(shooterDesiredVelocity);
+                shootingState = SHOOTING_STATE.SPIN_UP;
+                break;
+            case SPIN_UP:
+                transfer.closeTransferGate();
+                if (desiredVelocityReached()) {
+                    shootingState = SHOOTING_STATE.SHOOT;
+                }
+                break;
+            case SHOOT:
+                transfer.openTransferGate();
+                transfer.setPower(.87);
+                if (gamepad1.right_trigger > .3 && !desiredVelocityReached()) {
+                    shootingState = SHOOTING_STATE.SPIN_UP;
+                } else if (gamepad1.right_trigger <= .3) {
+                    shootingState = SHOOTING_STATE.END;
+                }
+                break;
+            case END:
+                shooter.setMotorVelocity(0);
+                transfer.closeTransferGate();
+                transfer.setPower(0);
+                shootingState = SHOOTING_STATE.INACTIVE;
+                break;
+            case INACTIVE:
+                transfer.closeTransferGate();
+                break;
+        }
     }
 }

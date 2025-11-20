@@ -86,7 +86,7 @@ public class Tuning extends SelectableOpMode {
             follower = Constants.createFollower(hardwareMap);
         }
 
-        follower.setStartingPose(new Pose());
+        follower.setStartingPose(new Pose(-61.3235, -15.1146, Math.toRadians(-180)));
 
         poseHistory = follower.getPoseHistory();
 
@@ -157,7 +157,7 @@ class LocalizationTest extends OpMode {
 
         telemetryM.debug("x:" + follower.getPose().getX());
         telemetryM.debug("y:" + follower.getPose().getY());
-        telemetryM.debug("heading:" + follower.getPose().getHeading());
+        telemetryM.debug("heading:" + Math.toDegrees(follower.getPose().getHeading()));
         telemetryM.debug("total heading:" + follower.getTotalHeading());
         telemetryM.update(telemetry);
 
@@ -529,7 +529,7 @@ class LateralVelocityTuner extends OpMode {
  */
 class ForwardZeroPowerAccelerationTuner extends OpMode {
     private final ArrayList<Double> accelerations = new ArrayList<>();
-    public static double VELOCITY = 40;
+    public static double VELOCITY = 47;
 
     private double previousVelocity;
     private long previousTimeNano;
@@ -633,7 +633,7 @@ class ForwardZeroPowerAccelerationTuner extends OpMode {
  */
 class LateralZeroPowerAccelerationTuner extends OpMode {
     private final ArrayList<Double> accelerations = new ArrayList<>();
-    public static double VELOCITY = 30;
+    public static double VELOCITY = 34;
     private double previousVelocity;
     private long previousTimeNano;
     private boolean stopping;
