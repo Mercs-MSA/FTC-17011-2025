@@ -38,8 +38,8 @@ public class PPVBezierBlueAuto extends OpMode {
     private Shooter shooter;
     private ElapsedTime shootTimer;
     private int timesShot;
-    private double shooterVelocity = 1667;
-    public static double offsetX = 20;
+    private double shooterVelocity = 1600;
+    public static double offsetX = 10;
     public static double offsetY = 14;
     private static Teleop.SHOOTER_STATE rapidFireState = Teleop.SHOOTER_STATE.INACTIVE_STATE;
     private enum AUTO_STATE {
@@ -140,7 +140,7 @@ public class PPVBezierBlueAuto extends OpMode {
                                     new Pose(59.739 + offsetX, 21.723)
                             )
                     )
-                    .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(115))
+                    .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(120))
                     .build();
 
             intakeLevel1Ball1 = follower
@@ -382,6 +382,7 @@ public class PPVBezierBlueAuto extends OpMode {
 
             case intakeLevel1Ball1:
                 intake.setPower(1);
+                follower.setMaxPower(.5);
                 follower.followPath(paths.intakeLevel1Ball1);
 
                 PAW_NextState = AUTO_STATE.FULL_ROTATE_SPINDEX;
@@ -410,6 +411,7 @@ public class PPVBezierBlueAuto extends OpMode {
 
             case intakeLevel1ToShootFar:
                 intake.setPower(0);
+                follower.setMaxPower(1);
                 follower.followPath(paths.intakeLevel1ToShootFar);
 
                 spindex.changeCurrentPositionBy(spindexThirdRevolution);
@@ -422,6 +424,7 @@ public class PPVBezierBlueAuto extends OpMode {
 
             case intakeLevel2Ball1:
                 intake.setPower(1);
+                follower.setMaxPower(.5);
                 follower.followPath(paths.intakeLevel2Ball1);
 
                 PAW_NextState = AUTO_STATE.FULL_ROTATE_SPINDEX;
