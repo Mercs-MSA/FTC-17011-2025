@@ -17,6 +17,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.Constants.GeneralConstants;
 import org.firstinspires.ftc.teamcode.SoftElectronics;
 import org.firstinspires.ftc.teamcode.Teleop;
+import org.firstinspires.ftc.teamcode.mechanisms.Drivebase;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
 import org.firstinspires.ftc.teamcode.mechanisms.Spindex;
@@ -36,12 +37,18 @@ public class PPVBezierBlueAuto extends OpMode {
     private Spindex spindex;
     private Intake intake;
     private Shooter shooter;
-    private ElapsedTime shootTimer;
+    private ElapsedTime autoTimer;
     private int timesShot;
     private double shooterVelocity = 1600;
     public static double offsetX = 10;
     public static double offsetY = 14;
     private static Teleop.SHOOTER_STATE rapidFireState = Teleop.SHOOTER_STATE.INACTIVE_STATE;
+    private Drivebase drivebase;
+    private static double lastShooterVelocity;
+    public static double shooterVelocityDropThreshold = 100.6741;
+
+
+
     private enum AUTO_STATE {
         INIT,
         PATH_ACTIVE_WAIT,
@@ -64,6 +71,8 @@ public class PPVBezierBlueAuto extends OpMode {
         HALF_ROTATE_SPINDEX,
         SHOOT,
         WAIT_UNTIL_SHOOT_DONE,
+        WAIT_UNTIL_WAIT_DONE,
+        WAIT_STATE,
         END
     }
 
@@ -71,6 +80,9 @@ public class PPVBezierBlueAuto extends OpMode {
     private AUTO_STATE FR_NextState; //Full Rotate Spindex Next State
     private AUTO_STATE HR_NextState; //Half Rotate Spindex Next State
     private AUTO_STATE S_NextState; //Full Rotate Spindex Next State
+    private AUTO_STATE W_NextState; //Full Rotate Spindex Next State
+    private double W_StateSeconds = 0.67;
+
 
 
     private AUTO_STATE autoState;
@@ -80,15 +92,20 @@ public class PPVBezierBlueAuto extends OpMode {
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
         softElectronics = new SoftElectronics(hardwareMap, this.telemetry);
 
+        drivebase = new Drivebase(hardwareMap);
         spindex = new Spindex(hardwareMap);
         intake = new Intake(hardwareMap);
         shooter = new Shooter(hardwareMap);
-        shootTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
+
+        autoTimer = new ElapsedTime();
+        timesShot = 0;
 
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(new Pose(72, 8, Math.toRadians(90)));
 
         paths = new Paths(follower); // Build paths
+
+        lastShooterVelocity = shooter.getRightVelocity();
 
         panelsTelemetry.debug("Status", "Initialized");
         panelsTelemetry.update(telemetry);
@@ -140,7 +157,7 @@ public class PPVBezierBlueAuto extends OpMode {
                                     new Pose(59.739 + offsetX, 21.723)
                             )
                     )
-                    .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(120))
+                    .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(110))
                     .build();
 
             intakeLevel1Ball1 = follower
@@ -149,7 +166,7 @@ public class PPVBezierBlueAuto extends OpMode {
                             new BezierCurve(
                                     new Pose(59.739 + offsetX, 21.723),
                                     new Pose(65.993 + offsetX, 38.016 + offsetY),
-                                    new Pose(35.054 + offsetX, 35.383 + offsetY)
+                                    new Pose(35.054 + offsetX - 6, 35.383 + offsetY)
                             )
                     )
                     .setLinearHeadingInterpolation(Math.toRadians(115), Math.toRadians(180))
@@ -158,7 +175,9 @@ public class PPVBezierBlueAuto extends OpMode {
             intakeLevel1Ball2 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(35.054 + offsetX, 35.383 + offsetY), new Pose(29.952 + offsetX, 35.383 + offsetY))
+                            new BezierLine(
+                                    new Pose(35.054 + offsetX - 6, 35.383 + offsetY),
+                                    new Pose(29.952 + offsetX - 6, 35.383 + offsetY))
                     )
                     .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
                     .build();
@@ -166,7 +185,9 @@ public class PPVBezierBlueAuto extends OpMode {
             intakeLevel1Ball3 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(29.952 + offsetX, 35.383 + offsetY), new Pose(24.500 + offsetX, 35.383 + offsetY))
+                            new BezierLine(
+                                    new Pose(29.952 + offsetX - 6, 35.383 + offsetY),
+                                    new Pose(24.500 + offsetX - 6, 35.383 + offsetY))
                     )
                     .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
                     .build();
@@ -175,7 +196,7 @@ public class PPVBezierBlueAuto extends OpMode {
                     .pathBuilder()
                     .addPath(
                             new BezierCurve(
-                                    new Pose(24.500 + offsetX, 35.383 + offsetY),
+                                    new Pose(24.500 + offsetX - 6, 35.383 + offsetY),
                                     new Pose(40.155 + offsetX, 23.698 + offsetY),
                                     new Pose(59.739 + offsetX, 21.723)
                             )
@@ -274,17 +295,44 @@ public class PPVBezierBlueAuto extends OpMode {
     }
 
     private void updateRapidFireStateMachine() {
+
         switch (rapidFireState) {
             case START_STATE:
+                spindex.changeCurrentPositionBy(spindexThirdRevolution/2.0);
+                timesShot = 0;
                 rapidFireState = Teleop.SHOOTER_STATE.RUN_SHOOTER_MOTOR_STATE;
                 break;
 
             case RUN_SHOOTER_MOTOR_STATE:
-                shooter.setMotorVelocity(shooterVelocity);
-                spindex.runSpindexToTransferThird();
+                shooter.setMotorVelocity(Teleop.farZoneVelocity);
 
                 //Go to Next State
-                rapidFireState = Teleop.SHOOTER_STATE.WAIT_UNTIL_SHOOTER_SPINDEX_READY_STATE;
+                rapidFireState = Teleop.SHOOTER_STATE.RUN_SPINDEX_STATE;
+                break;
+
+            case POINT_AT_GOAL_STATE:
+
+//                double currentHeading = Math.toDegrees(drivebase.otos.getPosition().h + drivebase.getOffset());
+//
+//                // smallest rotation
+//                double error = ((shooterDesiredVelocity == closeZoneVelocity ? closeZoneHeading : farZoneHeading) - currentHeading) * -1;
+//
+//                double turnPower = error * drivebase.kP;
+//
+//                if (turnPower > 0) {
+//                    turnPower = Math.min(turnPower, 0.267);
+//                } else if (turnPower < 0) {
+//                    turnPower = Math.max(turnPower, -0.267);
+//                }
+//                double headingError = currentHeading - (shooterDesiredVelocity == farZoneHeading ? farZoneHeading : closeZoneHeading) ;
+//
+//                if (Math.abs(headingError) < 2.0) {   // robot is basically facing the target
+//                    drivebase.stop();  // stop motors
+//                    rapidFireState = Teleop.SHOOTER_STATE.RUN_SPINDEX_STATE;
+//                }
+//
+//                drivebase.setDrivePower(turnPower, -turnPower, turnPower, -turnPower);
+
 
                 break;
 
@@ -294,33 +342,38 @@ public class PPVBezierBlueAuto extends OpMode {
                 break;
 
             case WAIT_UNTIL_SHOOTER_SPINDEX_READY_STATE:
-                spindex.stopTransferWheel();
 
-                //Go to next state when Artifact is in position AND shooter has reached desired velocity
-                if (shooter.getRightVelocity() > Teleop.shooterDesiredVelocity * .95 && Math.abs(spindex.spindexMotor.getCurrentPosition() - Spindex.currentSpindexPosition) < 3) {
-                        rapidFireState = Teleop.SHOOTER_STATE.RUN_TRANSFER_STATE;
-                    shootTimer.reset();
+                if (shooter.getRightVelocity() > Teleop.farZoneVelocity * .97 && !spindex.isSpindexMoving()) {
+                    rapidFireState = Teleop.SHOOTER_STATE.RUN_TRANSFER_STATE;
                 }
+
                 break;
 
             case RUN_TRANSFER_STATE:
                 spindex.runTransferWheel();
 
                 //Repeat RUN_SPINDEX State when timer has reached 3 seconds or when artifact is shot
-                if (shootTimer.time(TimeUnit.SECONDS) > .8 && timesShot < 3) {
-                    shootTimer.reset();
+                if (lastShooterVelocity - shooter.getRightVelocity() > shooterVelocityDropThreshold || gamepad1.right_trigger > 0.5) {
+//                    rapidFireTimer.reset();
+//                    numOfBallsInRobot--;
+//                    if (numOfBallsInRobot < 0)
+//                        numOfBallsInRobot = 0;
                     timesShot++;
-                    rapidFireState = Teleop.SHOOTER_STATE.RUN_SPINDEX_STATE;
-                } else if (timesShot == 3){
-                    rapidFireState = Teleop.SHOOTER_STATE.END_STATE;
+                    if (timesShot >= 3) {
+                        rapidFireState = Teleop.SHOOTER_STATE.END_STATE;
+                    } else {
+                        rapidFireState = Teleop.SHOOTER_STATE.RUN_SPINDEX_STATE;
+                    }
                 }
+
+                lastShooterVelocity = shooter.getRightVelocity();
+
                 break;
 
             case END_STATE:
                 shooter.stop();
                 spindex.stopTransferWheel();
-                spindex.stopSpindex();
-                timesShot = 0;
+                spindex.changeCurrentPositionBy(spindexThirdRevolution/2.0);
 
                 rapidFireState = Teleop.SHOOTER_STATE.INACTIVE_STATE;
 
@@ -341,6 +394,7 @@ public class PPVBezierBlueAuto extends OpMode {
             case PATH_ACTIVE_WAIT:
                 if (!follower.isBusy()) {
                     autoState = PAW_NextState;
+                    autoTimer.reset();
                 }
 
                 break;
@@ -352,7 +406,7 @@ public class PPVBezierBlueAuto extends OpMode {
                 break;
 
             case HALF_ROTATE_SPINDEX:
-                spindex.changeCurrentPositionBy(spindexThirdRevolution/2);
+                spindex.changeCurrentPositionBy(spindexThirdRevolution/2.0);
 
                 autoState = HR_NextState;
                 break;
@@ -369,13 +423,24 @@ public class PPVBezierBlueAuto extends OpMode {
 
                 break;
 
+            case WAIT_STATE:
+                autoTimer.reset();
+                autoState = AUTO_STATE.WAIT_UNTIL_WAIT_DONE;
+                break;
+
+            case WAIT_UNTIL_WAIT_DONE:
+                if (autoTimer.time(TimeUnit.SECONDS) > W_StateSeconds)
+                    autoState = W_NextState;
+
+                break;
+
+
             /// Ordered Cases
             case startToShootFar:
                 follower.followPath(paths.startToShootFar);
 
                 PAW_NextState = AUTO_STATE.SHOOT;
-                S_NextState = AUTO_STATE.HALF_ROTATE_SPINDEX;
-                HR_NextState = AUTO_STATE.intakeLevel1Ball1;
+                S_NextState = AUTO_STATE.intakeLevel1Ball1;
 
                 autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
                 break;
@@ -392,21 +457,24 @@ public class PPVBezierBlueAuto extends OpMode {
                 break;
 
             case intakeLevel1Ball2:
-                follower.followPath(paths.intakeLevel1Ball2);
+                if (autoTimer.time(TimeUnit.MILLISECONDS) > 500) {
+                    follower.followPath(paths.intakeLevel1Ball2);
 
-                PAW_NextState = AUTO_STATE.FULL_ROTATE_SPINDEX;
-                FR_NextState = AUTO_STATE.intakeLevel1Ball3;
+                    PAW_NextState = AUTO_STATE.FULL_ROTATE_SPINDEX;
+                    FR_NextState = AUTO_STATE.intakeLevel1Ball3;
 
-                autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+                    autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+                }
                 break;
 
             case intakeLevel1Ball3:
-                follower.followPath(paths.intakeLevel1Ball3);
+                if (autoTimer.time(TimeUnit.MILLISECONDS) > 600) {
+                    follower.followPath(paths.intakeLevel1Ball3);
 
-                PAW_NextState = AUTO_STATE.HALF_ROTATE_SPINDEX;
-                HR_NextState = AUTO_STATE.intakeLevel1ToShootFar;
+                    PAW_NextState = AUTO_STATE.intakeLevel1ToShootFar;
 
-                autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+                    autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+                }
                 break;
 
             case intakeLevel1ToShootFar:
@@ -414,10 +482,8 @@ public class PPVBezierBlueAuto extends OpMode {
                 follower.setMaxPower(1);
                 follower.followPath(paths.intakeLevel1ToShootFar);
 
-                spindex.changeCurrentPositionBy(spindexThirdRevolution);
                 PAW_NextState = AUTO_STATE.SHOOT;
-                S_NextState = AUTO_STATE.HALF_ROTATE_SPINDEX;
-                HR_NextState = AUTO_STATE.intakeLevel2Ball1;
+                HR_NextState = AUTO_STATE.END;
 
                 autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
                 break;

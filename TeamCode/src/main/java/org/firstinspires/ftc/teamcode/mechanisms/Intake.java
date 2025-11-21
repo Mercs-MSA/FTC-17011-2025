@@ -11,7 +11,7 @@ public class Intake {
 
     private static AnalogInput intakeSensor;
     private static final double intakeDistanceTolerance = 2;
-    private static int intakeVelocity = 400;
+    private static int intakeVelocity = 800;
     public Intake(HardwareMap hardwareMap) {
         intakeMotor = hardwareMap.get(DcMotorEx.class, "intakeMotor");
         intakeMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);

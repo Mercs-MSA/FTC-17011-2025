@@ -72,7 +72,7 @@ public class Teleop extends OpMode {
     private static TelemetryManager myPanels;
 
     private double intakePower = 0.0;
-    public static int farZoneVelocity = 1550;
+    public static int farZoneVelocity = 1500;
 
     public static int closeZoneVelocity = 1250;
     public static double farZoneHeading = 65.0;
