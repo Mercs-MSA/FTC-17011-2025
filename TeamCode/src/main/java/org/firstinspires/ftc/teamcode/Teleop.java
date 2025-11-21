@@ -151,6 +151,7 @@ public class Teleop extends OpMode {
         double turretFieldHeading = Math.toDegrees(drivebase.getLaserHeading()) + (double) shooter.getTurretPos() / 8.13333333333; //TODO: Figure out why this value is constantly getting closer to 0
         switch (turretState) {
             case ZEROED:
+                shooter.setTurretPower(0);
                 shooter.setTurretTarget(0);
                 turretFieldHeading = Math.toDegrees(drivebase.getLaserHeading());
                 break;
@@ -259,7 +260,7 @@ public class Teleop extends OpMode {
     }
 
     private boolean desiredVelocityReached() {
-        if (shooter.getVelocity() > shooterDesiredVelocity * .96)
+        if (shooter.getVelocity() > shooterDesiredVelocity * .85)
             return true;
         return false;
     }

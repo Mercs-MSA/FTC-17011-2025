@@ -60,7 +60,7 @@ public class RedPlayerSideAuto extends OpMode {
     private AutoState nextState = AutoState.INACTIVE;
     private AutoState previousState = AutoState.INACTIVE;
 
-    public static int shooterVelocity = 2000;
+    public static int shooterVelocity = 1800;
 
     // -----------------------------
     // PATH / POSE DEFINITIONS (BLUE)
@@ -75,7 +75,7 @@ public class RedPlayerSideAuto extends OpMode {
             -46, -22, 0
     );
 
-    public static final Pose shootPose = new Pose(-55.06379, 15.07, Math.toRadians(-180));
+    public static final Pose shootPose = new Pose(-55.06379, -15.07, Math.toRadians(-180));
     public static final Pose readyIntakePose1 = new Pose(-34.41036, -28.7874, Math.toRadians(-90));
     public static final Pose intakeEndPose1 = new Pose(-35.67191, -58.8364, Math.toRadians(-90));
     public static final Pose readyIntakePose2 = new Pose(-45, -59.377, Math.toRadians(-135));
@@ -95,19 +95,12 @@ public class RedPlayerSideAuto extends OpMode {
     public static final PathChain intakeChain2 = new PathChain(readyIntakePath2, endIntakePath2, backToShoot2);
 
     static {
-        // Mirror headings: -90 -> -180
-//        path1.setLinearHeadingInterpolation(Math.toRadians(-90), Math.toRadians(-180));
-
         startPath.setTangentHeadingInterpolation();
         readyIntakePath1.setTangentHeadingInterpolation();
         endIntakePath1.setTangentHeadingInterpolation();
         backToShoot1.setTangentHeadingInterpolation();
         readyIntakePath2.setTangentHeadingInterpolation();
         endIntakePath2.setTangentHeadingInterpolation();
-//        path8.setTangentHeadingInterpolation();
-//        path9.setTangentHeadingInterpolation();
-//        path10.setTangentHeadingInterpolation();
-//        path11.setTangentHeadingInterpolation();
     }
 
     @Override
@@ -123,7 +116,7 @@ public class RedPlayerSideAuto extends OpMode {
 
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(startPose);
-        follower.setMaxPower(1.0);
+        follower.setMaxPower(.8);
 
         onBlueAlliance = false;
         ranAuto = true;
@@ -193,6 +186,7 @@ public class RedPlayerSideAuto extends OpMode {
 
             case END_PATH:
                 follower.followPath(exitPath);
+                shooter.setTurretTarget(0);
                 currentState = AutoState.PATH_ACTIVE;
                 nextState = AutoState.DONE;
                 break;

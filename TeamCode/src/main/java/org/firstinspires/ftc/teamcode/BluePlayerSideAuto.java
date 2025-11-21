@@ -34,74 +34,73 @@ public class BluePlayerSideAuto extends OpMode {
 
     private ElapsedTime shootTimer;
 
+    public enum SHOOTING_STATE {
+        INACTIVE,
+        START,
+        SPIN_UP,
+        SHOOT,
+        END
+    }
+    public static Teleop.SHOOTING_STATE shootingState = Teleop.SHOOTING_STATE.INACTIVE;
+
     private enum AutoState {
         START,
-        PATH_CHAIN_RUNNING,
-        SPINUP_AND_SHOOT,
-        DONE
+        PATH_ACTIVE,
+        SHOOT,
+        PATH_INTAKE_1,
+        //        PATH_SHOOT_1,
+        PATH_INTAKE_2,
+        //        PATH_SHOOT_2,
+        END_PATH,
+        DONE,
+        INACTIVE
     }
 
-    private AutoState state = AutoState.START;
+    private AutoState currentState = AutoState.INACTIVE;
+    private AutoState nextState = AutoState.INACTIVE;
+    private AutoState previousState = AutoState.INACTIVE;
 
-    // --- Shooter control ---
-    public static int shooterVelocity = 6000;   // ticks / sec, tune as needed
+    public static int shooterVelocity = 1800;
 
     // -----------------------------
-    // PATH / POSE DEFINITIONS (RED)
+    // PATH / POSE DEFINITIONS (BLUE)
+    // Same XY, mirrored headings
     // -----------------------------
 
-    // Start at the “hub” point, facing 90° (upfield)
     public static final Pose startPose = new Pose(
-            95.8554216, 95.6385542, Math.toRadians(90)
+            -61.3235, 15.1146, Math.toRadians(180)
     );
 
-    // End of Path 1: same XY, rotated to 180°
     public static final Pose poseRotateEnd = new Pose(
-            95.8554216, 95.6385542, Math.toRadians(180)
+            -46, 22, 0
     );
 
-    public static final Pose p2 = new Pose(109.0843370, 83.4939759, 0);
-    public static final Pose p3 = new Pose(129.0361445, 83.4939759, 0);
-    public static final Pose p4 = new Pose(95.8554216, 95.6385542, 0);
-    public static final Pose p5 = new Pose(109.7349390, 59.4216867, 0);
-    public static final Pose p6 = new Pose(128.6024090, 59.2048192, 0);
-    public static final Pose p7 = new Pose(95.6385542, 95.8554216, 0);
-    public static final Pose p8 = new Pose(110.8192771, 35.5662650, 0);
-    public static final Pose p9 = new Pose(129.2530120, 35.3493975, 0);
-    public static final Pose p10 = new Pose(95.8554216, 95.8554216, 0);
-    public static final Pose p11 = new Pose(119.4939759, 95.6385542, 0);
+    public static final Pose shootPose = new Pose(-55.06379, 15.07, Math.toRadians(180));
+    public static final Pose readyIntakePose1 = new Pose(-34.41036, 28.7874, Math.toRadians(90));
+    public static final Pose intakeEndPose1 = new Pose(-35.67191, 58.8364, Math.toRadians(90));
+    public static final Pose readyIntakePose2 = new Pose(-45, 59.377, Math.toRadians(135));
+    public static final Pose intakeEndPose2 = new Pose(-60.8429, 60.11, Math.toRadians(165));
 
-    public static final Path path1 = new Path(new BezierLine(startPose, poseRotateEnd));
-    public static final Path path2 = new Path(new BezierLine(poseRotateEnd, p2));
-    public static final Path path3 = new Path(new BezierLine(p2, p3));
-    public static final Path path4 = new Path(new BezierLine(p3, p4));
-    public static final Path path5 = new Path(new BezierLine(p4, p5));
-    public static final Path path6 = new Path(new BezierLine(p5, p6));
-    public static final Path path7 = new Path(new BezierLine(p6, p7));
-    public static final Path path8 = new Path(new BezierLine(p7, p8));
-    public static final Path path9 = new Path(new BezierLine(p8, p9));
-    public static final Path path10 = new Path(new BezierLine(p9, p10));
-    public static final Path path11 = new Path(new BezierLine(p10, p11));
+    public static final Path startPath = new Path(new BezierLine(startPose, shootPose));
+    public static final Path readyIntakePath1 = new Path(new BezierLine(shootPose, readyIntakePose1));
+    public static final Path endIntakePath1 = new Path(new BezierLine(readyIntakePose1, intakeEndPose1));
+    public static final Path backToShoot1 = new Path(new BezierLine(intakeEndPose1, shootPose));
+    public static final Path readyIntakePath2 = new Path(new BezierLine(shootPose, readyIntakePose2));
+    public static final Path endIntakePath2 = new Path(new BezierLine(readyIntakePose2, intakeEndPose2));
+    public static final Path backToShoot2 = new Path(new BezierLine(intakeEndPose2, shootPose));
+    public static final Path exitPath = new Path(new BezierLine(shootPose, poseRotateEnd));
 
-    public static final PathChain fullChain = new PathChain(
-            path1, path2, path3, path4, path5, path6, path7, path8, path9, path10, path11
-    );
+
+    public static final PathChain intakeChain1 = new PathChain(readyIntakePath1, endIntakePath2, backToShoot1);
+    public static final PathChain intakeChain2 = new PathChain(readyIntakePath2, endIntakePath2, backToShoot2);
 
     static {
-        // Path 1: explicit 90° -> 180° heading sweep, no translation
-        path1.setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(180));
-
-        // All others: tangential heading like in the composer
-        path2.setTangentHeadingInterpolation();
-        path3.setTangentHeadingInterpolation();
-        path4.setTangentHeadingInterpolation();
-        path5.setTangentHeadingInterpolation();
-        path6.setTangentHeadingInterpolation();
-        path7.setTangentHeadingInterpolation();
-        path8.setTangentHeadingInterpolation();
-        path9.setTangentHeadingInterpolation();
-        path10.setTangentHeadingInterpolation();
-        path11.setTangentHeadingInterpolation();
+        startPath.setTangentHeadingInterpolation();
+        readyIntakePath1.setTangentHeadingInterpolation();
+        endIntakePath1.setTangentHeadingInterpolation();
+        backToShoot1.setTangentHeadingInterpolation();
+        readyIntakePath2.setTangentHeadingInterpolation();
+        endIntakePath2.setTangentHeadingInterpolation();
     }
 
     @Override
@@ -117,7 +116,7 @@ public class BluePlayerSideAuto extends OpMode {
 
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(startPose);
-        follower.setMaxPower(1.0);
+        follower.setMaxPower(.8);
 
         onBlueAlliance = true;
         ranAuto = true;
@@ -131,45 +130,65 @@ public class BluePlayerSideAuto extends OpMode {
         super.start();
         shooter.setMotorVelocity(0);
         intake.setPower(0);
-        state = AutoState.START;
+        currentState = AutoState.START;
     }
 
     @Override
     public void loop() {
         follower.update();
 
-        switch (state) {
+        switch (currentState) {
             case START:
-                // Begin following the full chain & start intaking
-                follower.followPath(fullChain);
-                intake.setPower(1.0);
-                state = AutoState.PATH_CHAIN_RUNNING;
+                follower.followPath(startPath);
+                shooter.setTurretTarget(23.8);
+                currentState = AutoState.PATH_ACTIVE;
+                nextState = AutoState.SHOOT;
+                previousState = AutoState.START;
                 break;
 
-            case PATH_CHAIN_RUNNING:
+            case PATH_ACTIVE:
                 if (!follower.isBusy()) {
-                    // Finished the path, stop intake and start shooter spinup
-                    intake.setPower(0.0);
-                    shooter.setMotorVelocity(shooterVelocity);
                     shootTimer.reset();
-                    state = AutoState.SPINUP_AND_SHOOT;
+                    currentState = nextState;
                 }
                 break;
 
-            case SPINUP_AND_SHOOT:
-                double v = shooter.getVelocity();
-
-                // Simple spin-up check + timed feed
-                if (v > shooterVelocity * 0.9) {
-                    // Feed with intake for ~1.5 seconds once at speed
-                    if (shootTimer.seconds() < 1.5) {
-                        intake.setPower(1.0);
-                    } else {
-                        intake.setPower(0.0);
-                        shooter.setMotorVelocity(0);
-                        state = AutoState.DONE;
+            case SHOOT:
+                if (shootingState.equals(Teleop.SHOOTING_STATE.INACTIVE)) {
+                    intake.setPower(0);
+                    shootingState = Teleop.SHOOTING_STATE.START;
+                } else if (shootingState.equals(Teleop.SHOOTING_STATE.END)) {
+                    if (previousState.equals(AutoState.START)) {
+                        currentState = AutoState.PATH_INTAKE_1;
+                    } else if (previousState.equals(AutoState.PATH_INTAKE_1)) {
+                        currentState = AutoState.PATH_INTAKE_2;
+                    } else if (previousState.equals(AutoState.PATH_INTAKE_2)) {
+                        currentState = AutoState.END_PATH;
                     }
                 }
+                break;
+
+            case PATH_INTAKE_1:
+                intake.setPower(1);
+                follower.followPath(intakeChain1);
+                currentState = AutoState.PATH_ACTIVE;
+                nextState = AutoState.SHOOT;
+                previousState = AutoState.PATH_INTAKE_1;
+                break;
+
+            case PATH_INTAKE_2:
+                intake.setPower(1);
+                follower.followPath(intakeChain2);
+                currentState = AutoState.PATH_ACTIVE;
+                nextState = AutoState.SHOOT;
+                previousState = AutoState.PATH_INTAKE_2;
+                break;
+
+            case END_PATH:
+                follower.followPath(exitPath);
+                shooter.setTurretTarget(0);
+                currentState = AutoState.PATH_ACTIVE;
+                nextState = AutoState.DONE;
                 break;
 
             case DONE:
@@ -178,12 +197,54 @@ public class BluePlayerSideAuto extends OpMode {
                 break;
         }
 
-        telemetryA.addData("State", state);
+        telemetryA.addData("State", currentState);
         telemetryA.addData("Pose X", follower.getPose().getX());
         telemetryA.addData("Pose Y", follower.getPose().getY());
         telemetryA.addData("Heading (deg)", Math.toDegrees(follower.getPose().getHeading()));
-        telemetryA.addData("Shooter vel", shooter.getVelocity());
+        //telemetryA.addData("Shooter vel", shooter.getVelocity());
         telemetryA.addData("Timer", shootTimer.seconds());
         telemetryA.update();
+    }
+
+    private boolean desiredVelocityReached() {
+        if (shooter.getVelocity() > shooterVelocity * .96)
+            return true;
+        return false;
+    }
+
+    int shotCount = 0;
+    private void shootingMachine() {
+        switch (shootingState) {
+            case START:
+                shooter.setMotorVelocity(shooterVelocity);
+                shootingState = Teleop.SHOOTING_STATE.SPIN_UP;
+                break;
+            case SPIN_UP:
+                transfer.closeTransferGate();
+                if (desiredVelocityReached()) {
+                    shootingState = Teleop.SHOOTING_STATE.SHOOT;
+                }
+                break;
+            case SHOOT:
+                transfer.openTransferGate();
+                transfer.setPower(.87);
+                if (shotCount < 2 && !desiredVelocityReached()) {
+                    shotCount++;
+                    shootingState = Teleop.SHOOTING_STATE.SPIN_UP;
+                } else if (shotCount >= 2) {
+                    shotCount = 0;
+                    shootingState = Teleop.SHOOTING_STATE.END;
+                }
+                break;
+            case END:
+                shooter.setMotorVelocity(0);
+                transfer.closeTransferGate();
+                transfer.setPower(0);
+                shootingState = Teleop.SHOOTING_STATE.INACTIVE;
+                break;
+            case INACTIVE:
+                transfer.closeTransferGate();
+                break;
+        }
     }
 }
