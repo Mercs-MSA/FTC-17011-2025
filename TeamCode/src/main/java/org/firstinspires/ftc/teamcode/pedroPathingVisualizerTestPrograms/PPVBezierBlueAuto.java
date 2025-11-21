@@ -340,6 +340,7 @@ public class PPVBezierBlueAuto extends OpMode {
             /// General Cases
             case PATH_ACTIVE_WAIT:
                 if (!follower.isBusy()) {
+                    shootTimer.reset();
                     autoState = PAW_NextState;
                 }
 
@@ -392,22 +393,28 @@ public class PPVBezierBlueAuto extends OpMode {
                 break;
 
             case intakeLevel1Ball2:
-                follower.followPath(paths.intakeLevel1Ball2);
+                if (shootTimer.time(TimeUnit.MILLISECONDS) > 500) {
+                    follower.followPath(paths.intakeLevel1Ball2);
 
-                PAW_NextState = AUTO_STATE.FULL_ROTATE_SPINDEX;
-                FR_NextState = AUTO_STATE.intakeLevel1Ball3;
+                    PAW_NextState = AUTO_STATE.FULL_ROTATE_SPINDEX;
+                    FR_NextState = AUTO_STATE.intakeLevel1Ball3;
 
-                autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+                    autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+                }
                 break;
 
             case intakeLevel1Ball3:
-                follower.followPath(paths.intakeLevel1Ball3);
 
-                PAW_NextState = AUTO_STATE.HALF_ROTATE_SPINDEX;
-                HR_NextState = AUTO_STATE.intakeLevel1ToShootFar;
+                if (shootTimer.time(TimeUnit.MILLISECONDS) > 500) {
+                    follower.followPath(paths.intakeLevel1Ball3);
 
-                autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+                    PAW_NextState = AUTO_STATE.HALF_ROTATE_SPINDEX;
+                    HR_NextState = AUTO_STATE.intakeLevel1ToShootFar;
+
+                    autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+                }
                 break;
+
 
             case intakeLevel1ToShootFar:
                 intake.setPower(0);
@@ -434,25 +441,32 @@ public class PPVBezierBlueAuto extends OpMode {
                 break;
 
             case intakeLevel2Ball2:
-                follower.followPath(paths.intakeLevel2Ball2);
 
-                PAW_NextState = AUTO_STATE.FULL_ROTATE_SPINDEX;
-                FR_NextState = AUTO_STATE.intakeLevel2Ball3;
+                if (shootTimer.time(TimeUnit.MILLISECONDS) > 500) {
+                    follower.followPath(paths.intakeLevel2Ball2);
 
-                autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+                    PAW_NextState = AUTO_STATE.FULL_ROTATE_SPINDEX;
+                    FR_NextState = AUTO_STATE.intakeLevel2Ball3;
+
+                    autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+                }
                 break;
 
             case intakeLevel2Ball3:
-                follower.followPath(paths.intakeLevel2Ball3);
 
-                PAW_NextState = AUTO_STATE.FULL_ROTATE_SPINDEX;
-                FR_NextState = AUTO_STATE.intakeLevel2ToShootClose;
+                if (shootTimer.time(TimeUnit.MILLISECONDS) > 500) {
+                    follower.followPath(paths.intakeLevel2Ball3);
 
-                autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+                    PAW_NextState = AUTO_STATE.FULL_ROTATE_SPINDEX;
+                    FR_NextState = AUTO_STATE.intakeLevel2ToShootClose;
+
+                    autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+                }
                 break;
 
             case intakeLevel2ToShootClose:
                 intake.setPower(0);
+                follower.setMaxPower(1);
                 shooterVelocity = Teleop.closeZoneVelocity;
                 follower.followPath(paths.intakeLevel2ToShootClose);
 
