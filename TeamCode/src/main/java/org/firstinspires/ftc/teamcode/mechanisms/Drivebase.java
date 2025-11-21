@@ -61,6 +61,7 @@ public class Drivebase {
         otos = hardwareMap.get(SparkFunOTOS.class, "otos");
         otos.setAngularUnit(AngleUnit.RADIANS);
         SparkFunOTOS.Pose2D offsetPose = new SparkFunOTOS.Pose2D(-0.375, -7.1875, Math.PI);
+        otos.setPosition(new SparkFunOTOS.Pose2D(0, 0, Math.PI));
         otos.setOffset(offsetPose);
         otos.setLinearScalar(1.04);
         otos.setAngularScalar(.9855);
@@ -157,6 +158,10 @@ public class Drivebase {
 
     public double getOffset() {
         return offset;
+    }
+
+    public LLResult getLLResult() {
+        return limelight.getLatestResult();
     }
 
     // Simple proportional turn to an approximate goal heading (67 deg)

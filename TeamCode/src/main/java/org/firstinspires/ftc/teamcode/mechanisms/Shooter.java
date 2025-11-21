@@ -63,14 +63,17 @@ public class Shooter {
 
         shooterMotor.setDirection(DcMotor.Direction.REVERSE);
 
-        shooterMotor.setVelocityPIDFCoefficients(P, I, D, F);
-        turretMotor.setVelocityPIDFCoefficients(1, 0, 0, 0);
+//        shooterMotor.setVelocityPIDFCoefficients(P, I, D, F);
+//        turretMotor.setVelocityPIDFCoefficients(1, 0, 0, 0);
 
         shooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        turretMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        turretMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         turretMotor.setTargetPosition(0);
         turretMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        turretMotor.setVelocity(0);
 
         shooterMotor.setVelocity(0);
 
@@ -113,29 +116,45 @@ public class Shooter {
         shooterMotor.setPower(0);
     }
 
-//    public LLResult getLLResult() {
-//        LLResult llResult = limelight.getLatestResult();
-//        return llResult;
-//    }
+//
 
     public void setTurretTarget(double angle) { //Positive is counter-clockwise
-        turretMotor.setTargetPosition((int) (angle * 8.13333333333)); //Angle to tick conversion factor: 122/15 or 8.13333333
+        //Angle to tick conversion factor: 122/15 or 8.13333333
+        turretMotor.setTargetPosition((int) (clamp(-180, angle, 180) * 8.13333333333));
+        turretMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        turretMotor.setPower(0.8);
     }
 
     public void setTurretMode(DcMotor.RunMode mode) {
         turretMotor.setMode(mode);
     }
 
-    public void setTurretVelocity(int vel) {
+    public void setTurretVelocity(int vel, double power) {
         turretMotor.setVelocity(vel);
+        turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        turretMotor.setPower(power);
     }
 
     public void setTurretPower(double power) {
+        turretMotor.setPower(power);
     }
 
     public int getTurretPos() {
         return turretMotor.getCurrentPosition();
     }
+
+    public int getTurretTargetPos() {
+        return turretMotor.getTargetPosition();
+    }
+
+    public DcMotor.RunMode getTurretMode() {
+        return turretMotor.getMode();
+    }
+
+    public double getTurretVelocity() {
+        return turretMotor.getVelocity();
+    }
+
 
 
 //    public void lockOn() {
@@ -149,4 +168,10 @@ public class Shooter {
 //            turretMotor.setVelocity(11);
 //        }
 //    }
+    public static double clamp(double low, double val, double high) {
+        if (low > val) {
+            return low;
+        } else return Math.min(high, val);
+    }
+
 }

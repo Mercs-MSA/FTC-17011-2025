@@ -10,6 +10,7 @@ import com.bylazar.ftcontrol.panels.integration.TelemetryManager;
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.mechanisms.Drivebase;
@@ -68,7 +69,7 @@ public class Teleop extends OpMode {
 
     private enum TURRET_STATE {
         ZEROED,
-        ZEROING,
+        AIMED,
         AIMING_NO_TAG,
         AIMING_TO_TAG
     }
@@ -123,6 +124,7 @@ public class Teleop extends OpMode {
     public void loop() {
         updateDrivebase();
         updateMechanisms();
+        updateTurretState();
         updateTelemetry();
 
         drivebase.updateLL();
@@ -144,26 +146,42 @@ public class Teleop extends OpMode {
         }
     }
 
-    public void updateTurretState() { //Turret 360: -1484 //Turrent 720: -2954
-        double turretFieldHeading = Math.toDegrees(drivebase.getLaserHeading()) + (double) shooter.getTurretPos() / 4.11 * (-1);
+    public void updateTurretState() {//Turret 180: -1484 //Turrent 360: -2954
+        // Red goal: -42.6
+        double turretFieldHeading = Math.toDegrees(drivebase.getLaserHeading()) + (double) shooter.getTurretPos() / 8.13333333333; //TODO: Figure out why this value is constantly getting closer to 0
         switch (turretState) {
             case ZEROED:
                 shooter.setTurretTarget(0);
+                turretFieldHeading = Math.toDegrees(drivebase.getLaserHeading());
                 break;
-            case ZEROING:
+            case AIMED:
                 break;
             case AIMING_NO_TAG:
-                if (onBlueAlliance) {
-//                    if (turretFieldHeading)
-                } else {
 
+                if (drivebase.getTargetSeen()) {
+                    turretState = TURRET_STATE.AIMING_TO_TAG;
                 }
+
+                if (!onBlueAlliance) {
+                    shooter.setTurretVelocity((int)((-42-turretFieldHeading)*100), 0.5);
+                } else {
+                    shooter.setTurretVelocity((int)(((42-180)-turretFieldHeading)*100), 0.5);
+                }
+
+
                 break;
             case AIMING_TO_TAG:
+                shooter.setTurretMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                shooter.setTurretVelocity(-(int)((drivebase.getLLResult().getTx()+2)*3), 0.2);
+
+                if (!drivebase.getTargetSeen()) {
+                    turretState = TURRET_STATE.AIMING_NO_TAG;
+                }
                 break;
             default:
                 break;
         }
+        myTelem.addData("fieldTurretHeadihng", turretFieldHeading);
     }
 
 
@@ -171,7 +189,7 @@ public class Teleop extends OpMode {
         shootingMachine();
 
         // LT → Far shot (6000)
-        if (gamepad1.left_trigger > 0.3) {
+        if (gamepad1.dpad_down) {
             shooterDesiredVelocity = FAR_SHOT_VELOCITY;
 //            shooter.setMotorVelocity(shooterDesiredVelocity);
 //            transfer.openTransferGate();
@@ -185,6 +203,12 @@ public class Teleop extends OpMode {
 //            shooter.setMotorVelocity(shooterDesiredVelocity);
 //            transfer.openTransferGate();
             shootingState = SHOOTING_STATE.START;
+        }
+
+        if (gamepad1.left_trigger > 0.3) {
+            turretState = TURRET_STATE.AIMING_NO_TAG;
+        } else {
+            turretState = TURRET_STATE.ZEROED;
         }
 
         // Stop shooter ONLY if both triggers released
@@ -214,6 +238,7 @@ public class Teleop extends OpMode {
 
     private void updateTelemetry() {
         double shooterVel = shooter.getVelocity();
+        double turretFieldHeading = Math.toDegrees(drivebase.getLaserHeading()) + (double) shooter.getTurretPos() / 8.13333333333; //TODO: Figure out why this value is constantly getting closer to 0
         myTelem.addData("Heading:", Math.toDegrees(drivebase.getPosition().h));
         myTelem.addData("Shooter current velocity: ", shooterVel);
         myTelem.addData("Shooter Target Vel:", shooterDesiredVelocity);
@@ -221,8 +246,15 @@ public class Teleop extends OpMode {
         myTelem.addData("Transfer Power:", transfer.getPower());
         myTelem.addData("Gate position: ", transfer.getTransferPosition());
         myTelem.addData("Shooting state: ", shootingState);
+        myTelem.addData("Turret state:", turretState);
         myTelem.addData("Reached desired velocity? ", desiredVelocityReached());
         myTelem.addData("Turret Position: ", shooter.getTurretPos());
+        myTelem.addData("Turret target", shooter.getTurretTargetPos());
+        myTelem.addData("Turret mode:", shooter.getTurretMode());
+        myTelem.addData("Tx:", drivebase.getLLResult().getTx());
+        myTelem.addData("Turret velocity:", shooter.getTurretVelocity());
+        myTelem.addData("Turret Target Velocity", -(int)(drivebase.getLLResult().getTx()*100));
+        myTelem.addData("Turret NoTarget Velocity", (int)(((42-180)-turretFieldHeading)*10));
         myTelem.update();
     }
 
@@ -240,8 +272,11 @@ public class Teleop extends OpMode {
                 break;
             case SPIN_UP:
                 transfer.closeTransferGate();
-                if (desiredVelocityReached()) {
+                if (desiredVelocityReached() && gamepad1.right_trigger > .3) {
                     shootingState = SHOOTING_STATE.SHOOT;
+                } else if (!desiredVelocityReached() && gamepad1.right_trigger > .3) {
+                } else {
+                    shootingState = SHOOTING_STATE.END;
                 }
                 break;
             case SHOOT:

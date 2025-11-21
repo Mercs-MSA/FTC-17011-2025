@@ -24,11 +24,13 @@ public class TeleTest extends OpMode {
         turretMotor = hardwareMap.get(DcMotorEx.class, "turretMotor");
         shooterMotor = hardwareMap.get(DcMotorEx.class, "shooterMotor");
 
-        turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        turretMotor.setTargetPosition(0);
-        turretMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         turretMotor.setPower(0);
+
+//        turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//        turretMotor.setTargetPosition(0);
+//        turretMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//        turretMotor.setPower(0);
 
         transferGate = hardwareMap.get(Servo.class, "transferGate");
 
@@ -60,6 +62,10 @@ public class TeleTest extends OpMode {
         } else {
             intakeMotor.setPower(0);
             transferMotor.setPower(0);
+        }
+
+        if (gamepad1.right_trigger > 0.5) {
+            turretMotor.setPower(0);
         }
 
         if (gamepad1.circle) {
