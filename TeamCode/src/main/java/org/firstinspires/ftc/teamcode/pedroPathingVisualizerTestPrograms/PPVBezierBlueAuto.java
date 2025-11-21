@@ -38,7 +38,9 @@ public class PPVBezierBlueAuto extends OpMode {
     private Shooter shooter;
     private ElapsedTime shootTimer;
     private int timesShot;
-    private double shooterVelocity = 1667;
+    private double shooterVelocity = 1600;
+    public static double offsetX = 10;
+    public static double offsetY = 14;
     private static Teleop.SHOOTER_STATE rapidFireState = Teleop.SHOOTER_STATE.INACTIVE_STATE;
     private enum AUTO_STATE {
         INIT,
@@ -135,19 +137,19 @@ public class PPVBezierBlueAuto extends OpMode {
                             new BezierCurve(
                                     new Pose(56.000, 8.000),
                                     new Pose(55.790, 17.938),
-                                    new Pose(59.739, 21.723)
+                                    new Pose(59.739 + offsetX, 21.723)
                             )
                     )
-                    .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(115))
+                    .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(120))
                     .build();
 
             intakeLevel1Ball1 = follower
                     .pathBuilder()
                     .addPath(
                             new BezierCurve(
-                                    new Pose(59.739, 21.723),
-                                    new Pose(65.993, 38.016),
-                                    new Pose(35.054, 35.383)
+                                    new Pose(59.739 + offsetX, 21.723),
+                                    new Pose(65.993 + offsetX, 38.016 + offsetY),
+                                    new Pose(35.054 + offsetX, 35.383 + offsetY)
                             )
                     )
                     .setLinearHeadingInterpolation(Math.toRadians(115), Math.toRadians(180))
@@ -156,7 +158,7 @@ public class PPVBezierBlueAuto extends OpMode {
             intakeLevel1Ball2 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(35.054, 35.383), new Pose(29.952, 35.383))
+                            new BezierLine(new Pose(35.054 + offsetX, 35.383 + offsetY), new Pose(29.952 + offsetX, 35.383 + offsetY))
                     )
                     .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
                     .build();
@@ -164,7 +166,7 @@ public class PPVBezierBlueAuto extends OpMode {
             intakeLevel1Ball3 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(29.952, 35.383), new Pose(24.500, 35.383))
+                            new BezierLine(new Pose(29.952 + offsetX, 35.383 + offsetY), new Pose(24.500 + offsetX, 35.383 + offsetY))
                     )
                     .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
                     .build();
@@ -173,9 +175,9 @@ public class PPVBezierBlueAuto extends OpMode {
                     .pathBuilder()
                     .addPath(
                             new BezierCurve(
-                                    new Pose(24.500, 35.383),
-                                    new Pose(40.155, 23.698),
-                                    new Pose(59.739, 21.723)
+                                    new Pose(24.500 + offsetX, 35.383 + offsetY),
+                                    new Pose(40.155 + offsetX, 23.698 + offsetY),
+                                    new Pose(59.739 + offsetX, 21.723)
                             )
                     )
                     .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(115))
@@ -186,8 +188,8 @@ public class PPVBezierBlueAuto extends OpMode {
                     .addPath(
                             new BezierCurve(
                                     new Pose(59.739, 21.723),
-                                    new Pose(66.651, 61.221),
-                                    new Pose(34.725, 59.739)
+                                    new Pose(66.651, 61.221 + offsetY),
+                                    new Pose(34.725, 59.739 + offsetY)
                             )
                     )
                     .setLinearHeadingInterpolation(Math.toRadians(115), Math.toRadians(180))
@@ -196,7 +198,7 @@ public class PPVBezierBlueAuto extends OpMode {
             intakeLevel2Ball2 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(34.725, 59.739), new Pose(29.787, 59.739))
+                            new BezierLine(new Pose(34.725, 59.739 + offsetY), new Pose(29.787, 59.739 + offsetY))
                     )
                     .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
                     .build();
@@ -204,7 +206,7 @@ public class PPVBezierBlueAuto extends OpMode {
             intakeLevel2Ball3 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(29.787, 59.739), new Pose(24.192, 59.739))
+                            new BezierLine(new Pose(29.787, 59.739 + offsetY), new Pose(24.192, 59.739 + offsetY))
                     )
                     .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
                     .build();
@@ -213,9 +215,9 @@ public class PPVBezierBlueAuto extends OpMode {
                     .pathBuilder()
                     .addPath(
                             new BezierCurve(
-                                    new Pose(24.192, 59.739),
-                                    new Pose(59.739, 61.056),
-                                    new Pose(59.081, 84.425)
+                                    new Pose(24.192 + offsetX, 59.739),
+                                    new Pose(59.739 + offsetX, 61.056),
+                                    new Pose(59.081 + offsetX, 84.425)
                             )
                     )
                     .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(130))
@@ -224,7 +226,7 @@ public class PPVBezierBlueAuto extends OpMode {
             intakeLevel3Ball1 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(59.081, 84.425), new Pose(34.889, 83.767))
+                            new BezierLine(new Pose(59.081, 84.425 + offsetY), new Pose(34.889, 83.767))
                     )
                     .setLinearHeadingInterpolation(Math.toRadians(130), Math.toRadians(180))
                     .build();
@@ -232,7 +234,7 @@ public class PPVBezierBlueAuto extends OpMode {
             intakeLevel3Ball2 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(34.889, 83.767), new Pose(29.787, 83.767))
+                            new BezierLine(new Pose(34.889, 83.767 + offsetY), new Pose(29.787, 83.767 + offsetY))
                     )
                     .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
                     .build();
@@ -240,7 +242,7 @@ public class PPVBezierBlueAuto extends OpMode {
             intakeLevel3Ball3 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(29.787, 83.767), new Pose(24.686, 83.767))
+                            new BezierLine(new Pose(29.787, 83.767 + offsetY), new Pose(24.686, 83.767 + offsetY))
                     )
                     .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
                     .build();
@@ -249,9 +251,9 @@ public class PPVBezierBlueAuto extends OpMode {
                     .pathBuilder()
                     .addPath(
                             new BezierCurve(
-                                    new Pose(24.686, 83.767),
-                                    new Pose(43.941, 70.272),
-                                    new Pose(59.081, 84.425)
+                                    new Pose(24.686 + offsetX, 83.767),
+                                    new Pose(43.941 + offsetX, 70.272),
+                                    new Pose(59.081 + offsetX, 84.425)
                             )
                     )
                     .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(130))
@@ -380,6 +382,7 @@ public class PPVBezierBlueAuto extends OpMode {
 
             case intakeLevel1Ball1:
                 intake.setPower(1);
+                follower.setMaxPower(.5);
                 follower.followPath(paths.intakeLevel1Ball1);
 
                 PAW_NextState = AUTO_STATE.FULL_ROTATE_SPINDEX;
@@ -408,6 +411,7 @@ public class PPVBezierBlueAuto extends OpMode {
 
             case intakeLevel1ToShootFar:
                 intake.setPower(0);
+                follower.setMaxPower(1);
                 follower.followPath(paths.intakeLevel1ToShootFar);
 
                 spindex.changeCurrentPositionBy(spindexThirdRevolution);
@@ -420,6 +424,7 @@ public class PPVBezierBlueAuto extends OpMode {
 
             case intakeLevel2Ball1:
                 intake.setPower(1);
+                follower.setMaxPower(.5);
                 follower.followPath(paths.intakeLevel2Ball1);
 
                 PAW_NextState = AUTO_STATE.FULL_ROTATE_SPINDEX;
