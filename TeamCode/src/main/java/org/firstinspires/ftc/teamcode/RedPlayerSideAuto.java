@@ -244,7 +244,7 @@ public class RedPlayerSideAuto extends OpMode {
 
                 //Go to next state when Artifact is in position AND shooter has reached desired velocity
                 if (shooter.getRightVelocity() > shooterDesiredVelocity * .95 && Math.abs(spindex.spindexMotor.getCurrentPosition() - Spindex.currentSpindexPosition) < 3) {
-                    if (spindex.getColor(spindex.spindexColorRight).equals(GeneralConstants.colorSensorStates.OCCUPIED))
+                    if (spindex.getColorRaw(spindex.spindexColorRight).equals(GeneralConstants.colorSensorStates.OCCUPIED))
                         rapidFireState = Teleop.SHOOTER_STATE.RUN_TRANSFER_STATE;
                     else
                         rapidFireState = Teleop.SHOOTER_STATE.RUN_SPINDEX_STATE;

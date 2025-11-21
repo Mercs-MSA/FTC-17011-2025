@@ -31,6 +31,7 @@ public class Drivebase {
     private Limelight3A limelight;
     private LLStatus llStatus;
     private LLResult llResults;
+    public static double kP = 0.01;
 
     private double TX = 0;
 
@@ -109,7 +110,7 @@ public class Drivebase {
     public void drive(double drive, double strafe, double turn) {
         // Get current heading
 //        double botHeading = SoftElectronics.getYaw() + offset;
-        double botHeading = otos.getPosition().h;
+        double botHeading = otos.getPosition().h + offset;
         IMUheadingTracker = botHeading;
 
         // Rotate joystick input to be field-centric
@@ -147,147 +148,40 @@ public class Drivebase {
         otos.setPosition(pose);
     }
     public static double angleWrap(double angle) {
-        angle = angle % 360;
-
-        if (angle > 180)
-            angle -= 360;
-        if (angle <= -180)
-            angle += 360;
+//        angle = angle % 360;
+//
+//        if (angle > 180)
+//            angle -= 360;
+//        if (angle <= -180)
+//            angle += 360;
 
         return angle;
     }
 
     public void turnToHeading(double targetHeading) {
         // convert bot heading to [-180, 180]
-        double currentHeading = angleWrap(Math.toDegrees(otos.getPosition().h));
-
-        // wrap target too (just to be safe)
-        targetHeading = angleWrap(targetHeading);
+        double currentHeading = Math.toDegrees(otos.getPosition().h);
 
         // smallest rotation
-        double error = angleWrap(targetHeading - currentHeading);
+        double error = (targetHeading - currentHeading) * -1;
 
-        double kP = 0.01;
         double turnPower = error * kP;
 
-        turnPower = Math.max(-0.5, Math.min(turnPower, 0.5));
+        if (turnPower > 0) {
+            turnPower = Math.min(turnPower, 0.267);
+        } else if (turnPower < 0) {
+            turnPower = Math.max(turnPower, -0.267);
+        }
 
         setDrivePower(turnPower, -turnPower, turnPower, -turnPower);
     }
 
-    public static void setDrivePower(double fl, double fr, double bl, double br) {
+    public void setDrivePower(double fl, double fr, double bl, double br) {
         frontLeft.setPower(fl);
         frontRight.setPower(fr);
         backLeft.setPower(bl);
         backRight.setPower(br);
     }
-
-
-
-    public void turnToGoal() {
-        // 1. Pick target based on alliance
-        double targetHeading;
-        if (onBlueAlliance) {
-            targetHeading = getPointsHeading(
-                    blueAimPointX,
-                    blueAimPointy,
-                    otos.getPosition().x,
-                    otos.getPosition().y
-            );
-        } else {
-            targetHeading = getPointsHeading(
-                    redAimPointX,
-                    redAimPointy,
-                    otos.getPosition().x,
-                    otos.getPosition().y
-            );
-        }
-
-        // 2. Current heading (deg)
-        double botHeading = Math.toDegrees(otos.getPosition().h);
-
-        // 3. Normalize error to [-180, 180]
-        double error = targetHeading - botHeading;
-        error = (error + 540) % 360 - 180;
-
-        // 4. Deadband for stability
-        double deadband = 1.5;  // degrees
-        if (Math.abs(error) < deadband) {
-            drive(0, 0, 0);
-            return;
-        }
-
-        // 5. Proportional turning
-        double kP = 0.015;  // tune this
-        double turnPower = kP * error;
-
-        // 6. Limit turn speed
-        turnPower = Math.max(-0.4, Math.min(turnPower, 0.4));
-
-        // 7. Command robot
-        drive(0, 0, turnPower);
-    }
-
-
-//    public void turnToGoal() {
-//        double heading;
-//
-//        if (onBlueAlliance) {
-//            heading = getPointsHeading(blueAimPointX, blueAimPointy, otos.getPosition().x, otos.getPosition().y);
-//        } else {
-//            heading = getPointsHeading(redAimPointX, redAimPointy, otos.getPosition().x, otos.getPosition().y);
-//        }
-//
-
-//        double heading = Math.toDegrees(otos.getPosition().h);
-//        if (onBlueAlliance) {
-//            if (heading > 62 && heading < 72) {
-//                drive (0, 0, 0);
-//            } else {
-//                drive (0, 0, -0.05 * (67-heading));
-//            }
-//        } else {
-//            if (heading > 62 && heading < 72) {
-//                drive (0, 0, 0);
-//            } else {
-//                drive (0, 0, -0.05 * (67-heading));
-//            }
-//        }
-//        double botHeading = Math.toDegrees(SoftElectronics.getYaw());
-//        if (llResults.isValid())
-//            TX = llResults.getFiducialResults().get(0).getTargetXDegrees();
-//
-//        //TODO: Make more concise later
-//        if (onBlueAlliance) {
-//            if (!llResults.isValid()) {
-//
-//            } else {
-//                if (TX < -.5) {
-//                    drive(0, 0, -.25 * (Math.abs(TX) / 50));
-//                } else if (TX > .5) {
-//                    drive(0, 0, .25 * (Math.abs(TX) / 50));
-//                } else {
-//                    drive(0, 0, 0);
-//                }
-//            }
-//        } else {
-//            if (!llResults.isValid()) {
-//                if (botHeading < 44 && botHeading > -135) {
-//                    drive(0, 0, .5 * (Math.abs(-45 - botHeading) / 10));
-//                } else {
-//                    drive(0, 0, -.5 * (Math.abs(-45 - botHeading) / 10));
-//                }
-//            } else {
-//                if (TX < -.5) {
-//                    drive(0, 0, -.25 * (Math.abs(TX) / 50));
-//                } else if (TX > .5) {
-//                    drive(0, 0, .25 * (Math.abs(TX) / 50));
-//                } else {
-//                    drive(0, 0, 0);
-//                }
-//            }
-//        }
-//    }
 
 
     // Stop all motors
