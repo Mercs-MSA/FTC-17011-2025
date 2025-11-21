@@ -12,16 +12,13 @@ import org.firstinspires.ftc.teamcode.Teleop;
 
 @Config
 public class Spindex {
-    public static DcMotorEx spindexMotor;
-//    public ColorRangeSensor spindexColorBack; //Closest to wheel
-    public ColorRangeSensor spindexColorRight; //Right of the wheel
-//    public ColorRangeSensor spindexColorLeft; //Left of the wheel
+    public DcMotorEx spindexMotor;
+    public ColorRangeSensor spindexColorBack;
+    public ColorRangeSensor spindexColorRight;
+    public ColorRangeSensor spindexColorLeft;
 
     public static double currentSpindexPosition = 0;
-    private static double currentSpindexPositionAccurate = 0;
-
     public static double spindexPositionFromAuto = 0;
-
 
 
     private GeneralConstants.colorSensorStates spindexColorBackState;
@@ -29,25 +26,19 @@ public class Spindex {
     private GeneralConstants.colorSensorStates spindexColorLeftState;
 
     private static CRServo spindexTransferServo;
-    private static int numOfArtifactsInRobot = 0;
-    private int numSnapshot = 0;
 
     public static double spindexMotorVelocity = 600;
 
-    private boolean alreadyChecked = false;
-
-
     public GeneralConstants.colorSensorStates targetColor = GeneralConstants.colorSensorStates.EMPTY;
-
 
 
     public Spindex(HardwareMap hardwareMap) {
         spindexMotor = hardwareMap.get(DcMotorEx.class, "spindexMotor");
 
         spindexTransferServo = hardwareMap.get(CRServo.class, "spindexTransferServo");
-//        spindexColorBack = hardwareMap.get(ColorRangeSensor.class, "spindexColorB");
+        spindexColorBack = hardwareMap.get(ColorRangeSensor.class, "spindexColorB");
         spindexColorRight = hardwareMap.get(ColorRangeSensor.class, "spindexColorR");
-//        spindexColorLeft = hardwareMap.get(ColorRangeSensor.class, "spindexColorL");
+        spindexColorLeft = hardwareMap.get(ColorRangeSensor.class, "spindexColorL");
 
         spindexColorBackState = GeneralConstants.colorSensorStates.EMPTY;
         spindexColorRightState = GeneralConstants.colorSensorStates.EMPTY;
@@ -56,8 +47,9 @@ public class Spindex {
         spindexMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         spindexMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         spindexMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
         currentSpindexPosition = 0;
-        spindexMotor.setTargetPosition((int)(currentSpindexPosition));
+        spindexMotor.setTargetPosition((int) (currentSpindexPosition));
         spindexMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         spindexMotor.setVelocity(spindexMotorVelocity);
 
@@ -72,7 +64,7 @@ public class Spindex {
 
     public void changeCurrentPositionBy(double positionChange) {
         currentSpindexPosition += positionChange;
-        spindexMotor.setTargetPosition( (int) (Math.round(currentSpindexPosition)) );
+        spindexMotor.setTargetPosition((int) (Math.round(currentSpindexPosition)));
         spindexMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
         spindexMotor.setVelocity(spindexMotorVelocity);
     }
@@ -85,8 +77,8 @@ public class Spindex {
     }
 
     public void runSpindexToTransferThird() {
-        if (currentSpindexPosition % Teleop.spindexThirdRevolution != 0 ) {
-            changeCurrentPositionBy(Teleop.spindexThirdRevolution/2.0);
+        if (currentSpindexPosition % Teleop.spindexThirdRevolution != 0) {
+            changeCurrentPositionBy(Teleop.spindexThirdRevolution / 2.0);
         }
     }
 
@@ -94,11 +86,6 @@ public class Spindex {
     public void stopSpindex() {
         spindexMotor.setVelocity(0);
     }
-
-    public double getSpindexVelocity() {
-        return spindexMotor.getVelocity();
-    }
-
 
 
     public void runTransferWheel() {
@@ -114,76 +101,37 @@ public class Spindex {
         spindexTransferServo.setPower(0);
     }
 
-
-    public void setSpindexColorTarget(GeneralConstants.colorSensorStates targetColor) {
-        this.targetColor = targetColor;
-        numSnapshot = numOfArtifactsInRobot;
-        alreadyChecked = false;
-    }
-
-    public GeneralConstants.colorSensorStates getColor(ColorRangeSensor colorSensor) {
-        float r = colorSensor.red();
-        float g = colorSensor.green();
-        float b = colorSensor.blue();
-
-        if (r < 200 && g < 380 && b < 360) { //Green: 234, 428, 382 || Purple: 250, 410, 403
-            return GeneralConstants.colorSensorStates.EMPTY;
-        } else {
-            return GeneralConstants.colorSensorStates.OCCUPIED;
-        }
-
-        /*
-        if (colorSensor.equals(spindexColorBack)) {
-//            if (g < 980 && g > 400 && r > 330 && b > 570 && colorSensor.getDistance(DistanceUnit.INCH) < 3)
-//                return GeneralConstants.artifactColors.PURPLE;
-//            else if (r < 330 && b > 740 && g > 980 && colorSensor.getDistance(DistanceUnit.INCH) < 3)
-//                return GeneralConstants.artifactColors.GREEN;
-//            else
-//                return GeneralConstants.artifactColors.EMPTY;
-            if (g > r && g > (b + 5) && colorSensor.getDistance(DistanceUnit.INCH) < 2.3)
-                return GeneralConstants.artifactColors.GREEN;
-            else if (colorSensor.getDistance(DistanceUnit.INCH) < 2.3)
-                return GeneralConstants.artifactColors.PURPLE;
-            else
-                return GeneralConstants.artifactColors.EMPTY;
-        } else {
-//            if (g < 980 && g > 400 && r > 330 && b > 570 && colorSensor.getDistance(DistanceUnit.INCH) < 1.5)
-//                return GeneralConstants.artifactColors.PURPLE;
-//            else if (r < 330 && b > 740 && g > 980 && colorSensor.getDistance(DistanceUnit.INCH) < 1.5)
-//                return GeneralConstants.artifactColors.GREEN;            else
-//                return GeneralConstants.artifactColors.EMPTY;
-            if (g > r && g > b && colorSensor.getDistance(DistanceUnit.INCH) < 1.5)
-                return GeneralConstants.artifactColors.GREEN;
-            else if (colorSensor.getDistance(DistanceUnit.INCH) < 1.5)
-                return GeneralConstants.artifactColors.PURPLE;
-            else
-                return GeneralConstants.artifactColors.EMPTY;
-        }
-        */
-    }
-
-    public String getColor(ColorRangeSensor colorRangeSensor, boolean irrelevant) {
-        float r = colorRangeSensor.red();
-        float g = colorRangeSensor.green();
-        float b = colorRangeSensor.blue();
+    public String getColorRaw(ColorRangeSensor colorSensor) {
+        int r = colorSensor.red();
+        int g = colorSensor.green();
+        int b = colorSensor.blue();
 
         return "R: " + r + " G: " + g + " B: " + b;
     }
 
+    ///IMPORTANT: UNTUNED METHOD
+    public String getColor(ColorRangeSensor colorRangeSensor) {
+        int r = colorRangeSensor.red();
+        int g = colorRangeSensor.green();
+        int b = colorRangeSensor.blue();
 
-    public void updateSpinColorSensors() {
-        numOfArtifactsInRobot = 0;
-//        spindexColorBackState = getColor(spindexColorBack);
-//        spindexColorLeftState = getColor(spindexColorLeft);
-        spindexColorRightState = getColor(spindexColorRight);
+        // White = all channels high and close together
+        int max = Math.max(r, Math.max(g, b));
+        int min = Math.min(r, Math.min(g, b));
+        if (max > 100 && (max - min) < 25) {
+            return "EMPTY";
+        }
 
-        numOfArtifactsInRobot += (spindexColorBackState.equals(GeneralConstants.colorSensorStates.EMPTY)) ? 0 : 1;
-        numOfArtifactsInRobot += (spindexColorLeftState.equals(GeneralConstants.colorSensorStates.EMPTY)) ? 0 : 1;
-        numOfArtifactsInRobot += (spindexColorRightState.equals(GeneralConstants.colorSensorStates.EMPTY)) ? 0 : 1;
-    }
+        // Purple = red + blue high, green low
+        if (r > 80 && b > 80 && g < 50) {
+            return "P";
+        }
 
-    public int getNumOfArtifactsInRobot() {
-        updateSpinColorSensors();
-        return numOfArtifactsInRobot;
+        // Green = green dominant
+        if (g > r && g > b && g > 80) {
+            return "G";
+        }
+
+        return "unknown";
     }
 }

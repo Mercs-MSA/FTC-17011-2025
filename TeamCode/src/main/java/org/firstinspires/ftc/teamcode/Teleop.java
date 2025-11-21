@@ -72,10 +72,13 @@ public class Teleop extends OpMode {
     private static TelemetryManager myPanels;
 
     private double intakePower = 0.0;
-    public static int farZoneVelocity = 1600;
-    public static int closeZoneVelocity = 1250;
+    public static int farZoneVelocity = 1550;
 
-    public static int shooterDesiredVelocity = 1600; //1450 for close triangle's end
+    public static int closeZoneVelocity = 1250;
+    public static double farZoneHeading = 65.0;
+    public static double closeZoneHeading = 45.0;
+
+    public static int shooterDesiredVelocity = farZoneVelocity; //1450 for close triangle's end
 
     //12,905 for 24 full revolutions = 537.70833333
     //16,129 for for 30 full revolutions = 537.633333
@@ -92,30 +95,23 @@ public class Teleop extends OpMode {
 
     public static STARTING_ORIENTATION startingOrientation = STARTING_ORIENTATION.GOAL_SIDE;
 
-    public enum SHOOTER_STATE {START_STATE, POINT_AT_GOAL_STATE, RUN_SHOOTER_MOTOR_STATE, WAIT_UNTIL_SHOOTER_SPINDEX_READY_STATE, CLOSE_GATE_STATE, RUN_TRANSFER_STATE, RUN_SPINDEX_STATE, RELEASE_STATE, INACTIVE_STATE, END_STATE}
+    public enum SHOOTER_STATE {START_STATE, POINT_AT_GOAL_STATE, WAIT_UNTIL_ROBOT_TURNED, RUN_SHOOTER_MOTOR_STATE, WAIT_UNTIL_SHOOTER_SPINDEX_READY_STATE, RUN_TRANSFER_STATE, RUN_SPINDEX_STATE, INACTIVE_STATE, END_STATE}
     public enum INTAKE_STATE {EMPTY, JUST_INTOOK_BALL, CYCLING_BALL}
 
     public enum AUTO_AIM_STATE {INACTIVE, START, WAIT_FOR_ROBOT_TO_FINISH_TURNING, END,}
 
+    public enum MOTIF_PATTERN {GPP, PGP, PPG}
+
+    private MOTIF_PATTERN motifPattern = MOTIF_PATTERN.GPP;
+
     private static int numOfBallsInRobot = 0;
     private static INTAKE_STATE intakeState = INTAKE_STATE.EMPTY;
     private static SHOOTER_STATE shooterState = SHOOTER_STATE.INACTIVE_STATE;
-
-    private static AUTO_AIM_STATE autoAimState = AUTO_AIM_STATE.INACTIVE;
+    private SHOOTER_STATE motifShooterState = SHOOTER_STATE.INACTIVE_STATE;
+    private AUTO_AIM_STATE autoAimState = AUTO_AIM_STATE.INACTIVE;
     private double AA_targetHeading;
 
-
-    public static boolean spinningToColor = false;
-
-    ElapsedTime shotTimer = new ElapsedTime();
-    double ema = 0;                             // exponential moving average of RPM
-    final double ALPHA = 0.2;                   // smoothing factor (0..1)
-    final double DROP_PCT = 0.18;               // 18% dip counts as “ball contact”
-    final double RECOVER_PCT = 0.10;            // must recover within 10% of target to re-arm
-    boolean shotArmed = true;
-    boolean shotDetected = false;
-
-    boolean spindexRunPosition = false;
+    public static int motifBallNumber = 1;
 
     private static double lastShooterVelocity;
 
@@ -193,21 +189,24 @@ public class Teleop extends OpMode {
 
         if (onBlueAlliance) {
             drivebase.setPosition(new SparkFunOTOS.Pose2D(136, 8, Math.toRadians(180)));
+
         } else {
             drivebase.setPosition(new SparkFunOTOS.Pose2D(8, 8, Math.toRadians(0)));
         }
-
     }
 
     @Override
     public void loop() {
+
         updateDrivebase();
         updateMechanisms();
-
         updateSpindexAndIntakeStateMahcine();
+
+
         updateAutoAimStateMachine();
         updateShooterStateMachine();
 
+        updateMotifShooterStateMachine();
         updateTelemetry();
 
         drivebase.updateLL();
@@ -220,108 +219,42 @@ public class Teleop extends OpMode {
         //myTelem.addData("Right Color:", spindex.getColor(spindex.spindexColorRight, true));
         myTelem.addData("rapid fire state:", shooterState.toString());
         myTelem.addData("rapid fire timer:", rapidFireTimer.time(TimeUnit.SECONDS));
-
         myTelem.addData("shooter velocity:", shooter.getRightVelocity());
+        myTelem.addLine("\n");
+
         myTelem.addData("spindex actual position:", spindex.spindexMotor.getCurrentPosition());
         myTelem.addData("spindex desired position:", Spindex.currentSpindexPosition);
         myTelem.addData("entry sensor: ", intake.isBallInIntake());
+        myTelem.addLine("\n");
 
         myTelem.addData("intake timer:", intakeTimer.time(TimeUnit.SECONDS));
-        myTelem.addData("intake/spindex state: ", intakeState);
+        myTelem.addData("intake/spindex state: ", intakeState.toString());
         myTelem.addData("numOfBalls: ", numOfBallsInRobot);
+        myTelem.addLine("\n");
+
+        myTelem.addData("Motif Pattern: ", motifPattern.toString());
+        myTelem.addData("Motif Current Ball: ", motifBallNumber);
+        myTelem.addData("Motif Shooter State: ", motifShooterState.toString());
+        myTelem.addLine("\n");
+
+        myTelem.addData("autoAimState: ", autoAimState.toString());
+
+        myTelem.addData("Left Color Sensor", spindex.getColorRaw(spindex.spindexColorLeft));
+        myTelem.addData("Right Color Sensor", spindex.getColorRaw(spindex.spindexColorRight));
+        myTelem.addData("Back Color Sensor", spindex.getColorRaw(spindex.spindexColorBack));
+        myTelem.addLine("\n");
+
+        myTelem.addData("Left Color Sensor", spindex.getColor(spindex.spindexColorLeft));
+        myTelem.addData("Right Color Sensor", spindex.getColor(spindex.spindexColorRight));
+        myTelem.addData("Back Color Sensor", spindex.getColor(spindex.spindexColorBack));
+        myTelem.addLine("\n");
+
         myTelem.update();
     }
 
 
 
-    private void updateAutoAimStateMachine() {
-        switch (autoAimState) {
 
-            case INACTIVE:
-                break;
-
-            case START:
-                // Pick target depending on alliance
-                if (onBlueAlliance) {
-                    AA_targetHeading = Drivebase.getPointsHeading(
-                            Drivebase.blueAimPointX,
-                            Drivebase.blueAimPointy,
-                            Drivebase.otos.getPosition().x,
-                            Drivebase.otos.getPosition().y
-                    );
-                } else {
-                    AA_targetHeading = Drivebase.getPointsHeading(
-                            Drivebase.redAimPointX,
-                            Drivebase.redAimPointy,
-                            Drivebase.otos.getPosition().x,
-                            Drivebase.otos.getPosition().y
-                    );
-                }
-
-                // Start turning toward AA_targetHeading
-                drivebase.turnToHeading(AA_targetHeading);  // ← your custom turn method
-
-                autoAimState = AUTO_AIM_STATE.WAIT_FOR_ROBOT_TO_FINISH_TURNING;
-                break;
-
-
-            case WAIT_FOR_ROBOT_TO_FINISH_TURNING:
-                double botHeading = Drivebase.angleWrap(Math.toDegrees(Drivebase.otos.getPosition().h));
-
-                // You can change this tolerance depending on how crispy you want aim to be
-                double headingError = Math.abs(Drivebase.angleWrap(botHeading - AA_targetHeading));
-
-                if (headingError < 2.0) {   // robot is basically facing the target
-                    drivebase.stop();  // stop motors
-                    autoAimState = AUTO_AIM_STATE.END;
-                }
-
-                break;
-
-
-            case END:
-                autoAimState = AUTO_AIM_STATE.INACTIVE;
-                break;
-        }
-    }
-
-
-    private void updateSpindexAndIntakeStateMahcine() {
-        switch (intakeState) {
-            case EMPTY:
-                if (!spindex.isSpindexMoving() && intake.isBallInIntake() && numOfBallsInRobot < 3 && shooterState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
-                    intakeTimer.reset();
-                    intakeState = INTAKE_STATE.JUST_INTOOK_BALL;
-                }
-                break;
-
-            case JUST_INTOOK_BALL:
-                if (intakeTimer.time(TimeUnit.SECONDS) > 0.1 || checkAgain == true) {
-                    if (checkAgain) {
-                        intakeState = INTAKE_STATE.CYCLING_BALL;
-                        checkAgain = false;
-                    } else {
-                        intakeState = INTAKE_STATE.EMPTY;
-                        checkAgain = true;
-                    }
-                }
-                break;
-
-            case CYCLING_BALL:
-                numOfBallsInRobot++;
-
-                if (numOfBallsInRobot >= 3) {
-                } else {
-                    spindex.changeCurrentPositionBy(spindexThirdRevolution);
-                }
-                intakeState = INTAKE_STATE.EMPTY;
-
-                break;
-
-        }
-
-
-    }
 
     private void updateDrivebase() {
         // Field-centric driving
@@ -365,7 +298,8 @@ public class Teleop extends OpMode {
             shooterDesiredVelocity = farZoneVelocity;
 
         if (gamepad1.crossWasPressed()) {
-            spindex.changeCurrentPositionBy(spindexThirdRevolution);
+            intakeState = INTAKE_STATE.JUST_INTOOK_BALL;
+            checkAgain = true;
         }
 
         if (gamepad1.circleWasPressed()) {
@@ -379,26 +313,198 @@ public class Teleop extends OpMode {
         if (gamepad1.dpadUpWasPressed()) {
             drivebase.resetYaw();
         }
+
+        if (gamepad1.dpadRightWasPressed()) {
+            if (motifPattern.equals(MOTIF_PATTERN.GPP)) {
+                motifPattern = MOTIF_PATTERN.PGP;
+            } else if (motifPattern.equals(MOTIF_PATTERN.PGP)) {
+                motifPattern = MOTIF_PATTERN.PPG;
+            } else if (motifPattern.equals(MOTIF_PATTERN.PPG)) {
+                motifPattern = MOTIF_PATTERN.GPP;
+            }
+        }
+
+        if (gamepad1.dpadLeftWasPressed()) {
+            if (motifPattern.equals(MOTIF_PATTERN.PPG)) {
+                motifPattern = MOTIF_PATTERN.PGP;
+            } else if (motifPattern.equals(MOTIF_PATTERN.GPP)) {
+                motifPattern = MOTIF_PATTERN.PPG;
+            } else if (motifPattern.equals(MOTIF_PATTERN.PGP)) {
+                motifPattern = MOTIF_PATTERN.GPP;
+            }
+        }
+
+    }
+
+    private void updateMotifShooterStateMachine() {
+
+
+        switch (motifShooterState) {
+            case START_STATE:
+                motifShooterState = SHOOTER_STATE.RUN_SHOOTER_MOTOR_STATE;
+                break;
+
+            case RUN_SHOOTER_MOTOR_STATE:
+                shooter.setMotorVelocity(shooterDesiredVelocity);
+                spindex.changeCurrentPositionBy(spindexThirdRevolution/2.0);
+                motifBallNumber = 1;
+
+                //Go to Next State
+                motifShooterState = SHOOTER_STATE.WAIT_UNTIL_SHOOTER_SPINDEX_READY_STATE;
+
+                //Cancel State Machine
+                if (drive > .1 || drive < -.1 || strafe > .1 || strafe < -.1) {
+                    motifShooterState = SHOOTER_STATE.END_STATE;
+                }
+                break;
+
+            case RUN_SPINDEX_STATE:
+                //back, right, left,
+                String[] artifactArray = {
+                        spindex.getColor(spindex.spindexColorBack),
+                        spindex.getColor(spindex.spindexColorRight),
+                        spindex.getColor(spindex.spindexColorLeft),
+
+
+                };
+
+                String desiredBallColor = motifPattern.toString().substring(motifBallNumber-1, motifBallNumber);
+
+                if (artifactArray[0].equals(desiredBallColor)) {
+                    motifShooterState = SHOOTER_STATE.WAIT_UNTIL_SHOOTER_SPINDEX_READY_STATE;
+                    break;
+                }
+
+                if (artifactArray[1].equals(desiredBallColor)) {
+                    spindex.changeCurrentPositionBy(spindexThirdRevolution);
+                    motifShooterState = SHOOTER_STATE.WAIT_UNTIL_SHOOTER_SPINDEX_READY_STATE;
+                    break;
+                }
+
+                if (artifactArray[2].equals(desiredBallColor)) {
+                    spindex.changeCurrentPositionBy(-spindexThirdRevolution);
+                    motifShooterState = SHOOTER_STATE.WAIT_UNTIL_SHOOTER_SPINDEX_READY_STATE;
+                    break;
+                }
+
+
+                if (!(artifactArray[0].equals("EMPTY")) ) {
+                    motifShooterState = SHOOTER_STATE.WAIT_UNTIL_SHOOTER_SPINDEX_READY_STATE;
+                    break;
+                }
+
+                if (!(artifactArray[1].equals("EMPTY")) ) {
+                    spindex.changeCurrentPositionBy(spindexThirdRevolution);
+                    motifShooterState = SHOOTER_STATE.WAIT_UNTIL_SHOOTER_SPINDEX_READY_STATE;
+                    break;
+                }
+
+                if (!(artifactArray[2].equals("EMPTY")) ) {
+                    spindex.changeCurrentPositionBy(-spindexThirdRevolution);
+                    motifShooterState = SHOOTER_STATE.WAIT_UNTIL_SHOOTER_SPINDEX_READY_STATE;
+                    break;
+                }
+
+                motifShooterState = SHOOTER_STATE.END_STATE;
+
+                break;
+
+            case WAIT_UNTIL_SHOOTER_SPINDEX_READY_STATE:
+
+                //Go to next state when Artifact is in position AND shooter has reached desired velocity
+                if (shooter.getRightVelocity() > shooterDesiredVelocity * .97 && !spindex.isSpindexMoving()) {
+                    motifShooterState = SHOOTER_STATE.RUN_TRANSFER_STATE;
+                    rapidFireTimer.reset();
+                }
+
+                //Cancel State Machine
+                if (drive > .1 || drive < -.1 || strafe > .1 || strafe < -.1) {
+                    motifShooterState = SHOOTER_STATE.END_STATE;
+                }
+
+                break;
+
+            case RUN_TRANSFER_STATE:
+                spindex.runTransferWheel();
+
+                //Repeat RUN_SPINDEX State when timer has reached 3 seconds or when artifact is shot
+                if (lastShooterVelocity - shooter.getRightVelocity() > shooterVelocityDropThreshold || gamepad1.right_trigger > 0.5) {
+                    rapidFireTimer.reset();
+                    numOfBallsInRobot--;
+                    if (numOfBallsInRobot < 0)
+                        numOfBallsInRobot = 0;
+
+                    motifBallNumber++;
+                    motifShooterState = SHOOTER_STATE.RUN_SPINDEX_STATE;
+                }
+
+                lastShooterVelocity = shooter.getRightVelocity();
+
+                //Cancel State Machine
+                if (drive > .1 || drive < -.1 || strafe > .1 || strafe < -.1) {
+                    motifShooterState = SHOOTER_STATE.END_STATE;
+                }
+
+                break;
+
+            case END_STATE:
+                shooter.stop();
+                spindex.stopTransferWheel();
+                spindex.changeCurrentPositionBy(spindexThirdRevolution/2.0);
+
+                motifShooterState = SHOOTER_STATE.INACTIVE_STATE;
+
+                break;
+
+            case INACTIVE_STATE:
+                break;
+        }
     }
 
     private void updateShooterStateMachine() {
 
         switch (shooterState) {
             case START_STATE:
+                spindex.changeCurrentPositionBy(spindexThirdRevolution/2.0);
                 shooterState = SHOOTER_STATE.RUN_SHOOTER_MOTOR_STATE;
                 break;
 
             case RUN_SHOOTER_MOTOR_STATE:
                 shooter.setMotorVelocity(shooterDesiredVelocity);
-                spindex.changeCurrentPositionBy(spindexThirdRevolution/2.0);
 
                 //Go to Next State
-                shooterState = SHOOTER_STATE.WAIT_UNTIL_SHOOTER_SPINDEX_READY_STATE;
+                shooterState = SHOOTER_STATE.RUN_SPINDEX_STATE;
 
                 //Cancel State Machine
                 if (drive > .1 || drive < -.1 || strafe > .1 || strafe < -.1) {
                     shooterState = SHOOTER_STATE.END_STATE;
                 }
+                break;
+
+            case POINT_AT_GOAL_STATE:
+
+                double currentHeading = Math.toDegrees(drivebase.otos.getPosition().h + drivebase.getOffset());
+
+                // smallest rotation
+                double error = ((shooterDesiredVelocity == closeZoneVelocity ? closeZoneHeading : farZoneHeading) - currentHeading) * -1;
+
+                double turnPower = error * drivebase.kP;
+
+                if (turnPower > 0) {
+                    turnPower = Math.min(turnPower, 0.267);
+                } else if (turnPower < 0) {
+                    turnPower = Math.max(turnPower, -0.267);
+                }
+                double headingError = currentHeading - (shooterDesiredVelocity == farZoneHeading ? farZoneHeading : closeZoneHeading) ;
+
+                if (Math.abs(headingError) < 2.0) {   // robot is basically facing the target
+                    drivebase.stop();  // stop motors
+                    shooterState = SHOOTER_STATE.RUN_SPINDEX_STATE;
+                }
+
+                drivebase.setDrivePower(turnPower, -turnPower, turnPower, -turnPower);
+
+
                 break;
 
             case RUN_SPINDEX_STATE:
@@ -408,13 +514,8 @@ public class Teleop extends OpMode {
 
             case WAIT_UNTIL_SHOOTER_SPINDEX_READY_STATE:
 
-                //Go to next state when Artifact is in position AND shooter has reached desired velocity
-                if (shooter.getRightVelocity() > shooterDesiredVelocity * .95 && Math.abs(spindex.spindexMotor.getCurrentPosition() - Spindex.currentSpindexPosition) < 3) {
-//                    if (spindex.getColor(spindex.spindexColorBack).equals(GeneralConstants.colorSensorStates.OCCUPIED))
+                if (shooter.getRightVelocity() > shooterDesiredVelocity * .97 && !spindex.isSpindexMoving()) {
                     shooterState = SHOOTER_STATE.RUN_TRANSFER_STATE;
-//                    else
-//                        rapidFireState = SHOOTER_STATE.RUN_SPINDEX_STATE;
-                    rapidFireTimer.reset();
                 }
 
                 //Cancel State Machine
@@ -457,6 +558,95 @@ public class Teleop extends OpMode {
             case INACTIVE_STATE:
                 break;
         }
+    }
+
+    private void updateAutoAimStateMachine() {
+        switch (autoAimState) {
+
+            case INACTIVE:
+                break;
+
+            case START:
+                // Pick target depending on alliance
+                if (onBlueAlliance) {
+                    AA_targetHeading = Drivebase.getPointsHeading(
+                            Drivebase.blueAimPointX,
+                            Drivebase.blueAimPointy,
+                            Drivebase.otos.getPosition().x,
+                            Drivebase.otos.getPosition().y
+                    );
+                } else {
+                    AA_targetHeading = Drivebase.getPointsHeading(
+                            Drivebase.redAimPointX,
+                            Drivebase.redAimPointy,
+                            Drivebase.otos.getPosition().x,
+                            Drivebase.otos.getPosition().y
+                    );
+                }
+
+                // Start turning toward AA_targetHeading
+                drivebase.turnToHeading(farZoneHeading);  // ← your custom turn method
+
+                autoAimState = AUTO_AIM_STATE.WAIT_FOR_ROBOT_TO_FINISH_TURNING;
+                break;
+
+
+            case WAIT_FOR_ROBOT_TO_FINISH_TURNING:
+                double botHeading = Math.toDegrees(drivebase.getPosition().h);
+
+                // You can change this tolerance depending on how crispy you want aim to be
+                double headingError = Math.abs(botHeading - farZoneHeading);
+
+                if (headingError < 2.0) {   // robot is basically facing the target
+                    drivebase.stop();  // stop motors
+                    autoAimState = AUTO_AIM_STATE.END;
+                }
+
+                break;
+
+
+            case END:
+                autoAimState = AUTO_AIM_STATE.INACTIVE;
+                break;
+        }
+    }
+
+
+    private void updateSpindexAndIntakeStateMahcine() {
+        switch (intakeState) {
+            case EMPTY:
+                if (!spindex.isSpindexMoving() && intake.isBallInIntake() && numOfBallsInRobot < 3 && shooterState.equals(SHOOTER_STATE.INACTIVE_STATE) && motifShooterState.equals(SHOOTER_STATE.INACTIVE_STATE)) {
+                    intakeTimer.reset();
+                    intakeState = INTAKE_STATE.CYCLING_BALL; //SWITCH
+                }
+                break;
+
+            case JUST_INTOOK_BALL:
+                if (intakeTimer.time(TimeUnit.SECONDS) > 0.05 || checkAgain) {
+                    if (checkAgain) {
+                        intakeState = INTAKE_STATE.CYCLING_BALL;
+                        checkAgain = false;
+                    } else {
+                        intakeState = INTAKE_STATE.EMPTY;
+                        checkAgain = true;
+                    }
+                }
+                break;
+
+            case CYCLING_BALL:
+                numOfBallsInRobot++;
+
+                if (numOfBallsInRobot >= 3) {
+                } else {
+                    spindex.changeCurrentPositionBy(spindexThirdRevolution);
+                }
+                intakeState = INTAKE_STATE.EMPTY;
+
+                break;
+
+        }
+
+
     }
 }
 
