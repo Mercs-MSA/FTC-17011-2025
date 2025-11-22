@@ -155,20 +155,20 @@ public class Teleop extends OpMode {
             if (onBlueAlliance) {
                 myTelem.addLine("Blue alliance selected. Press right bumper to select red.");
                 if (startingOrientation.equals(STARTING_ORIENTATION.GOAL_SIDE)) {
-//                    drivebase.offsetYaw(-90);
-                    drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, -Math.PI/2));
+                    drivebase.offsetYaw(-90);
+//                    drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, -Math.PI/2));
                 } else {
-//                    drivebase.offsetYaw(90);
-                    drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, Math.PI/2));
+                    drivebase.offsetYaw(90);
+//                    drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, Math.PI/2));
                 }
             } else {
                 myTelem.addLine("Red alliance selected. Press left bumper to select blue.");
                 if (startingOrientation.equals(STARTING_ORIENTATION.GOAL_SIDE)) {
-//                    drivebase.offsetYaw(90);
-                    drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, Math.PI/2));
+                    drivebase.offsetYaw(90);
+//                    drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, Math.PI/2));
                 } else {
-//                    drivebase.offsetYaw(-90);
-                    drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, -Math.PI/2));
+                    drivebase.offsetYaw(-90);
+//                    drivebase.setPosition(new SparkFunOTOS.Pose2D(0, 0, -Math.PI/2));
                 }
             }
 //        }
@@ -190,12 +190,12 @@ public class Teleop extends OpMode {
         ranAuto = false;
 
         if (onBlueAlliance) {
-            drivebase.setPosition(new SparkFunOTOS.Pose2D(136, 8, Math.toRadians(180)));
-            farZoneHeading = 65.0;
+//            drivebase.setPosition(new SparkFunOTOS.Pose2D(136, 8, Math.toRadians(180)));
+            farZoneHeading = -70.0;
             closeZoneHeading = 45.0;
         } else {
-            drivebase.setPosition(new SparkFunOTOS.Pose2D(8, 8, Math.toRadians(0)));
-            farZoneHeading = -65.0;
+//            drivebase.setPosition(new SparkFunOTOS.Pose2D(8, 8, Math.toRadians(0)));
+            farZoneHeading = 67.0;
             closeZoneHeading = -45.0;
         }
     }
@@ -220,6 +220,7 @@ public class Teleop extends OpMode {
     private void updateTelemetry() {
         //        myTelem.addData("Robot Yaw:", Math.toDegrees(drivebase.getPosition().h));
         myTelem.addData("Robot Heading:", Math.toDegrees(drivebase.getPosition().h));
+        myTelem.addData("Heading Error (Far)", AngleUnit.DEGREES.normalize((farZoneHeading - AngleUnit.DEGREES.normalize(Math.toDegrees(drivebase.getPosition().h))) * -1));
         //myTelem.addData("Robot Offset:", drivebase.getOffset());
         //myTelem.addData("Right Color:", spindex.getColor(spindex.spindexColorRight, true));
         myTelem.addData("rapid fire state:", shooterState.toString());
