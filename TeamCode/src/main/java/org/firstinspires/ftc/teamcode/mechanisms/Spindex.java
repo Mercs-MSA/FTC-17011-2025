@@ -48,7 +48,7 @@ public class Spindex {
         spindexMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         spindexMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        currentSpindexPosition = 0;
+        currentSpindexPosition = 0.00;
         spindexMotor.setTargetPosition((int) (currentSpindexPosition));
         spindexMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         spindexMotor.setVelocity(spindexMotorVelocity);
