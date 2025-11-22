@@ -14,6 +14,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.SoftElectronics;
@@ -160,18 +161,20 @@ public class Drivebase {
 
     public void turnToHeading(double targetHeading) {
         // convert bot heading to [-180, 180]
-        double currentHeading = Math.toDegrees(otos.getPosition().h);
+        double currentHeading = AngleUnit.DEGREES.normalize(Math.toDegrees(otos.getPosition().h));
 
         // smallest rotation
-        double error = (targetHeading - currentHeading) * -1;
+        double error = AngleUnit.DEGREES.normalize((targetHeading - currentHeading) * -1);
 
         double turnPower = error * kP;
 
-        if (turnPower > 0) {
-            turnPower = Math.min(turnPower, 0.267);
-        } else if (turnPower < 0) {
-            turnPower = Math.max(turnPower, -0.267);
-        }
+//        if (turnPower > 0) {
+//            turnPower = Math.min(turnPower, 0.267);
+//        } else if (turnPower < 0) {
+//            turnPower = Math.max(turnPower, -0.267);
+//        }
+
+        turnPower = Range.clip(turnPower, -0.267, 0.267);
 
         setDrivePower(turnPower, -turnPower, turnPower, -turnPower);
     }
@@ -201,8 +204,10 @@ public class Drivebase {
     public double getBotHeading() {
         return IMUheadingTracker;
     }
-    public boolean getTXInRange() {return llResults.getFiducialResults().get(0).getTargetXDegrees() <= .5 && llResults.getFiducialResults().get(0).getTargetXDegrees() >= -.5;}
+//    public boolean getTXInRange() {return llResults.getFiducialResults().get(0).getTargetXDegrees() <= .5 && llResults.getFiducialResults().get(0).getTargetXDegrees() >= -.5;}
     public boolean getTargetSeen() {return llResults.isValid();}
+    public double getTX() {return llResults.getFiducialResults().get(0).getTargetXDegrees();}
+    public LLResult getResults() {return llResults;}
     public double getOffset() {
         return offset;
     }

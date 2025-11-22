@@ -38,12 +38,14 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.bylazar.ftcontrol.panels.integration.TelemetryManager;
+import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.mechanisms.Drivebase;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
@@ -98,7 +100,7 @@ public class Teleop extends OpMode {
     public enum SHOOTER_STATE {START_STATE, POINT_AT_GOAL_STATE, WAIT_UNTIL_ROBOT_TURNED, RUN_SHOOTER_MOTOR_STATE, WAIT_UNTIL_SHOOTER_SPINDEX_READY_STATE, RUN_TRANSFER_STATE, RUN_SPINDEX_STATE, INACTIVE_STATE, END_STATE}
     public enum INTAKE_STATE {EMPTY, JUST_INTOOK_BALL, CYCLING_BALL}
 
-    public enum AUTO_AIM_STATE {INACTIVE, START, WAIT_FOR_ROBOT_TO_FINISH_TURNING, END,}
+    public enum AUTO_AIM_STATE {INACTIVE, AIMING_NO_TAG, AIMING_WITH_TAG, WAIT_FOR_ROBOT_TO_FINISH_TURNING, END,}
 
     public enum MOTIF_PATTERN {GPP, PGP, PPG}
 
@@ -189,9 +191,12 @@ public class Teleop extends OpMode {
 
         if (onBlueAlliance) {
             drivebase.setPosition(new SparkFunOTOS.Pose2D(136, 8, Math.toRadians(180)));
-
+            farZoneHeading = 65.0;
+            closeZoneHeading = 45.0;
         } else {
             drivebase.setPosition(new SparkFunOTOS.Pose2D(8, 8, Math.toRadians(0)));
+            farZoneHeading = -65.0;
+            closeZoneHeading = -45.0;
         }
     }
 
@@ -266,7 +271,9 @@ public class Teleop extends OpMode {
             drivebase.drive(drive, strafe, turn);
         }
 
-        if (gamepad1.triangle) autoAimState = AUTO_AIM_STATE.START;
+        if (gamepad1.triangle) autoAimState = AUTO_AIM_STATE.AIMING_NO_TAG;
+                else autoAimState = AUTO_AIM_STATE.INACTIVE;
+
 
         if (gamepad1.left_bumper) {
             drive *= .6;
@@ -483,26 +490,26 @@ public class Teleop extends OpMode {
 
             case POINT_AT_GOAL_STATE:
 
-                double currentHeading = Math.toDegrees(drivebase.otos.getPosition().h + drivebase.getOffset());
-
-                // smallest rotation
-                double error = ((shooterDesiredVelocity == closeZoneVelocity ? closeZoneHeading : farZoneHeading) - currentHeading) * -1;
-
-                double turnPower = error * drivebase.kP;
-
-                if (turnPower > 0) {
-                    turnPower = Math.min(turnPower, 0.267);
-                } else if (turnPower < 0) {
-                    turnPower = Math.max(turnPower, -0.267);
-                }
-                double headingError = currentHeading - (shooterDesiredVelocity == farZoneHeading ? farZoneHeading : closeZoneHeading) ;
-
-                if (Math.abs(headingError) < 2.0) {   // robot is basically facing the target
-                    drivebase.stop();  // stop motors
-                    shooterState = SHOOTER_STATE.RUN_SPINDEX_STATE;
-                }
-
-                drivebase.setDrivePower(turnPower, -turnPower, turnPower, -turnPower);
+//                double currentHeading = Math.toDegrees(drivebase.otos.getPosition().h + drivebase.getOffset());
+//
+//                // smallest rotation
+//                double error = ((shooterDesiredVelocity == closeZoneVelocity ? closeZoneHeading : farZoneHeading) - currentHeading) * -1;
+//
+//                double turnPower = error * drivebase.kP;
+//
+//                if (turnPower > 0) {
+//                    turnPower = Math.min(turnPower, 0.267);
+//                } else if (turnPower < 0) {
+//                    turnPower = Math.max(turnPower, -0.267);
+//                }
+//                double headingError = currentHeading - (shooterDesiredVelocity == farZoneVelocity ? farZoneHeading : closeZoneHeading) ;
+//
+//                if (Math.abs(headingError) < 2.0) {   // robot is basically facing the target
+//                    drivebase.stop();  // stop motors
+//                    shooterState = SHOOTER_STATE.RUN_SPINDEX_STATE;
+//                }
+//
+//                drivebase.setDrivePower(turnPower, -turnPower, turnPower, -turnPower);
 
 
                 break;
@@ -561,46 +568,63 @@ public class Teleop extends OpMode {
     }
 
     private void updateAutoAimStateMachine() {
+
         switch (autoAimState) {
 
             case INACTIVE:
                 break;
 
-            case START:
+            case AIMING_NO_TAG:
                 // Pick target depending on alliance
-                if (onBlueAlliance) {
-                    AA_targetHeading = Drivebase.getPointsHeading(
-                            Drivebase.blueAimPointX,
-                            Drivebase.blueAimPointy,
-                            Drivebase.otos.getPosition().x,
-                            Drivebase.otos.getPosition().y
-                    );
-                } else {
-                    AA_targetHeading = Drivebase.getPointsHeading(
-                            Drivebase.redAimPointX,
-                            Drivebase.redAimPointy,
-                            Drivebase.otos.getPosition().x,
-                            Drivebase.otos.getPosition().y
-                    );
-                }
+//                if (onBlueAlliance) {
+//                    AA_targetHeading = Drivebase.getPointsHeading(
+//                            Drivebase.blueAimPointX,
+//                            Drivebase.blueAimPointy,
+//                            Drivebase.otos.getPosition().x,
+//                            Drivebase.otos.getPosition().y
+//                    );
 
-                // Start turning toward AA_targetHeading
-                drivebase.turnToHeading(farZoneHeading);  // ← your custom turn method
+//                } else {
+//                    AA_targetHeading = Drivebase.getPointsHeading(
+//                            Drivebase.redAimPointX,
+//                            Drivebase.redAimPointy,
+//                            Drivebase.otos.getPosition().x,
+//                            Drivebase.otos.getPosition().y
+//                    );
+//                }
+//                if (drivebase.getResults() != null) {
+//                    autoAimState = AUTO_AIM_STATE.AIMING_WITH_TAG;
+//                }
 
-                autoAimState = AUTO_AIM_STATE.WAIT_FOR_ROBOT_TO_FINISH_TURNING;
-                break;
+                double goalHeading = shooterDesiredVelocity == farZoneVelocity ? farZoneHeading : closeZoneHeading;
 
 
-            case WAIT_FOR_ROBOT_TO_FINISH_TURNING:
                 double botHeading = Math.toDegrees(drivebase.getPosition().h);
 
                 // You can change this tolerance depending on how crispy you want aim to be
-                double headingError = Math.abs(botHeading - farZoneHeading);
+                double headingError = Math.abs(AngleUnit.DEGREES.normalize(botHeading - goalHeading));
 
                 if (headingError < 2.0) {   // robot is basically facing the target
                     drivebase.stop();  // stop motors
                     autoAimState = AUTO_AIM_STATE.END;
+                } else {
+                    drivebase.turnToHeading(goalHeading);
                 }
+
+//                autoAimState = AUTO_AIM_STATE.WAIT_FOR_ROBOT_TO_FINISH_TURNING;
+                break;
+
+
+            case WAIT_FOR_ROBOT_TO_FINISH_TURNING:
+//                double botHeading = Math.toDegrees(drivebase.getPosition().h);
+//
+//                // You can change this tolerance depending on how crispy you want aim to be
+//                double headingError = Math.abs(botHeading - farZoneHeading);
+//
+//                if (headingError < 2.0) {   // robot is basically facing the target
+//                    drivebase.stop();  // stop motors
+//                    autoAimState = AUTO_AIM_STATE.END;
+//                }
 
                 break;
 
