@@ -17,7 +17,6 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.Constants.GeneralConstants;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
 import org.firstinspires.ftc.teamcode.mechanisms.Spindex;
@@ -155,7 +154,7 @@ public class RedLongRangeAuto extends OpMode {
             spindex.changeCurrentPositionBy(spindexThirdRevolution/2);
             if (previousState.equals(AUTO_STATES.WAIT)) {
 //                currentState = AUTO_STATES.PATH_TO_INTAKE1;
-                spindex.resetSpindexToZero();
+                spindex.moveSpindexToZero();
                 currentState = AUTO_STATES.LEAVE;
             } else if (previousState.equals(AUTO_STATES.PATH_TO_SHOOT2))
                 currentState = AUTO_STATES.LEAVE;
@@ -219,7 +218,7 @@ public class RedLongRangeAuto extends OpMode {
     }
 
     private void pathActiveState() {
-        spindex.reverseTransfer();
+        spindex.runTransferWheelReverse();
         shootTimer.reset();
         if (!follower.isBusy()) {
             currentState = nextState;

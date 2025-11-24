@@ -69,11 +69,16 @@ public class Spindex {
         spindexMotor.setVelocity(spindexMotorVelocity);
     }
 
-    public void resetSpindexToZero() {
+    public void moveSpindexToZero() {
         currentSpindexPosition = 0;
         spindexMotor.setTargetPosition((int) (Math.round(currentSpindexPosition)));
         spindexMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
         spindexMotor.setVelocity(800);
+    }
+    public void resetSpindexEncoder() {
+        currentSpindexPosition = 0;
+        spindexMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        spindexMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
     public void runSpindexToTransferThird() {
@@ -92,7 +97,7 @@ public class Spindex {
         spindexTransferServo.setPower(1);
     }
 
-    public void reverseTransfer() {
+    public void runTransferWheelReverse() {
         spindexTransferServo.setPower(-1);
     }
 

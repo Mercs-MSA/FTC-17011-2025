@@ -84,7 +84,7 @@ public class Drivebase {
     }
 
     public void resetYaw() {
-        otos.setPosition(new SparkFunOTOS.Pose2D(0,0,0));
+            otos.setPosition(new SparkFunOTOS.Pose2D(0,0,0));
     }
 
     public void updateLL() {

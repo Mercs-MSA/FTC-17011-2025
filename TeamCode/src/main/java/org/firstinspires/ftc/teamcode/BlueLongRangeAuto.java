@@ -136,7 +136,7 @@ public class BlueLongRangeAuto extends OpMode {
             rapidFireState = Teleop.SHOOTER_STATE.START_STATE;
         updateRapidFireStateMachine();
         if (rapidFireState.equals(Teleop.SHOOTER_STATE.END_STATE)) {
-            spindex.resetSpindexToZero();
+            spindex.moveSpindexToZero();
             currentState = AUTO_STATES.LEAVE;
         }
     }
