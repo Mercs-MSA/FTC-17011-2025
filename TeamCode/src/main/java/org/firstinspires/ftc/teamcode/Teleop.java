@@ -13,6 +13,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.mechanisms.Drivebase;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Transfer;
@@ -148,7 +149,7 @@ public class Teleop extends OpMode {
 
     public void updateTurretState() {//Turret 180: -1484 //Turrent 360: -2954
         // Red goal: -42.6
-        double turretFieldHeading = Math.toDegrees(drivebase.getLaserHeading()) + (double) shooter.getTurretPos() / 8.13333333333; //TODO: Figure out why this value is constantly getting closer to 0
+        double turretFieldHeading = AngleUnit.normalizeDegrees(Math.toDegrees(drivebase.getLaserHeading()) + AngleUnit.normalizeDegrees((double) shooter.getTurretPos() / 8.13333333333)); //TODO: Figure out why this value is constantly getting closer to 0
         switch (turretState) {
             case ZEROED:
                 shooter.setTurretPower(0);
@@ -163,11 +164,10 @@ public class Teleop extends OpMode {
                     turretState = TURRET_STATE.AIMING_TO_TAG;
                 }
 
-                if (!onBlueAlliance) {
-                    shooter.setTurretVelocity((int)((-42-turretFieldHeading)*100), 0.5);
-                } else {
-                    shooter.setTurretVelocity((int)(((42-180)-turretFieldHeading)*100), 0.5);
-                }
+                double targetDegrees = onBlueAlliance ? 42 : -42;
+
+                shooter.setTurretVelocity((int)(AngleUnit.normalizeRadians(targetDegrees-turretFieldHeading)*100), 0.5);
+
 
 
                 break;
