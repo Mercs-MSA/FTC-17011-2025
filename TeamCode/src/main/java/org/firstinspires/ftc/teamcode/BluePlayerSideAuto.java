@@ -60,26 +60,23 @@ public class BluePlayerSideAuto extends OpMode {
     private AutoState nextState = AutoState.INACTIVE;
     private AutoState previousState = AutoState.INACTIVE;
 
-    public static int shooterVelocity = 1800;
+    public static int shooterVelocity = 1925;
 
     // -----------------------------
     // PATH / POSE DEFINITIONS (BLUE)
     // Same XY, mirrored headings
     // -----------------------------
 
-    public static final Pose startPose = new Pose(
-            -61.3235, 15.1146, Math.toRadians(180)
-    );
-
-    public static final Pose poseRotateEnd = new Pose(
-            -46, 22, 0
-    );
+    public static final Pose startPose = new Pose(-61.3235, 15.1146, Math.toRadians(180));
 
     public static final Pose shootPose = new Pose(-55.06379, 15.07, Math.toRadians(180));
     public static final Pose readyIntakePose1 = new Pose(-34.41036, 28.7874, Math.toRadians(90));
     public static final Pose intakeEndPose1 = new Pose(-35.67191, 58.8364, Math.toRadians(90));
     public static final Pose readyIntakePose2 = new Pose(-45, 59.377, Math.toRadians(135));
     public static final Pose intakeEndPose2 = new Pose(-60.8429, 60.11, Math.toRadians(165));
+
+    public static final Pose poseRotateEnd = new Pose(-46, 22, 0);
+
 
     public static final Path startPath = new Path(new BezierLine(startPose, shootPose));
     public static final Path readyIntakePath1 = new Path(new BezierLine(shootPose, readyIntakePose1));
@@ -115,19 +112,23 @@ public class BluePlayerSideAuto extends OpMode {
         shootTimer = new ElapsedTime();
 
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(startPose);
+//        follower.setStartingPose(startPose);
+//        follower.setPose(startPose);
         follower.setMaxPower(.8);
 
         onBlueAlliance = true;
         ranAuto = true;
 
-        telemetryA.addLine("Red Mock Path Auto Init");
+        telemetryA.addLine("Blue Mock Path Auto Init");
+        telemetryA.addData("Start Pose: ", follower.getPose());
+        telemetryA.addData("Heading: ", Math.toDegrees(follower.getHeading()));
         telemetryA.update();
     }
 
     @Override
     public void start() {
         super.start();
+        follower.setPose(startPose);
         shooter.setMotorVelocity(0);
         intake.setPower(0);
         currentState = AutoState.START;
@@ -154,6 +155,7 @@ public class BluePlayerSideAuto extends OpMode {
                 break;
 
             case SHOOT:
+                shootingMachine();
                 if (shootingState.equals(Teleop.SHOOTING_STATE.INACTIVE)) {
                     intake.setPower(0);
                     shootingState = Teleop.SHOOTING_STATE.START;
@@ -207,7 +209,7 @@ public class BluePlayerSideAuto extends OpMode {
     }
 
     private boolean desiredVelocityReached() {
-        if (shooter.getVelocity() > shooterVelocity * .96)
+        if (shooter.getVelocity() > shooterVelocity * .9)
             return true;
         return false;
     }

@@ -42,7 +42,7 @@ public class Teleop extends OpMode {
 
 
     // Shooter velocities
-    public static int FAR_SHOT_VELOCITY = 1850;
+    public static int FAR_SHOT_VELOCITY = 1925;
     public static int CLOSE_SHOT_VELOCITY = 1500;
 
     public static int shooterDesiredVelocity = 0;
@@ -90,6 +90,7 @@ public class Teleop extends OpMode {
         shooter = new Shooter(hardwareMap);
 
         shootingState = SHOOTING_STATE.INACTIVE;
+        turretState = TURRET_STATE.ZEROED;
 
         shooterDesiredVelocity = 0;
 
@@ -152,11 +153,14 @@ public class Teleop extends OpMode {
         double turretFieldHeading = AngleUnit.normalizeDegrees(Math.toDegrees(drivebase.getLaserHeading()) + AngleUnit.normalizeDegrees((double) shooter.getTurretPos() / 8.13333333333)); //TODO: Figure out why this value is constantly getting closer to 0
         switch (turretState) {
             case ZEROED:
-                shooter.setTurretPower(0);
-                shooter.setTurretTarget(0);
-                turretFieldHeading = Math.toDegrees(drivebase.getLaserHeading());
+//                shooter.setTurretPower(0);
+//                shooter.setTurretTarget(0);
+                shooter.setTurretVelocity(0, 0);
+//                turretFieldHeading = Math.toDegrees(drivebase.getLaserHeading());
                 break;
             case AIMED:
+                shooter.setTurretVelocity(0, 0);
+
                 break;
             case AIMING_NO_TAG:
 
@@ -166,8 +170,13 @@ public class Teleop extends OpMode {
 
                 double targetDegrees = onBlueAlliance ? 42 : -42;
 
-                shooter.setTurretVelocity((int)(AngleUnit.normalizeRadians(targetDegrees-turretFieldHeading)*100), 0.5);
+                double error = Math.abs(targetDegrees-turretFieldHeading);
 
+                if (error > 5) {
+                    shooter.setTurretVelocity((int)((targetDegrees-turretFieldHeading)), 0.5);
+                } else {
+                    turretState = TURRET_STATE.AIMED;
+                }
 
 
                 break;
@@ -255,12 +264,13 @@ public class Teleop extends OpMode {
         myTelem.addData("Tx:", drivebase.getLLResult().getTx());
         myTelem.addData("Turret velocity:", shooter.getTurretVelocity());
         myTelem.addData("Turret Target Velocity", -(int)(drivebase.getLLResult().getTx()*100));
-        myTelem.addData("Turret NoTarget Velocity", (int)(((42-180)-turretFieldHeading)*10));
+        myTelem.addData("Turret NoTarget Velocity", (int)(AngleUnit.normalizeDegrees(42-turretFieldHeading)*10));
+        myTelem.addData("error", 42-turretFieldHeading);
         myTelem.update();
     }
 
     private boolean desiredVelocityReached() {
-        if (shooter.getVelocity() > shooterDesiredVelocity * .85)
+        if (shooter.getVelocity() > shooterDesiredVelocity * .95)
             return true;
         return false;
     }

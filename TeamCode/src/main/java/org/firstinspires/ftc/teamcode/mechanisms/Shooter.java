@@ -17,6 +17,7 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Constants.GeneralConstants;
@@ -25,7 +26,7 @@ import org.firstinspires.ftc.teamcode.Constants.GeneralConstants;
 public class Shooter {
     private DcMotorEx shooterMotor;
     private DcMotorEx turretMotor;
-    private Limelight3A limelight;
+//    private Limelight3A limelight;
 
     private static int goalAngle = 0;
     private static int currentAngle = 0;
@@ -59,7 +60,7 @@ public class Shooter {
 
         // Configure initial settings
         shooterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         shooterMotor.setDirection(DcMotor.Direction.REVERSE);
 
@@ -120,7 +121,7 @@ public class Shooter {
 
     public void setTurretTarget(double angle) { //Positive is counter-clockwise
         //Angle to tick conversion factor: 122/15 or 8.13333333
-        turretMotor.setTargetPosition((int) (clamp(-180, angle, 180) * 8.13333333333));
+        turretMotor.setTargetPosition((int) (AngleUnit.normalizeDegrees(angle) * 8.13333333333));
         turretMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         turretMotor.setPower(0.8);
     }
