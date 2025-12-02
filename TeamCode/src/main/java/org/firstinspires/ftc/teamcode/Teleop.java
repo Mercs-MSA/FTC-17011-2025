@@ -270,9 +270,7 @@ public class Teleop extends OpMode {
     }
 
     private boolean desiredVelocityReached() {
-        if (shooter.getVelocity() > shooterDesiredVelocity * .95)
-            return true;
-        return false;
+        return (shooter.getVelocity() > shooterDesiredVelocity * .95);
     }
 
     private void shootingMachine() {
@@ -285,7 +283,6 @@ public class Teleop extends OpMode {
                 transfer.closeTransferGate();
                 if (desiredVelocityReached() && gamepad1.right_trigger > .3) {
                     shootingState = SHOOTING_STATE.SHOOT;
-                } else if (!desiredVelocityReached() && gamepad1.right_trigger > .3) {
                 } else {
                     shootingState = SHOOTING_STATE.END;
                 }
