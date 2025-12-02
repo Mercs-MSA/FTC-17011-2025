@@ -112,6 +112,8 @@ public class Shooter {
         return shooterMotor.getVelocity();
     }
 
+    public double getVoltage() { return shooterMotor.getCurrent(CurrentUnit.AMPS); }
+
 
     public void stop() {
         shooterMotor.setPower(0);

@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.Autos;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
@@ -12,6 +12,8 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.SoftElectronics;
+import org.firstinspires.ftc.teamcode.Teleop;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
 import org.firstinspires.ftc.teamcode.mechanisms.Transfer;
@@ -20,9 +22,8 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.onBlueAlliance;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.ranAuto;
 
-@Autonomous(name = "Red Player Side Auto", group = "Competition")
-public class RedPlayerSideAuto extends OpMode {
-
+@Autonomous(name = "Blue Player Side Auto", group = "Competition")
+public class BluePlayerSideAuto extends OpMode {
     private Follower follower;
     private SoftElectronics softElectronics;
     private Intake intake;
@@ -34,13 +35,6 @@ public class RedPlayerSideAuto extends OpMode {
 
     private ElapsedTime shootTimer;
 
-    public enum SHOOTING_STATE {
-        INACTIVE,
-        START,
-        SPIN_UP,
-        SHOOT,
-        END
-    }
     public static Teleop.SHOOTING_STATE shootingState = Teleop.SHOOTING_STATE.INACTIVE;
 
     private enum AutoState {
@@ -48,9 +42,13 @@ public class RedPlayerSideAuto extends OpMode {
         PATH_ACTIVE,
         SHOOT,
         PATH_INTAKE_1,
-//        PATH_SHOOT_1,
+        //        PATH_SHOOT_1,
         PATH_INTAKE_2,
-//        PATH_SHOOT_2,
+        //        PATH_SHOOT_2,
+        PATH_INTAKE_3,
+        HOLD_GATE_1,
+        PATH_INTAKE_4,
+        HOLD_GATE_2,
         END_PATH,
         DONE,
         INACTIVE
@@ -67,15 +65,17 @@ public class RedPlayerSideAuto extends OpMode {
     // Same XY, mirrored headings
     // -----------------------------
 
-    public static final Pose startPose = new Pose(-61.3235, -15.1146, Math.toRadians(-180));
+    public static final Pose startPose = new Pose(-61.3235, 15.1146, Math.toRadians(180));
 
-    public static final Pose shootPose = new Pose(-55.06379, -15.07, Math.toRadians(-180));
-    public static final Pose readyIntakePose1 = new Pose(-34.41036, -28.7874, Math.toRadians(-90));
-    public static final Pose intakeEndPose1 = new Pose(-35.67191, -58.8364, Math.toRadians(-90));
-    public static final Pose readyIntakePose2 = new Pose(-45, -59.377, Math.toRadians(-135));
-    public static final Pose intakeEndPose2 = new Pose(-60.8429, -60.11, Math.toRadians(-165));
+    public static final Pose shootPose = new Pose(-55.06379, 15.07, Math.toRadians(180));
+    public static final Pose readyIntakePose1 = new Pose(-34.41036, 28.7874, Math.toRadians(90));
+    public static final Pose intakeEndPose1 = new Pose(-35.67191, 58.8364, Math.toRadians(90));
+    public static final Pose readyIntakePose2 = new Pose(-45, 59.377, Math.toRadians(135));
+    public static final Pose intakeEndPose2 = new Pose(-60.8429, 60.11, Math.toRadians(165));
+//    public static final Pose intakeFromTunnel1 = new Pose(0,0, Math.toRadians(-45));
+//    public static final Pose intakeFromTunnel2 = new Pose(0,0, Math.toRadians(-45));
 
-    public static final Pose poseRotateEnd = new Pose(-46, -22, 0);
+    public static final Pose poseRotateEnd = new Pose(-46, 22, 0);
 
 
     public static final Path startPath = new Path(new BezierLine(startPose, shootPose));
@@ -85,10 +85,14 @@ public class RedPlayerSideAuto extends OpMode {
     public static final Path readyIntakePath2 = new Path(new BezierLine(shootPose, readyIntakePose2));
     public static final Path endIntakePath2 = new Path(new BezierLine(readyIntakePose2, intakeEndPose2));
     public static final Path backToShoot2 = new Path(new BezierLine(intakeEndPose2, shootPose));
+//    public static final Path toTunnel1 = new Path(new BezierLine(shootPose, intakeFromTunnel1));
+//    public static final Path backToShoot3 = new Path(new BezierLine(intakeFromTunnel1, shootPose));
+//    public static final Path toTunnel2 = new Path(new BezierLine(shootPose, intakeFromTunnel2));
+//    public static final Path backToShoot4 = new Path(new BezierLine(intakeFromTunnel2, shootPose));
     public static final Path exitPath = new Path(new BezierLine(shootPose, poseRotateEnd));
 
 
-    public static final PathChain intakeChain1 = new PathChain(readyIntakePath1, endIntakePath2, backToShoot1);
+    public static final PathChain intakeChain1 = new PathChain(readyIntakePath1, endIntakePath1, backToShoot1);
     public static final PathChain intakeChain2 = new PathChain(readyIntakePath2, endIntakePath2, backToShoot2);
 
     static {
@@ -98,6 +102,11 @@ public class RedPlayerSideAuto extends OpMode {
         backToShoot1.setTangentHeadingInterpolation();
         readyIntakePath2.setTangentHeadingInterpolation();
         endIntakePath2.setTangentHeadingInterpolation();
+//        toTunnel1.setTangentHeadingInterpolation();
+//        backToShoot3.setTangentHeadingInterpolation();
+//        toTunnel2.setTangentHeadingInterpolation();
+//        backToShoot4.setTangentHeadingInterpolation();
+        exitPath.setTangentHeadingInterpolation();
     }
 
     @Override
@@ -112,14 +121,14 @@ public class RedPlayerSideAuto extends OpMode {
         shootTimer = new ElapsedTime();
 
         follower = Constants.createFollower(hardwareMap);
-//        follower.setStartingPose(startPose);
+        follower.setStartingPose(new Pose(-61.3235, 15.1146, Math.toRadians(180)));
 
         follower.setMaxPower(.8);
 
-        onBlueAlliance = false;
+        onBlueAlliance = true;
         ranAuto = true;
 
-        telemetryA.addLine("Red Mock Path Auto Init");
+        telemetryA.addLine("Blue Mock Path Auto Init");
         telemetryA.addData("Start Pose: ", follower.getPose());
         telemetryA.addData("Heading: ", Math.toDegrees(follower.getHeading()));
         telemetryA.update();
@@ -132,6 +141,8 @@ public class RedPlayerSideAuto extends OpMode {
         shooter.setMotorVelocity(0);
         intake.setPower(0);
         currentState = AutoState.START;
+        previousState = AutoState.INACTIVE;
+        nextState = AutoState.INACTIVE;
     }
 
     @Override
@@ -141,7 +152,7 @@ public class RedPlayerSideAuto extends OpMode {
         switch (currentState) {
             case START:
                 follower.followPath(startPath);
-                shooter.setTurretTarget(-23.8);
+                shooter.setTurretTarget(23.8);
                 currentState = AutoState.PATH_ACTIVE;
                 nextState = AutoState.SHOOT;
                 previousState = AutoState.START;
