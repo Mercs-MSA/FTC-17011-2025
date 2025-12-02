@@ -150,7 +150,10 @@ public class Teleop extends OpMode {
 
     public void updateTurretState() {//Turret 180: -1484 //Turrent 360: -2954
         // Red goal: -42.6
-        double turretFieldHeading = AngleUnit.normalizeDegrees(Math.toDegrees(drivebase.getLaserHeading()) + AngleUnit.normalizeDegrees((double) shooter.getTurretPos() / 8.13333333333)); //TODO: Figure out why this value is constantly getting closer to 0
+        double turretDeg = shooter.getTurretPos() / 8.13333333333;
+        double headingDeg = Math.toDegrees(drivebase.getLaserHeading());
+
+        double turretFieldHeading = AngleUnit.normalizeDegrees(headingDeg + turretDeg);
         switch (turretState) {
             case ZEROED:
 //                shooter.setTurretPower(0);
@@ -170,10 +173,10 @@ public class Teleop extends OpMode {
 
                 double targetDegrees = onBlueAlliance ? 42 : -42;
 
-                double error = Math.abs(targetDegrees-turretFieldHeading);
+                double error = targetDegrees - turretFieldHeading;
 
-                if (error > 5) {
-                    shooter.setTurretVelocity((int)((targetDegrees-turretFieldHeading)), 0.5);
+                if (Math.abs(error) > 5) {
+                    shooter.setTurretVelocity((int)(error * 100), 0.5);
                 } else {
                     turretState = TURRET_STATE.AIMED;
                 }
@@ -182,7 +185,7 @@ public class Teleop extends OpMode {
                 break;
             case AIMING_TO_TAG:
                 shooter.setTurretMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                shooter.setTurretVelocity(-(int)((drivebase.getLLResult().getTx()+2)*3), 0.2);
+//                shooter.setTurretVelocity(-(int)((drivebase.getLLResult().getTx()+2)*3), 0.2);
 
                 if (!drivebase.getTargetSeen()) {
                     turretState = TURRET_STATE.AIMING_NO_TAG;
@@ -264,7 +267,7 @@ public class Teleop extends OpMode {
         myTelem.addData("Tx:", drivebase.getLLResult().getTx());
         myTelem.addData("Turret velocity:", shooter.getTurretVelocity());
         myTelem.addData("Turret Target Velocity", -(int)(drivebase.getLLResult().getTx()*100));
-        myTelem.addData("Turret NoTarget Velocity", (int)(AngleUnit.normalizeDegrees(42-turretFieldHeading)*10));
+        myTelem.addData("Turret NoTarget Velocity", (int)((42-turretFieldHeading)*10));
         myTelem.addData("error", 42-turretFieldHeading);
         myTelem.update();
     }
