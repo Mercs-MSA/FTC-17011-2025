@@ -16,6 +16,11 @@ public class Constants {
     public static boolean onBlueAlliance = true;
     public static boolean ranAuto       = false;
 
+    public static double currentX = 0;
+    public static double currentY = 0;
+    public static double currentTheta = 0;
+
+
     // Robot version selector
     public enum VERSIONS {
         V1(new V1Constants()),

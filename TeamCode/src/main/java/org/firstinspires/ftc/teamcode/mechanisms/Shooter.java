@@ -56,7 +56,6 @@ public class Shooter {
     public Shooter(HardwareMap hardwareMap) {
         shooterMotor = hardwareMap.get(DcMotorEx.class, "shooterMotor");
         turretMotor = hardwareMap.get(DcMotorEx.class, "turretMotor");
-//        limelight = hardwareMap.get(Limelight3A.class, "limelight");
 
         // Configure initial settings
         shooterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -77,9 +76,6 @@ public class Shooter {
         turretMotor.setVelocity(0);
 
         shooterMotor.setVelocity(0);
-
-//        limelight.start();
-//        limelight.pipelineSwitch(0); //Pipeline 0 = Blue Tag (ID 20), Pipeline 1 = Red Tag (ID 24)
     }
 
 
@@ -159,18 +155,6 @@ public class Shooter {
     }
 
 
-
-//    public void lockOn() {
-//        double tx = 0;
-//        if (getLLResult().isValid())
-//            tx = getLLResult().getTx();
-//        else
-//            return;
-//
-//        if (tx > .2) {
-//            turretMotor.setVelocity(11);
-//        }
-//    }
     public static double clamp(double low, double val, double high) {
         if (low > val) {
             return low;

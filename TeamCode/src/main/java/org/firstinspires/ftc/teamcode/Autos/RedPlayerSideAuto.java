@@ -19,6 +19,9 @@ import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
 import org.firstinspires.ftc.teamcode.mechanisms.Transfer;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
+import static org.firstinspires.ftc.teamcode.Constants.Constants.currentTheta;
+import static org.firstinspires.ftc.teamcode.Constants.Constants.currentX;
+import static org.firstinspires.ftc.teamcode.Constants.Constants.currentY;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.onBlueAlliance;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.ranAuto;
 
@@ -126,6 +129,10 @@ public class RedPlayerSideAuto extends OpMode {
 
         follower.setMaxPower(.8);
 
+        currentX = 0;
+        currentY = 0;
+        currentTheta = 0;
+
         onBlueAlliance = false;
         ranAuto = true;
 
@@ -184,6 +191,7 @@ public class RedPlayerSideAuto extends OpMode {
 
             case PATH_INTAKE_1:
                 intake.setPower(1);
+                follower.setMaxPower(.4);
                 follower.followPath(intakeChain1);
                 currentState = AutoState.PATH_ACTIVE;
                 nextState = AutoState.SHOOT;
@@ -192,6 +200,7 @@ public class RedPlayerSideAuto extends OpMode {
 
             case PATH_INTAKE_2:
                 intake.setPower(1);
+                follower.setMaxPower(.4);
                 follower.followPath(intakeChain2);
                 currentState = AutoState.PATH_ACTIVE;
                 nextState = AutoState.SHOOT;
@@ -210,6 +219,10 @@ public class RedPlayerSideAuto extends OpMode {
                 intake.setPower(0.0);
                 break;
         }
+
+        currentX = follower.getPose().getX();
+        currentY = follower.getPose().getY();
+        currentTheta = follower.getPose().getHeading();
 
         telemetryA.addData("State", currentState);
         telemetryA.addData("Pose X", follower.getPose().getX());

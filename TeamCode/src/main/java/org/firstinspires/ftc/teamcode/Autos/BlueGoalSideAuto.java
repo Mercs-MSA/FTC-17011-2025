@@ -2,6 +2,9 @@ package org.firstinspires.ftc.teamcode.Autos;
 
 import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
 import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
+import static org.firstinspires.ftc.teamcode.Constants.Constants.currentTheta;
+import static org.firstinspires.ftc.teamcode.Constants.Constants.currentX;
+import static org.firstinspires.ftc.teamcode.Constants.Constants.currentY;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.onBlueAlliance;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.ranAuto;
 
@@ -46,6 +49,7 @@ public class BlueGoalSideAuto extends OpMode {
         //        PATH_SHOOT_1,
         PATH_INTAKE_2,
         //        PATH_SHOOT_2,
+        OPEN_GATE,
         PATH_INTAKE_3,
         HOLD_GATE_1,
         PATH_INTAKE_4,
@@ -75,6 +79,7 @@ public class BlueGoalSideAuto extends OpMode {
     public static final Pose intakeEndPose2 = new Pose(-60.8429, -60.11, Math.toRadians(-165));
 //    public static final Pose intakeFromTunnel1 = new Pose(0,0, Math.toRadians(-45));
 //    public static final Pose intakeFromTunnel2 = new Pose(0,0, Math.toRadians(-45));
+//    public static final Pose openGatePose = new Pose(0,0,0);
 
     public static final Pose poseRotateEnd = new Pose(-46, -22, 0);
 
@@ -86,6 +91,7 @@ public class BlueGoalSideAuto extends OpMode {
     public static final Path readyIntakePath2 = new Path(new BezierLine(shootPose, readyIntakePose2));
     public static final Path endIntakePath2 = new Path(new BezierLine(readyIntakePose2, intakeEndPose2));
     public static final Path backToShoot2 = new Path(new BezierLine(intakeEndPose2, shootPose));
+//    public static final Path toGate = new Path(new BezierLine(shootPose, openGatePose));
     //    public static final Path toTunnel1 = new Path(new BezierLine(shootPose, intakeFromTunnel1));
 //    public static final Path backToShoot3 = new Path(new BezierLine(intakeFromTunnel1, shootPose));
 //    public static final Path toTunnel2 = new Path(new BezierLine(shootPose, intakeFromTunnel2));
@@ -103,6 +109,7 @@ public class BlueGoalSideAuto extends OpMode {
         backToShoot1.setTangentHeadingInterpolation();
         readyIntakePath2.setTangentHeadingInterpolation();
         endIntakePath2.setTangentHeadingInterpolation();
+//        toGate.setTangentHeadingInterpolation();
 //        toTunnel1.setTangentHeadingInterpolation();
 //        backToShoot3.setTangentHeadingInterpolation();
 //        toTunnel2.setTangentHeadingInterpolation();
@@ -125,6 +132,10 @@ public class BlueGoalSideAuto extends OpMode {
         follower.setStartingPose(new Pose(-61.3235, -15.1146, Math.toRadians(-180)));
 
         follower.setMaxPower(.8);
+
+        currentX = 0;
+        currentY = 0;
+        currentTheta = 0;
 
         onBlueAlliance = false;
         ranAuto = true;
@@ -149,5 +160,17 @@ public class BlueGoalSideAuto extends OpMode {
     @Override
     public void loop() {
         follower.update();
+
+        currentX = follower.getPose().getX();
+        currentY = follower.getPose().getY();
+        currentTheta = follower.getPose().getHeading();
+
+        telemetryA.addData("State", currentState);
+        telemetryA.addData("Pose X", follower.getPose().getX());
+        telemetryA.addData("Pose Y", follower.getPose().getY());
+        telemetryA.addData("Heading (deg)", Math.toDegrees(follower.getPose().getHeading()));
+        //telemetryA.addData("Shooter vel", shooter.getVelocity());
+        telemetryA.addData("Timer", shootTimer.seconds());
+        telemetryA.update();
     }
 }
