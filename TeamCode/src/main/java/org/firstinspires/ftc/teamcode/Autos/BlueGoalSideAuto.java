@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.Autos;
 
 import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
 import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
+import static org.firstinspires.ftc.teamcode.Constants.Constants.CLOSE_SHOT_VELOCITY;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.currentTheta;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.currentX;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.currentY;
@@ -65,7 +66,7 @@ public class BlueGoalSideAuto extends OpMode {
     private AutoState nextState = AutoState.INACTIVE;
     private AutoState previousState = AutoState.INACTIVE;
 
-    public static int shooterVelocity = 1925;
+    public static int shooterVelocity = CLOSE_SHOT_VELOCITY;
 
     // -----------------------------
     // PATH / POSE DEFINITIONS (BLUE)

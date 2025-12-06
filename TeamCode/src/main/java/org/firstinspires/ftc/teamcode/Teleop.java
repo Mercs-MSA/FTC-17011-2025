@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode;
 
+import static org.firstinspires.ftc.teamcode.Constants.Constants.CLOSE_SHOT_VELOCITY;
+import static org.firstinspires.ftc.teamcode.Constants.Constants.FAR_SHOT_VELOCITY;
+import static org.firstinspires.ftc.teamcode.Constants.Constants.currentPose;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.onBlueAlliance;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.ranAuto;
 
@@ -42,8 +45,10 @@ public class Teleop extends OpMode {
 
 
     // Shooter velocities
-    public static int FAR_SHOT_VELOCITY = 2000;
-    public static int CLOSE_SHOT_VELOCITY = 1511;
+//    public static int FAR_SHOT_VELOCITY = 1967;
+//    public static int CLOSE_SHOT_VELOCITY = 1619;
+    public static int UPPER = 2200;
+    public static int LOWER = 0;
 
     public static int shooterDesiredVelocity = 0;
 
@@ -96,6 +101,12 @@ public class Teleop extends OpMode {
 
         myTelem.addData("Status", "Initialized");
         myTelem.update();
+
+        if (!ranAuto) {
+            drivebase.setPosition(new SparkFunOTOS.Pose2D(-61.3235, -15.1146, 0));
+        } else {
+            drivebase.setPosition(currentPose);
+        }
     }
 
     @Override
@@ -182,7 +193,12 @@ public class Teleop extends OpMode {
                 double error = targetDegrees - turretFieldHeading;
 
                 if (Math.abs(error) > 5) {
-                    shooter.setTurretVelocity((int)(error * 100), 0.5);
+                    if (turretDeg < -100 && error < 0)
+                        shooter.setTurretVelocity(0, 0);
+                    else if (turretDeg > 100 && error > 0)
+                        shooter.setTurretVelocity(0, 0);
+                    else
+                        shooter.setTurretVelocity((int)(error * 80), 0.5);
                 } else {
                     turretState = TURRET_STATE.AIMED;
                 }
@@ -244,11 +260,14 @@ public class Teleop extends OpMode {
         myTelem.addData("Heading:", Math.toDegrees(drivebase.getPosition().h));
         myTelem.addData("Shooter current velocity: ", shooterVel);
         myTelem.addData("Shooter Target Vel:", shooterDesiredVelocity);
+        myTelem.addData("Upper: ", UPPER);
+        myTelem.addData("Lower: ", LOWER);
         myTelem.addData("Shooter Current (AMPS): ", shooter.getShooterCurrent());
         myTelem.addData("Intake Power:", intake.getPower());
         myTelem.addData("Transfer Power:", transfer.getPower());
         myTelem.addData("Gate position: ", transfer.getTransferPosition());
         myTelem.addData("Shooting state: ", shootingState);
+        myTelem.addData("Shooter PIDF: ", shooter.originalPIDF);
         myTelem.addData("Turret state:", turretState);
         myTelem.addData("Reached desired velocity? ", desiredVelocityReached());
         myTelem.addData("Turret Position: ", shooter.getTurretPos());

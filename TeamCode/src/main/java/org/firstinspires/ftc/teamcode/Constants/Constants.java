@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.Constants;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 
 /*
  * README
@@ -19,6 +20,10 @@ public class Constants {
     public static double currentX = 0;
     public static double currentY = 0;
     public static double currentTheta = 0;
+    public static int FAR_SHOT_VELOCITY = 1967;
+    public static int CLOSE_SHOT_VELOCITY = 1619;
+
+    public static SparkFunOTOS.Pose2D currentPose;
 
 
     // Robot version selector

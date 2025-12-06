@@ -185,4 +185,12 @@ public class Drivebase {
     public void setStartingPose(Pose pose) {
         startingPose = pose;
     }
+
+    public void distanceToTarget() {
+        if (onBlueAlliance) {
+
+        } else {
+
+        }
+    }
  }

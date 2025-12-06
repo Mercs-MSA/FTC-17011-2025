@@ -46,10 +46,11 @@ public class Shooter {
 
     TURRET_STATE turretState = TURRET_STATE.ZEROED;
 
-    public static double P = 20;
-    public static double I = 3;
-    public static double D = 0;
-    public static double F = 5;
+    public static double P = 30;
+    public static double I = 5; //I 4 and D .05 worked ok too
+    public static double D = 1;
+    public static double F = 0;
+    public PIDFCoefficients originalPIDF; // 10, 3, 0, 0
 
     //5.5:1 turret rev
 
@@ -61,10 +62,10 @@ public class Shooter {
         shooterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
-        shooterMotor.setDirection(DcMotor.Direction.REVERSE);
+        shooterMotor.setDirection(DcMotor.Direction.FORWARD);
 
-//        shooterMotor.setVelocityPIDFCoefficients(P, I, D, F);
-//        turretMotor.setVelocityPIDFCoefficients(1, 0, 0, 0);
+        originalPIDF = shooterMotor.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooterMotor.setVelocityPIDFCoefficients(P, I, D, F);
 
         shooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 //        turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
