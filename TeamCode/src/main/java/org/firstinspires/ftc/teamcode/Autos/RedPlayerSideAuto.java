@@ -136,6 +136,8 @@ public class RedPlayerSideAuto extends OpMode {
         onBlueAlliance = false;
         ranAuto = true;
 
+        follower.update();
+
         telemetryA.addLine("Red Mock Path Auto Init");
         telemetryA.addData("Start Pose: ", follower.getPose());
         telemetryA.addData("Heading: ", Math.toDegrees(follower.getHeading()));

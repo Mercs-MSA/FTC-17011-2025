@@ -16,6 +16,7 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -27,6 +28,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
 import org.firstinspires.ftc.teamcode.mechanisms.Transfer;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
+@Disabled
 @Autonomous(name = "Blue Goal Side Auto", group = "Competition")
 public class BlueGoalSideAuto extends OpMode {
     private Follower follower;
@@ -139,6 +141,8 @@ public class BlueGoalSideAuto extends OpMode {
 
         onBlueAlliance = false;
         ranAuto = true;
+
+        follower.update();
 
         telemetryA.addLine("Red Mock Path Auto Init");
         telemetryA.addData("Start Pose: ", follower.getPose());
