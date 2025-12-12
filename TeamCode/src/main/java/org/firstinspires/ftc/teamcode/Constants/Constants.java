@@ -21,7 +21,7 @@ public class Constants {
     public static double currentY = 0;
     public static double currentTheta = 0;
     public static int FAR_SHOT_VELOCITY = 1967;
-    public static int CLOSE_SHOT_VELOCITY = 1619;
+    public static int CLOSE_SHOT_VELOCITY = 1629;
 
     public static SparkFunOTOS.Pose2D currentPose;
 
