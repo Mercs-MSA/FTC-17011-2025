@@ -103,7 +103,10 @@ public class Teleop extends OpMode {
         myTelem.update();
 
         if (!ranAuto) {
-            drivebase.setPosition(new SparkFunOTOS.Pose2D(-61.3235, -15.1146, 0));
+            if (!onBlueAlliance)
+                drivebase.setPosition(new SparkFunOTOS.Pose2D(-61.3235, -15.1146, 0));
+            else
+                drivebase.setPosition(new SparkFunOTOS.Pose2D(-61.3235, 15.1146, 0));
         } else {
             drivebase.setPosition(currentPose);
         }
@@ -129,7 +132,8 @@ public class Teleop extends OpMode {
 
     @Override
     public void start() {
-        shooter.setMotorVelocity(300);
+//        shooter.setMotorVelocity(300);
+        shooter.setMotorVelocity(0);
         ranAuto = false;
     }
 
@@ -165,75 +169,34 @@ public class Teleop extends OpMode {
         }
     }
 
-    public void updateTurretState() {//Turret 180: -1484 //Turrent 360: -2954
-        // Red goal: -42.6
-        double turretDeg = shooter.getTurretPos() / 8.13333333333;
-        double headingDeg = Math.toDegrees(drivebase.getLaserHeading());
-
-        double turretFieldHeading = AngleUnit.normalizeDegrees(headingDeg + turretDeg);
-        switch (turretState) {
-            case ZEROED:
-//                shooter.setTurretPower(0);
-//                shooter.setTurretTarget(0);
-                shooter.setTurretVelocity(0, 0);
-//                turretFieldHeading = Math.toDegrees(drivebase.getLaserHeading());
-                break;
-            case AIMED:
-                shooter.setTurretVelocity(0, 0);
-
-                break;
-            case AIMING_NO_TAG:
-
-                if (drivebase.getTargetSeen()) {
-                    turretState = TURRET_STATE.AIMING_TO_TAG;
-                }
-
-                double targetDegrees = onBlueAlliance ? 42 : -42;
-
-                double error = targetDegrees - turretFieldHeading;
-
-                if (Math.abs(error) > 5) {
-                    if (turretDeg < -100 && error < 0)
-                        shooter.setTurretVelocity(0, 0);
-                    else if (turretDeg > 100 && error > 0)
-                        shooter.setTurretVelocity(0, 0);
-                    else
-                        shooter.setTurretVelocity((int)(error * 80), 0.5);
-                } else {
-                    turretState = TURRET_STATE.AIMED;
-                }
-
-
-                break;
-            case AIMING_TO_TAG:
-                shooter.setTurretMode(DcMotor.RunMode.RUN_USING_ENCODER);
-//                shooter.setTurretVelocity(-(int)((drivebase.getLLResult().getTx()+2)*3), 0.2);
-
-                if (!drivebase.getTargetSeen()) {
-                    turretState = TURRET_STATE.AIMING_NO_TAG;
-                }
-                break;
-            default:
-                break;
-        }
-        myTelem.addData("fieldTurretHeadihng", turretFieldHeading);
-    }
-
 
     private void updateMechanisms() {
         shootingMachine();
+        setShooterDesiredVelocity(); ///STILL REQUIRES TUNING
 
-        // LT → Far shot (6000)
-        if (gamepad1.dpad_down) {
-            shooterDesiredVelocity = FAR_SHOT_VELOCITY;
-        } else {
-            shooterDesiredVelocity = CLOSE_SHOT_VELOCITY;
-        }
+//        if (gamepad1.dpad_down) {
+//            shooterDesiredVelocity = FAR_SHOT_VELOCITY;
+//        } else {
+//            shooterDesiredVelocity = CLOSE_SHOT_VELOCITY;
+//        }
 
-        // RT → Close shot (4500)
+        /// FOR TESTING
+//        if (gamepad1.cross) {
+//            shooter.setMotorVelocity(shooterDesiredVelocity);
+//        } else {
+//            shooter.setMotorVelocity(0);
+//        }
+
         if (gamepad1.right_trigger > 0.3 && shootingState.equals(SHOOTING_STATE.INACTIVE)) {
             shootingState = SHOOTING_STATE.START;
         }
+//            transfer.openTransferGate();
+//            intake.setPower(1);
+//            transfer.setPower(1);
+//        } else if (!gamepad1.left_bumper && !gamepad1.right_bumper) { /// FOR TESTING
+//            intake.setPower(0);
+//            transfer.setPower(0);
+//        }
 
         if (gamepad1.left_trigger > 0.3) {
             turretState = TURRET_STATE.AIMING_NO_TAG;
@@ -242,8 +205,9 @@ public class Teleop extends OpMode {
         }
 
         if (gamepad1.right_bumper && !gamepad1.left_bumper) {
-                intake.setPower(1);
-                transfer.setPower(1);
+            intake.setPower(1);
+            transfer.setPower(1);
+//            transfer.closeTransferGate();
         } else if (gamepad1.left_bumper && !gamepad1.right_bumper) {
             intake.setPower(-1);
             transfer.setPower(-1);
@@ -257,6 +221,7 @@ public class Teleop extends OpMode {
     private void updateTelemetry() {
         double shooterVel = shooter.getVelocity();
         double turretFieldHeading = Math.toDegrees(drivebase.getLaserHeading()) + (double) shooter.getTurretPos() / 8.13333333333; //TODO: Figure out why this value is constantly getting closer to 0
+        myTelem.addData("Range, inches: ", drivebase.distanceToTarget());
         myTelem.addData("Heading:", Math.toDegrees(drivebase.getPosition().h));
         myTelem.addData("Shooter current velocity: ", shooterVel);
         myTelem.addData("Shooter Target Vel:", shooterDesiredVelocity);
@@ -278,11 +243,16 @@ public class Teleop extends OpMode {
         myTelem.addData("Turret Target Velocity", -(int)(drivebase.getLLResult().getTx()*100));
         myTelem.addData("Turret NoTarget Velocity", (int)((42-turretFieldHeading)*10));
         myTelem.addData("error", 42-turretFieldHeading);
+        myTelem.addData("Turret heading PID", shooter.getTurretPositionalPID());
         myTelem.update();
     }
 
+    private void setShooterDesiredVelocity() {
+        double range = drivebase.distanceToTarget();
+        shooterDesiredVelocity = (int) ((-0.0467391 * Math.pow(range, 2)) + (15.8207 * range) + 747.86042);
+    }
     private boolean desiredVelocityReached() {
-        return (shooter.getVelocity() > shooterDesiredVelocity * .96);
+        return (shooter.getVelocity() > shooterDesiredVelocity * .97);
     }
 
     private void shootingMachine() {
@@ -312,7 +282,8 @@ public class Teleop extends OpMode {
                 }
                 break;
             case END:
-                shooter.setMotorVelocity(300);
+//                shooter.setMotorVelocity(300);
+                shooter.setMotorVelocity(0);
                 transfer.closeTransferGate();
                 transfer.setPower(0);
                 shootingState = SHOOTING_STATE.INACTIVE;
@@ -322,4 +293,68 @@ public class Teleop extends OpMode {
                 break;
         }
     }
+
+
+    public void updateTurretState() {//Turret 180: -1484 //Turrent 360: -2954
+        // Red goal: -42.6
+//        double turretDeg = shooter.getTurretPos() / 8.13333333333;
+//        double headingDeg = Math.toDegrees(drivebase.getLaserHeading());
+
+//        double turretFieldHeading = AngleUnit.normalizeDegrees(headingDeg + turretDeg);
+        switch (turretState) {
+            case ZEROED:
+//                shooter.setTurretPower(0);
+//                shooter.setTurretTarget(0);
+                shooter.setTurretVelocity(0, 0);
+//                turretFieldHeading = Math.toDegrees(drivebase.getLaserHeading());
+                break;
+            case AIMED:
+                shooter.setTurretVelocity(0, 0);
+
+                break;
+            case AIMING_NO_TAG:
+
+                double targetFieldAngle = (onBlueAlliance ? 42 : -42) ;
+                double robotHeadingDeg = Math.toDegrees(drivebase.getLaserHeading());
+
+                double turretSetpointDeg = targetFieldAngle - robotHeadingDeg;
+
+                double turretAngleDeg = shooter.getTurretPos() / 8.13333333333;
+
+                double error = AngleUnit.normalizeDegrees(turretSetpointDeg - turretAngleDeg);
+                double absError = Math.abs(error);
+
+                boolean seesTarget = drivebase.getTargetSeen();
+
+//                if (seesTarget) {
+//                    turretState = TURRET_STATE.AIMING_TO_TAG;
+//                    return;
+//                }
+
+                if (absError > 3) {
+                    shooter.setTurretTargetShortestPath(turretSetpointDeg);
+                } else if (absError < 2) {
+                    turretState = TURRET_STATE.AIMED;
+                }
+                myTelem.addData("turret target", turretSetpointDeg);
+                myTelem.addData("turret angle", turretAngleDeg);
+//                myTelem.addData("error")
+
+
+
+                break;
+            case AIMING_TO_TAG:
+                shooter.setTurretMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//                shooter.setTurretVelocity(-(int)((drivebase.getLLResult().getTx()+2)*50), 0.2);
+
+                if (!drivebase.getTargetSeen()) {
+                    turretState = TURRET_STATE.AIMING_NO_TAG;
+                }
+                break;
+            default:
+                break;
+        }
+//        myTelem.addData("fieldTurretHeadihng", turretFieldHeading);
+    }
+
 }

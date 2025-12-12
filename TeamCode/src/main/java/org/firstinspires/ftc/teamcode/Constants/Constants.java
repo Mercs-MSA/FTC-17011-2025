@@ -24,6 +24,9 @@ public class Constants {
     public static int CLOSE_SHOT_VELOCITY = 1629;
 
     public static SparkFunOTOS.Pose2D currentPose;
+    public static SparkFunOTOS.Pose2D blueGoal = new SparkFunOTOS.Pose2D(50.654, 42.016, Math.toRadians(48.62));
+    public static SparkFunOTOS.Pose2D redGoal = new SparkFunOTOS.Pose2D(47.675, -51.351, Math.toRadians(-53.762));
+
 
 
     // Robot version selector

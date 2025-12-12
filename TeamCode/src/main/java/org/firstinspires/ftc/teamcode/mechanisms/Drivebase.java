@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
+import static org.firstinspires.ftc.teamcode.Constants.Constants.blueGoal;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.onBlueAlliance;
+import static org.firstinspires.ftc.teamcode.Constants.Constants.redGoal;
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
@@ -186,11 +188,13 @@ public class Drivebase {
         startingPose = pose;
     }
 
-    public void distanceToTarget() {
+    public double distanceToTarget() {
+        double range = 0;
         if (onBlueAlliance) {
-
+            range = Math.hypot(otos.getPosition().x - blueGoal.x, otos.getPosition().y - blueGoal.y);
         } else {
-
+            range = Math.hypot(otos.getPosition().x - redGoal.x, otos.getPosition().y - redGoal.y);
         }
+        return range;
     }
  }

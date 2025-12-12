@@ -46,9 +46,9 @@ public class Shooter {
 
     TURRET_STATE turretState = TURRET_STATE.ZEROED;
 
-    public static double P = 30;
-    public static double I = 5; //I 4 and D .05 worked ok too
-    public static double D = 1;
+    public static double P = 30; ///30, 5, 1, 0 for no variable velocity. Current values are in the works for variable velocity
+    public static double I = 4;
+    public static double D = 2;
     public static double F = 0;
     public PIDFCoefficients originalPIDF; // 10, 3, 0, 0
 
@@ -57,6 +57,7 @@ public class Shooter {
     public Shooter(HardwareMap hardwareMap) {
         shooterMotor = hardwareMap.get(DcMotorEx.class, "shooterMotor");
         turretMotor = hardwareMap.get(DcMotorEx.class, "turretMotor");
+//        limelight = hardwareMap.get(Limelight3A.class, "limelight");
 
         // Configure initial settings
         shooterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -64,8 +65,8 @@ public class Shooter {
 
         shooterMotor.setDirection(DcMotor.Direction.FORWARD);
 
-        originalPIDF = shooterMotor.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER);
         shooterMotor.setVelocityPIDFCoefficients(P, I, D, F);
+        turretMotor.setPositionPIDFCoefficients(10);
 
         shooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 //        turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -77,6 +78,9 @@ public class Shooter {
         turretMotor.setVelocity(0);
 
         shooterMotor.setVelocity(0);
+
+//        limelight.start();
+//        limelight.pipelineSwitch(0); //Pipeline 0 = Blue Tag (ID 20), Pipeline 1 = Red Tag (ID 24)
     }
 
 
@@ -86,8 +90,12 @@ public class Shooter {
         return (shooterMotor.getVelocity() * 60.0) / 28.0;
     }
 
-    public PIDFCoefficients getPID() {
+    public PIDFCoefficients getShooterPID() {
         return (shooterMotor.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER));
+    }
+
+    public PIDFCoefficients getTurretPositionalPID() {
+        return turretMotor.getPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
 
@@ -120,9 +128,43 @@ public class Shooter {
 
     public void setTurretTarget(double angle) { //Positive is counter-clockwise
         //Angle to tick conversion factor: 122/15 or 8.13333333
-        turretMotor.setTargetPosition((int) (AngleUnit.normalizeDegrees(angle) * 8.13333333333));
+        turretMotor.setTargetPosition((int)(angle * 8.13333333333));
         turretMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         turretMotor.setPower(0.8);
+    }
+
+    public void setTurretTargetShortestPath(double desiredAngleDeg) {
+        // normalize desired angle to -180..180 (tolerant: user can pass normalized or raw)
+        double desired = AngleUnit.normalizeDegrees(desiredAngleDeg);
+
+        // read current encoder & convert to physical angle (may be >360 or <0 depending on your encoder origin)
+        int currentTicks = turretMotor.getCurrentPosition();
+        double currentAngleDeg = currentTicks / 8.13333333; // this gives a continuous angle
+        // but we only need the physical angle modulo 360 for the shortest-path calculation:
+        double currentPhysicalAngle = AngleUnit.normalizeDegrees(currentAngleDeg);
+
+        // shortest-path error (−180..+180)
+        double errorDeg = AngleUnit.normalizeDegrees(desired - currentPhysicalAngle);
+
+        // optional: clamp huge jumps (safety), e.g. protect against sensor glitches
+//        if (errorDeg > MAX_STEP_DEG) errorDeg = MAX_STEP_DEG;
+//        if (errorDeg < -MAX_STEP_DEG) errorDeg = -MAX_STEP_DEG;
+
+        // deadband: if already close, don't re-command (avoids hunting)
+        if (Math.abs(errorDeg) < 2) {
+            // optionally stop motor / switch mode
+            turretMotor.setPower(0.0);
+            return;
+        }
+
+        // compute tick delta for shortest path and make absolute target = current + delta
+        int deltaTicks = (int) Math.round(errorDeg * 8.13333333);
+        int targetTicks = currentTicks + deltaTicks;
+
+        // command motor
+        turretMotor.setTargetPosition(targetTicks);
+        turretMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        turretMotor.setPower(0.8); // tune power
     }
 
     public void setTurretMode(DcMotor.RunMode mode) {
@@ -132,7 +174,7 @@ public class Shooter {
     public void setTurretVelocity(int vel, double power) {
         turretMotor.setVelocity(vel);
         turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        turretMotor.setPower(power);
+//        turretMotor.setPower(power);
     }
 
     public void setTurretPower(double power) {
@@ -156,6 +198,18 @@ public class Shooter {
     }
 
 
+
+//    public void lockOn() {
+//        double tx = 0;
+//        if (getLLResult().isValid())
+//            tx = getLLResult().getTx();
+//        else
+//            return;
+//
+//        if (tx > .2) {
+//            turretMotor.setVelocity(11);
+//        }
+//    }
     public static double clamp(double low, double val, double high) {
         if (low > val) {
             return low;
