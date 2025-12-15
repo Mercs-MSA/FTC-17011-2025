@@ -10,13 +10,15 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.Teleop;
 import org.firstinspires.ftc.teamcode.mechanisms.Drivebase;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
 import org.firstinspires.ftc.teamcode.mechanisms.Transfer;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+
+import java.util.concurrent.TimeUnit;
 
 @Autonomous(name = "PPV Red Far Auto", group = "Autonomous")
 @Configurable // Panels
@@ -28,6 +30,7 @@ public class PPVRedFarAuto extends OpMode {
     private Transfer transfer;
     private Intake intake;
     private Shooter shooter;
+    private ElapsedTime autoTimer;
     private double lastVelocity;
     private int timesShot = 0;
     private double shooterVelocityDropThreshold = 80.6741;
@@ -42,7 +45,6 @@ public class PPVRedFarAuto extends OpMode {
         INIT,
         PATH_ACTIVE_WAIT,
         SHOOT,
-        WAIT_UNTIL_SHOOT_DONE,
         WAIT_UNTIL_WAIT_DONE,
         WAIT,
         LEAVE,
@@ -57,14 +59,14 @@ public class PPVRedFarAuto extends OpMode {
         CLOSE_GATE,
         SPIN_UP,
         OPEN_GATE,
-        SHOOT,
+        SHOOT_BALL,
         END
     }
     public static SHOOTING_STATE shootingState = SHOOTING_STATE.INACTIVE;
 
-    private AUTO_STATE PAW_NextState; //Path Active Wait Next State
-    private AUTO_STATE S_NextState; //Full Rotate Spindex Next State
-    private AUTO_STATE W_NextState; //Full Rotate Spindex Next State
+    private AUTO_STATE P_NextState; //Path Next State
+    private AUTO_STATE S_NextState; //Shooter Next State
+    private AUTO_STATE W_NextState; //Wait Next State
     private double W_NextStateLengthMS = 670.0;
     private AUTO_STATE autoState;
     private Paths paths; // Paths defined in the Paths class
@@ -74,6 +76,7 @@ public class PPVRedFarAuto extends OpMode {
     @Override
     public void init() {
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
+        autoState = AUTO_STATE.INIT;
 
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(new Pose(88, 8, Math.toRadians(90)));
@@ -94,7 +97,8 @@ public class PPVRedFarAuto extends OpMode {
     @Override
     public void loop() {
         follower.update(); // Update Pedro Pathing
-        updatePaths(); // Update autonomous state machine
+        updateAutoStateMachine(); // Update autonomous state machine
+        updateShooterStateMachine();
 
         // Log values to Panels and Driver Station
         panelsTelemetry.debug("Auto State", autoState);
@@ -180,12 +184,88 @@ public class PPVRedFarAuto extends OpMode {
         return (shooter.getVelocity() > shooterDesiredVelocity * .98);
     }
 
-    public void updatePaths() {
-        // Add your state machine Here
-        // Access paths with paths.pathName
-        // Refer to the Pedro Pathing Docs (Auto Example) for an example state machine
+    public void updateAutoStateMachine() {
+        switch (autoState) {
+
+            case PATH_ACTIVE_WAIT:
+                if (!follower.isBusy()) {
+                    autoState = P_NextState;
+                }
+                break;
+
+            case SHOOT:
+                if (shootingState == SHOOTING_STATE.INACTIVE) {
+                    shootingState = SHOOTING_STATE.START;
+                } else if (shootingState == SHOOTING_STATE.END) {
+                    autoState = S_NextState;
+                }
+
+            case WAIT:
+                autoTimer.reset();
+                autoState = AUTO_STATE.WAIT_UNTIL_WAIT_DONE;
+                break;
+
+            case WAIT_UNTIL_WAIT_DONE:
+                if (autoTimer.time(TimeUnit.MILLISECONDS) > W_NextStateLengthMS)
+                    autoState = W_NextState;
+
+                break;
+
+            case INIT:
+                autoState = AUTO_STATE.startToShootFar;
+                break;
+
+            case startToShootFar:
+                follower.followPath(paths.startToShootFar);
+                P_NextState = AUTO_STATE.SHOOT;
+                S_NextState = AUTO_STATE.shootToIntakeLevel1;
+
+
+                autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+                break;
+
+            case shootToIntakeLevel1:
+                intake.setPower(1);
+                follower.followPath(paths.shootToIntakeLevel1);
+                P_NextState = AUTO_STATE.intakeLevel1ToShoot;
+
+                autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+                break;
+
+            case intakeLevel1ToShoot:
+                follower.followPath(paths.intakeLevel1ToShoot);
+                P_NextState = AUTO_STATE.SHOOT;
+                S_NextState = AUTO_STATE.shootToTurnToHuman;
+
+                autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+                break;
+
+            case shootToTurnToHuman:
+                follower.followPath(paths.shootToTurnToHuman);
+                P_NextState = AUTO_STATE.turnToHumanToIntakeHuman;
+
+                autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+                break;
+
+            case turnToHumanToIntakeHuman:
+                follower.followPath(paths.turnToHumanToIntakeHuman);
+                P_NextState = AUTO_STATE.intakeHumanToShoot;
+
+                autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+                break;
+
+            case intakeHumanToShoot:
+                follower.followPath(paths.intakeHumanToShoot);
+                P_NextState = AUTO_STATE.SHOOT;
+                S_NextState = AUTO_STATE.END;
+
+            case END:
+                intake.setPower(0);
+                break;
+
+        }
     }
-    private void shootingMachine() {
+    private void updateShooterStateMachine() {
         switch (shootingState) {
             case START:
                 shootingState = SHOOTING_STATE.SPIN_UP;
@@ -201,11 +281,11 @@ public class PPVRedFarAuto extends OpMode {
 
             case IS_SHOOTER_READY:
                 if (desiredVelocityReached()) {
-                    shootingState = SHOOTING_STATE.SHOOT;
+                    shootingState = SHOOTING_STATE.SHOOT_BALL;
                 }
                 break;
 
-            case SHOOT:
+            case SHOOT_BALL:
                 transfer.openTransferGate();
                 transfer.setPower(.87);
                 if (shooter.getVelocity() - lastVelocity > shooterVelocityDropThreshold) {
@@ -218,6 +298,7 @@ public class PPVRedFarAuto extends OpMode {
                 }
                 lastVelocity = shooter.getVelocity();
                 break;
+
             case END:
                 shooter.setMotorVelocity(300);
                 transfer.closeTransferGate();
