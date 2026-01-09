@@ -37,6 +37,8 @@ public class Shooter {
     public static double rightMaxPosition = 500;
     public static double leftMaxPosition = 500;
 
+
+
     private enum TURRET_STATE {
         ZEROED,
         ZEROING,
