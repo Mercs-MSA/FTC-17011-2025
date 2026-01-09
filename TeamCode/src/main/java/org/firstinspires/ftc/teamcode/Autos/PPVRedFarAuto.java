@@ -48,7 +48,8 @@ public class PPVRedFarAuto extends OpMode {
         WAIT_UNTIL_WAIT_DONE,
         WAIT,
         LEAVE,
-        END
+        END,
+        NOTHING,
     }
 
     private enum SHOOTING_STATE {
@@ -68,7 +69,7 @@ public class PPVRedFarAuto extends OpMode {
     private AUTO_STATE S_NextState; //Shooter Next State
     private AUTO_STATE W_NextState; //Wait Next State
     private double W_NextStateLengthMS = 670.0;
-    private AUTO_STATE autoState;
+    private AUTO_STATE autoState = AUTO_STATE.INIT;
     private Paths paths; // Paths defined in the Paths class
 
     private double shooterDesiredVelocity = org.firstinspires.ftc.teamcode.Constants.Constants.FAR_SHOT_VELOCITY;
@@ -77,6 +78,9 @@ public class PPVRedFarAuto extends OpMode {
     public void init() {
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
         autoState = AUTO_STATE.INIT;
+        P_NextState = AUTO_STATE.NOTHING;
+        W_NextState = AUTO_STATE.NOTHING;
+        S_NextState = AUTO_STATE.NOTHING;
 
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(new Pose(88, 8, Math.toRadians(90)));
@@ -87,6 +91,8 @@ public class PPVRedFarAuto extends OpMode {
         intake = new Intake(hardwareMap);
         transfer = new Transfer(hardwareMap);
         shooter = new Shooter(hardwareMap);
+
+        autoTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
         lastVelocity = shooterDesiredVelocity;
 
@@ -102,6 +108,15 @@ public class PPVRedFarAuto extends OpMode {
 
         // Log values to Panels and Driver Station
         panelsTelemetry.debug("Auto State", autoState);
+        panelsTelemetry.debug("P_NextState", P_NextState);
+        panelsTelemetry.debug("W_NextState", W_NextState);
+        panelsTelemetry.debug("S_NextState", S_NextState);
+        panelsTelemetry.addLine("\n");
+        panelsTelemetry.debug("Shooter State", shootingState);
+        panelsTelemetry.debug("Shooter Velocity: ", shooter.getVelocity());
+        panelsTelemetry.debug("Shooter Desired Velocity: ", shooterDesiredVelocity);
+
+
         panelsTelemetry.debug("X", follower.getPose().getX());
         panelsTelemetry.debug("Y", follower.getPose().getY());
         panelsTelemetry.debug("Heading", follower.getPose().getHeading());
@@ -202,7 +217,7 @@ public class PPVRedFarAuto extends OpMode {
 
             case WAIT:
                 autoTimer.reset();
-                autoState = AUTO_STATE.WAIT_UNTIL_WAIT_DONE;
+                //autoState = AUTO_STATE.WAIT_UNTIL_WAIT_DONE;
                 break;
 
             case WAIT_UNTIL_WAIT_DONE:
@@ -268,7 +283,7 @@ public class PPVRedFarAuto extends OpMode {
     private void updateShooterStateMachine() {
         switch (shootingState) {
             case START:
-                shootingState = SHOOTING_STATE.SPIN_UP;
+                shootingState = SHOOTING_STATE.START_SHOOTER;
                 break;
 
             case START_SHOOTER:
