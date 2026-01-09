@@ -36,7 +36,7 @@ public class Drivebase {
     private double TX = 0;
 
     //Odometry
-    private Follower follower;
+//    private Follower follower;
     public static Pose startingPose = new Pose(88, 8, 90);
 
 
@@ -76,9 +76,9 @@ public class Drivebase {
         limelight.pipelineSwitch(onBlueAlliance ? 0 : 1);
 
         //Odometry setup
-        follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(startingPose == null ? new Pose() : startingPose);
-        follower.update();
+//        follower = Constants.createFollower(hardwareMap);
+//        follower.setStartingPose(startingPose == null ? new Pose() : startingPose);
+//        follower.update();
     }
 
     public void offsetYaw(double offsetDeg) {
@@ -86,7 +86,7 @@ public class Drivebase {
     }
 
     public void resetYaw() {
-        otos.setPosition(new SparkFunOTOS.Pose2D(0, 0, 0));
+        otos.setPosition(new SparkFunOTOS.Pose2D(otos.getPosition().x, otos.getPosition().y, 0));
     }
 
     public void setPosition(SparkFunOTOS.Pose2D pose) {
@@ -107,7 +107,7 @@ public class Drivebase {
 
     // Field-centric drive
     public void drive(double drive, double strafe, double turn) {
-        follower.update();
+//        follower.update();
 
         // Get current heading (radians)
         double botHeading = otos.getPosition().h + offset;
@@ -176,17 +176,17 @@ public class Drivebase {
 //        }
 //    }
 
-    public Pose getPose() {
-        return follower.getPose();
-    }
+//    public Pose getPose() {
+//        return follower.getPose();
+//    }
 
     public double getLaserHeading() {
         return otos.getPosition().h;
     }
 
-    public void setStartingPose(Pose pose) {
-        startingPose = pose;
-    }
+//    public void setStartingPose(Pose pose) {
+//        startingPose = pose;
+//    }
 
     public double distanceToTarget() {
         double range = 0;
@@ -196,5 +196,17 @@ public class Drivebase {
             range = Math.hypot(otos.getPosition().x - redGoal.x, otos.getPosition().y - redGoal.y);
         }
         return range;
+    }
+
+    public double angleToTargetDeg() {
+        Pose blueGoalPedro = new Pose(17, 37);
+        Pose redGoalPedro = new Pose (129, 138);
+
+        Pose goalPose = onBlueAlliance ? blueGoalPedro : redGoalPedro;
+
+        double deltaX = goalPose.getX() - getPosition().x;
+        double deltaY = goalPose.getY() - getPosition().y;
+
+        return Math.toDegrees(Math.atan2(deltaY, deltaX));
     }
  }

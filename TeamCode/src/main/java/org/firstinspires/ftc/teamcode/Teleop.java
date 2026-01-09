@@ -219,6 +219,9 @@ public class Teleop extends OpMode {
     }
 
     private void updateTelemetry() {
+//        myTelem.addData("follower pos", drivebase.getPose());
+        myTelem.addData("otos pos", drivebase.getPosition());
+        myTelem.addData("goalTarget", drivebase.angleToTargetDeg());
         double shooterVel = shooter.getVelocity();
         double turretFieldHeading = Math.toDegrees(drivebase.getLaserHeading()) + (double) shooter.getTurretPos() / 8.13333333333; //TODO: Figure out why this value is constantly getting closer to 0
         myTelem.addData("Range, inches: ", drivebase.distanceToTarget());
@@ -232,17 +235,17 @@ public class Teleop extends OpMode {
         myTelem.addData("Transfer Power:", transfer.getPower());
         myTelem.addData("Gate position: ", transfer.getTransferPosition());
         myTelem.addData("Shooting state: ", shootingState);
-        myTelem.addData("Shooter PIDF: ", shooter.originalPIDF);
+//        myTelem.addData("Shooter PIDF: ", shooter.originalPIDF);
         myTelem.addData("Turret state:", turretState);
         myTelem.addData("Reached desired velocity? ", desiredVelocityReached());
-        myTelem.addData("Turret Position: ", shooter.getTurretPos());
+        myTelem.addData("Turret Angle: ", shooter.getTurretPos() / 8.13333333333);
         myTelem.addData("Turret target", shooter.getTurretTargetPos());
         myTelem.addData("Turret mode:", shooter.getTurretMode());
         myTelem.addData("Tx:", drivebase.getLLResult().getTx());
-        myTelem.addData("Turret velocity:", shooter.getTurretVelocity());
-        myTelem.addData("Turret Target Velocity", -(int)(drivebase.getLLResult().getTx()*100));
-        myTelem.addData("Turret NoTarget Velocity", (int)((42-turretFieldHeading)*10));
-        myTelem.addData("error", 42-turretFieldHeading);
+//        myTelem.addData("Turret velocity:", shooter.getTurretVelocity());
+//        myTelem.addData("Turret Target Velocity", -(int)(drivebase.getLLResult().getTx()*100));
+//        myTelem.addData("Turret NoTarget Velocity", (int)((42-turretFieldHeading)*10));
+        myTelem.addData("error", drivebase.angleToTargetDeg()-turretFieldHeading);
         myTelem.addData("Turret heading PID", shooter.getTurretPositionalPID());
         myTelem.update();
     }
@@ -305,16 +308,16 @@ public class Teleop extends OpMode {
             case ZEROED:
 //                shooter.setTurretPower(0);
 //                shooter.setTurretTarget(0);
-                shooter.setTurretVelocity(0, 0);
+                shooter.setTurretPower(0);
 //                turretFieldHeading = Math.toDegrees(drivebase.getLaserHeading());
                 break;
             case AIMED:
-                shooter.setTurretVelocity(0, 0);
+                shooter.setTurretPower(0);
 
                 break;
             case AIMING_NO_TAG:
 
-                double targetFieldAngle = (onBlueAlliance ? 42 : -42) ;
+                double targetFieldAngle = drivebase.angleToTargetDeg();
                 double robotHeadingDeg = Math.toDegrees(drivebase.getLaserHeading());
 
                 double turretSetpointDeg = targetFieldAngle - robotHeadingDeg;
@@ -326,26 +329,35 @@ public class Teleop extends OpMode {
 
                 boolean seesTarget = drivebase.getTargetSeen();
 
-//                if (seesTarget) {
-//                    turretState = TURRET_STATE.AIMING_TO_TAG;
-//                    return;
-//                }
+                if (seesTarget) {
+                    turretState = TURRET_STATE.AIMING_TO_TAG;
+                    return;
+                }
 
                 if (absError > 3) {
                     shooter.setTurretTargetShortestPath(turretSetpointDeg);
                 } else if (absError < 2) {
                     turretState = TURRET_STATE.AIMED;
                 }
-                myTelem.addData("turret target", turretSetpointDeg);
-                myTelem.addData("turret angle", turretAngleDeg);
+//                myTelem.addData("turret target", turretSetpointDeg);
+//                myTelem.addData("turret angle", turretAngleDeg);
 //                myTelem.addData("error")
 
 
 
                 break;
             case AIMING_TO_TAG:
-                shooter.setTurretMode(DcMotor.RunMode.RUN_USING_ENCODER);
-//                shooter.setTurretVelocity(-(int)((drivebase.getLLResult().getTx()+2)*50), 0.2);
+//                shooter.setTurretMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                double tx = drivebase.getLLResult().getTx();
+
+                double kP = 0.02; // tune
+                double vel = kP * tx;
+
+                vel = Shooter.clamp(-0.4, vel, 0.4);
+                shooter.setTurretPower(vel);
+
+
+//                shooter.setTurretVelocity(, 0.2);
 
                 if (!drivebase.getTargetSeen()) {
                     turretState = TURRET_STATE.AIMING_NO_TAG;
