@@ -48,10 +48,10 @@ public class Shooter {
 
     TURRET_STATE turretState = TURRET_STATE.ZEROED;
 
-    public static double P = 30; ///30, 5, 1, 0 for no variable velocity. Current values are in the works for variable velocity
-    public static double I = 4;
-    public static double D = 2;
-    public static double F = 0;
+    public static double P = 80; ///30, 5, 1, 0 for no variable velocity. Current values are in the works for variable velocity
+    public static double I = 0;
+    public static double D = 1;
+    public static double F = 15;
     public PIDFCoefficients originalPIDF; // 10, 3, 0, 0
 
     //5.5:1 turret rev

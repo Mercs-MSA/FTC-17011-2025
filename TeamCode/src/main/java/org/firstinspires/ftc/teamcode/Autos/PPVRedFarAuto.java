@@ -39,8 +39,7 @@ public class PPVRedFarAuto extends OpMode {
         startToShootFar,
         shootToIntakeLevel1,
         intakeLevel1ToShoot,
-        shootToTurnToHuman,
-        turnToHumanToIntakeHuman,
+        shootToIntakeHuman,
         intakeHumanToShoot,
         INIT,
         PATH_ACTIVE_WAIT,
@@ -57,9 +56,6 @@ public class PPVRedFarAuto extends OpMode {
         START,
         START_SHOOTER,
         IS_SHOOTER_READY,
-        CLOSE_GATE,
-        SPIN_UP,
-        OPEN_GATE,
         SHOOT_BALL,
         END
     }
@@ -124,73 +120,116 @@ public class PPVRedFarAuto extends OpMode {
     }
 
     public static class Paths {
-
         public PathChain startToShootFar;
         public PathChain shootToIntakeLevel1;
         public PathChain intakeLevel1ToShoot;
-        public PathChain shootToTurnToHuman;
-        public PathChain turnToHumanToIntakeHuman;
+        public PathChain shootToIntakeHuman;
         public PathChain intakeHumanToShoot;
+        public PathChain shootToGate1;
+        public PathChain gateToShoot1;
+        public PathChain shootToGate2;
+        public PathChain gateToShoot2;
+        public PathChain leave;
 
         public Paths(Follower follower) {
-            startToShootFar = follower
-                    .pathBuilder()
-                    .addPath(
+            startToShootFar = follower.pathBuilder().addPath(
                             new BezierCurve(
                                     new Pose(88.000, 8.000),
-                                    new Pose(88.210, 17.938),
+                                    new Pose(86.950, 13.118),
                                     new Pose(84.261, 21.723)
                             )
-                    )
-                    .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(65))
+                    ).setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(65))
+
                     .build();
 
-            shootToIntakeLevel1 = follower
-                    .pathBuilder()
-                    .addPath(
+            shootToIntakeLevel1 = follower.pathBuilder().addPath(
                             new BezierCurve(
                                     new Pose(84.261, 21.723),
-                                    new Pose(85.054, 33.003),
+                                    new Pose(92.184, 38.036),
                                     new Pose(120.192, 35.302)
                             )
-                    )
-                    .setLinearHeadingInterpolation(Math.toRadians(65), Math.toRadians(0))
+                    ).setLinearHeadingInterpolation(Math.toRadians(65), Math.toRadians(0))
+
                     .build();
 
-            intakeLevel1ToShoot = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierLine(new Pose(120.192, 35.302), new Pose(84.261, 21.723))
-                    )
-                    .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(65))
+            intakeLevel1ToShoot = follower.pathBuilder().addPath(
+                            new BezierLine(
+                                    new Pose(120.192, 35.302),
+
+                                    new Pose(84.261, 21.723)
+                            )
+                    ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(65))
+
                     .build();
 
-            shootToTurnToHuman = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierLine(new Pose(84.261, 21.723), new Pose(84.261, 21.723))
-                    )
-                    .setLinearHeadingInterpolation(Math.toRadians(65), Math.toRadians(0))
-                    .build();
-
-            turnToHumanToIntakeHuman = follower
-                    .pathBuilder()
-                    .addPath(
+            shootToIntakeHuman = follower.pathBuilder().addPath(
                             new BezierCurve(
                                     new Pose(84.261, 21.723),
-                                    new Pose(100.160, 6.404),
-                                    new Pose(134.641, 8.867)
+                                    new Pose(124.160, 27.456),
+                                    new Pose(133.588, 10.551)
                             )
-                    )
-                    .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
+                    ).setLinearHeadingInterpolation(Math.toRadians(65), Math.toRadians(-15))
+
                     .build();
 
-            intakeHumanToShoot = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierLine(new Pose(134.641, 8.867), new Pose(84.261, 21.723))
-                    )
-                    .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(65))
+            intakeHumanToShoot = follower.pathBuilder().addPath(
+                            new BezierLine(
+                                    new Pose(133.588, 10.551),
+
+                                    new Pose(84.261, 21.723)
+                            )
+                    ).setLinearHeadingInterpolation(Math.toRadians(-15), Math.toRadians(65))
+
+                    .build();
+
+            shootToGate1 = follower.pathBuilder().addPath(
+                            new BezierLine(
+                                    new Pose(84.261, 21.723),
+
+                                    new Pose(132.684, 32.526)
+                            )
+                    ).setLinearHeadingInterpolation(Math.toRadians(65), Math.toRadians(90))
+
+                    .build();
+
+            gateToShoot1 = follower.pathBuilder().addPath(
+                            new BezierLine(
+                                    new Pose(132.684, 32.526),
+
+                                    new Pose(84.211, 21.842)
+                            )
+                    ).setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(65))
+
+                    .build();
+
+            shootToGate2 = follower.pathBuilder().addPath(
+                            new BezierLine(
+                                    new Pose(84.211, 21.842),
+
+                                    new Pose(132.579, 10.842)
+                            )
+                    ).setLinearHeadingInterpolation(Math.toRadians(65), Math.toRadians(-30))
+
+                    .build();
+
+            gateToShoot2 = follower.pathBuilder().addPath(
+                            new BezierLine(
+                                    new Pose(132.579, 10.842),
+
+                                    new Pose(84.211, 21.895)
+                            )
+                    ).setLinearHeadingInterpolation(Math.toRadians(-30), Math.toRadians(65))
+
+                    .build();
+
+            leave = follower.pathBuilder().addPath(
+                            new BezierLine(
+                                    new Pose(84.211, 21.895),
+
+                                    new Pose(90.053, 26.737)
+                            )
+                    ).setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(90))
+
                     .build();
         }
     }
@@ -209,9 +248,9 @@ public class PPVRedFarAuto extends OpMode {
                 break;
 
             case SHOOT:
-                if (shootingState == SHOOTING_STATE.INACTIVE) {
+                if (shootingState.equals(SHOOTING_STATE.INACTIVE)) {
                     shootingState = SHOOTING_STATE.START;
-                } else if (shootingState == SHOOTING_STATE.END) {
+                } else if (shootingState.equals(SHOOTING_STATE.END)) {
                     autoState = S_NextState;
                 }
 
@@ -250,20 +289,13 @@ public class PPVRedFarAuto extends OpMode {
             case intakeLevel1ToShoot:
                 follower.followPath(paths.intakeLevel1ToShoot);
                 P_NextState = AUTO_STATE.SHOOT;
-                S_NextState = AUTO_STATE.shootToTurnToHuman;
+                S_NextState = AUTO_STATE.shootToIntakeHuman;
 
                 autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
                 break;
 
-            case shootToTurnToHuman:
-                follower.followPath(paths.shootToTurnToHuman);
-                P_NextState = AUTO_STATE.turnToHumanToIntakeHuman;
-
-                autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
-                break;
-
-            case turnToHumanToIntakeHuman:
-                follower.followPath(paths.turnToHumanToIntakeHuman);
+            case shootToIntakeHuman:
+                follower.followPath(paths.shootToIntakeHuman);
                 P_NextState = AUTO_STATE.intakeHumanToShoot;
 
                 autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
@@ -284,6 +316,7 @@ public class PPVRedFarAuto extends OpMode {
         switch (shootingState) {
             case START:
                 shootingState = SHOOTING_STATE.START_SHOOTER;
+                autoTimer.reset();
                 break;
 
             case START_SHOOTER:
@@ -297,20 +330,23 @@ public class PPVRedFarAuto extends OpMode {
             case IS_SHOOTER_READY:
                 if (desiredVelocityReached()) {
                     shootingState = SHOOTING_STATE.SHOOT_BALL;
+                } else if (autoTimer.time(TimeUnit.MILLISECONDS) > 1200) {
+                    shootingState = SHOOTING_STATE.END;
                 }
                 break;
 
             case SHOOT_BALL:
                 transfer.openTransferGate();
                 transfer.setPower(.87);
-                if (shooter.getVelocity() - lastVelocity > shooterVelocityDropThreshold) {
-                    timesShot++;
-                    if (timesShot < 3) {
-                        shootingState = SHOOTING_STATE.START_SHOOTER;
-                    } else {
+                if ((shooter.getVelocity() - lastVelocity) < shooterVelocityDropThreshold) {
+                    if (autoTimer.time(TimeUnit.MILLISECONDS) > 1200) {
                         shootingState = SHOOTING_STATE.END;
+                    } else {
+                        shootingState = SHOOTING_STATE.START_SHOOTER;
                     }
                 }
+                if (autoTimer.time(TimeUnit.MILLISECONDS) > 1200)
+                    shootingState = SHOOTING_STATE.END;
                 lastVelocity = shooter.getVelocity();
                 break;
 

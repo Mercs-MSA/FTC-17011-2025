@@ -21,7 +21,6 @@ import org.firstinspires.ftc.teamcode.mechanisms.Transfer;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import static org.firstinspires.ftc.teamcode.Constants.Constants.FAR_SHOT_VELOCITY;
-import static org.firstinspires.ftc.teamcode.Constants.Constants.currentPose;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.currentTheta;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.currentX;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.currentY;
@@ -227,8 +226,6 @@ public class BluePlayerSideAuto extends OpMode {
         currentX = follower.getPose().getX();
         currentY = follower.getPose().getY();
         currentTheta = follower.getPose().getHeading();
-
-        currentPose = new SparkFunOTOS.Pose2D(currentX, currentY, currentTheta);
 
         telemetryA.addData("State", currentState);
         telemetryA.addData("Pose X", follower.getPose().getX());
