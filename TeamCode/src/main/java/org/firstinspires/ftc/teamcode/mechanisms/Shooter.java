@@ -85,7 +85,9 @@ public class Shooter {
 //        limelight.pipelineSwitch(0); //Pipeline 0 = Blue Tag (ID 20), Pipeline 1 = Red Tag (ID 24)
     }
 
-
+    public void setShooterPIDF(double p, double i, double d, double f) {
+        shooterMotor.setVelocityPIDFCoefficients(p, i, d, f);
+    }
 
     public double getRpm() {
         // getVelocity() returns ticks/second; convert to RPM

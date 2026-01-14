@@ -110,7 +110,7 @@ public class Drivebase {
 //        follower.update();
 
         // Get current heading (radians)
-        double botHeading = otos.getPosition().h + offset; //- Math.toRadians(90);
+        double botHeading = otos.getPosition().h + offset - Math.toRadians(90);
         IMUheadingTracker = botHeading;
 
         // Rotate joystick input to be field-centric
