@@ -1,5 +1,9 @@
 package org.firstinspires.ftc.teamcode;
 
+import static org.firstinspires.ftc.teamcode.Constants.Constants.onBlueAlliance;
+
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -9,6 +13,8 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 @TeleOp
 public class TeleTest extends OpMode {
+    private Limelight3A limelight;
+    private LLResult llResults;
     private Servo transferGate;
     private DcMotorEx intakeMotor;
     private DcMotorEx transferMotor;
@@ -34,6 +40,10 @@ public class TeleTest extends OpMode {
 
         transferGate = hardwareMap.get(Servo.class, "transferGate");
 
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        limelight.start();
+        limelight.pipelineSwitch(1);
+
         intakeMotor.setPower(0);
         transferMotor.setPower(0);
         shooterMotor.setPower(0);
@@ -50,6 +60,11 @@ public class TeleTest extends OpMode {
         shooterMotor.setPower(1);
         shooterMotor.setVelocity(0);
     }
+
+    public boolean getTargetSeen() {
+        return llResults != null && llResults.isValid();
+    }
+
 
     @Override
     public void loop() {
@@ -86,6 +101,13 @@ public class TeleTest extends OpMode {
             turretMotor.setPower(turretPower);
             turretMotor.setTargetPosition(turretMotor.getCurrentPosition() + (int) (25 * (turretPower)));
         }
+
+        llResults = limelight.getLatestResult();
+
+        if (getTargetSeen()) {
+            telemetry.addData("Limelight Area: ", llResults.getTa());
+        }
+
 
         // Telemetry output
         telemetry.addData("Shooter velocity: ", shooterMotor.getVelocity());

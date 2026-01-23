@@ -9,6 +9,8 @@ import static org.firstinspires.ftc.teamcode.Constants.Constants.currentY;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.onBlueAlliance;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.ranAuto;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.redGoal;
+import static org.firstinspires.ftc.teamcode.mechanisms.Shooter.turVelPIDF;
+import static org.firstinspires.ftc.teamcode.mechanisms.Shooter.turretP;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
@@ -224,19 +226,25 @@ public class Teleop extends OpMode {
             intake.setPower(0);
             transfer.setPower(0);
         }
+
+        if (gamepad1.crossWasPressed()) {
+            shooter.setTurretPIDF();
+        }
     }
 
     private void updateTelemetry() {
         double shooterVel = shooter.getVelocity();
         double turretFieldHeading = Math.toDegrees(drivebase.getLaserHeading()) + (double) shooter.getTurretPos() / 8.13333333333; //TODO: Figure out why this value is constantly getting closer to 0
-        myTelem.addData("Range, inches: ", drivebase.distanceToTarget());
+        myTelem.addData("Laser Range, inches: ", drivebase.distanceToTarget());
+        myTelem.addData("Lime Range, inches: ", drivebase.limeDistance());
         myTelem.addData("X, Y: ", drivebase.getPosition().x + ", " + drivebase.getPosition().y);
         myTelem.addData("Heading:", Math.toDegrees(drivebase.getPosition().h));
         myTelem.addData("Intake Power:", intake.getPower());
         myTelem.addData("Transfer Power:", transfer.getPower());
         myTelem.addData("Gate position: ", transfer.getTransferPosition());
         myTelem.addData("Shooting state: ", shootingState);
-//        myTelem.addData("Shooter PIDF: ", shooter.originalPIDF);
+        myTelem.addData("Turret P: ", turretP);
+        myTelem.addData("Turret PIDF: ", turVelPIDF);
         myTelem.addData("Turret state:", turretState);
         myTelem.addData("Reached desired velocity? ", desiredVelocityReached());
         myTelem.addData("Tx:", drivebase.getLLResult().getTx());
@@ -308,20 +316,20 @@ public class Teleop extends OpMode {
         } else {
             targetFieldAngle = Math.toDegrees(Math.atan2(redGoal.y - drivebase.getPosition().y, redGoal.x - drivebase.getPosition().x));
         }
-        myTelem.addLine("Red (Y, X): " + (redGoal.y - drivebase.getPosition().y) + ", " + (redGoal.x - drivebase.getPosition().x) + " atan: " + Math.atan2(redGoal.y - drivebase.getPosition().y, redGoal.x - drivebase.getPosition().x));
-        myTelem.addData("Target Field Angle: ", targetFieldAngle);
+//        myTelem.addLine("Red (Y, X): " + (redGoal.y - drivebase.getPosition().y) + ", " + (redGoal.x - drivebase.getPosition().x) + " atan: " + Math.atan2(redGoal.y - drivebase.getPosition().y, redGoal.x - drivebase.getPosition().x));
+//        myTelem.addData("Target Field Angle: ", targetFieldAngle);
 
         double robotHeadingDeg = Math.toDegrees(drivebase.getLaserHeading());
-        myTelem.addData("Robot Heading Degrees: ", robotHeadingDeg);
+//        myTelem.addData("Robot Heading Degrees: ", robotHeadingDeg);
 
         double turretSetpointDeg = targetFieldAngle - robotHeadingDeg;
-        myTelem.addData("Turret Setpoint Degrees: ", turretSetpointDeg);
+//        myTelem.addData("Turret Setpoint Degrees: ", turretSetpointDeg);
 
         double turretAngleDeg = shooter.getTurretPos() / 8.13333333333;
-        myTelem.addData("Turret Angle Degrees: ", turretAngleDeg);
+//        myTelem.addData("Turret Angle Degrees: ", turretAngleDeg);
 
         double error = AngleUnit.normalizeDegrees(turretSetpointDeg - turretAngleDeg);
-        myTelem.addData("Turret Error: ", error);
+//        myTelem.addData("Turret Error: ", error);
 
         double absError = Math.abs(error);
 
@@ -368,11 +376,12 @@ public class Teleop extends OpMode {
                     return;
                 }
 
-                if (Math.abs(error) > 2) {
-                    if (withinAngleLimit)
-                        shooter.setTurretVelocity(0, 0);
-                    else
-                        shooter.setTurretVelocity((int)(error * 100 + 25), 1);
+                if (Math.abs(error) > 1) {
+//                    if (!withinAngleLimit)
+//                        shooter.setTurretVelocity(0, 0);
+//                    else
+//                        shooter.setTurretVelocity((int)(error * 100 + 25), 1);
+                        shooter.setTurretTargetShortestPath(turretSetpointDeg);
                 } else {
                     turretState = TURRET_STATE.AIMED;
                 }
@@ -400,9 +409,9 @@ public class Teleop extends OpMode {
 
                 double absLimeError = Math.abs(limeError);
 
-                if (absLimeError > 1) {
+                if (absLimeError > 1.75) {
 //                    shooter.setTurretTargetShortestPath(limeError);
-                    if (withinAngleLimit)
+                    if (!withinAngleLimit)
                         shooter.setTurretVelocity(0,0);
                     else
                         shooter.setTurretVelocity((int)(-limeError * 100 + 25), 1);

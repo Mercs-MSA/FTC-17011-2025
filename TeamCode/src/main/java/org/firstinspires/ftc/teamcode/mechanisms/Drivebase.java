@@ -30,7 +30,6 @@ public class Drivebase {
 
     // Limelight
     private Limelight3A limelight;
-    private LLStatus llStatus;
     private LLResult llResults;
 
     private double TX = 0;
@@ -94,7 +93,6 @@ public class Drivebase {
     }
 
     public void updateLL() {
-        llStatus = limelight.getStatus();
         llResults = limelight.getLatestResult();
 
         if (llResults != null && llResults.isValid()) {
@@ -154,6 +152,10 @@ public class Drivebase {
                 && llResults.getFiducialResults().get(0).getTargetXDegrees() >= -0.5;
     }
 
+    public double getArea() {
+        return llResults.getTa();
+    }
+
     public boolean getTargetSeen() {
         return llResults != null && llResults.isValid();
     }
@@ -187,6 +189,10 @@ public class Drivebase {
 //    public void setStartingPose(Pose pose) {
 //        startingPose = pose;
 //    }
+
+    public double limeDistance() {
+        return ((29.51988 * Math.pow(getArea(), 2)) + (-108.64875 * getArea()) + 132.92319);
+    }
 
     public double distanceToTarget() {
         double range = 0;

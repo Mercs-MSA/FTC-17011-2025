@@ -52,7 +52,9 @@ public class Shooter {
     public static double I = 0;
     public static double D = 1;
     public static double F = 15;
-    public PIDFCoefficients originalPIDF; // 10, 3, 0, 0
+    public PIDFCoefficients originalPIDF; // 10, 0, 0, 0
+    public static double turretP = 30;
+    public static PIDFCoefficients turVelPIDF = new PIDFCoefficients(7, 0, 0, 0);
 
     //5.5:1 turret rev
 
@@ -68,16 +70,18 @@ public class Shooter {
         shooterMotor.setDirection(DcMotor.Direction.FORWARD);
 
         shooterMotor.setVelocityPIDFCoefficients(P, I, D, F);
-        turretMotor.setPositionPIDFCoefficients(10);
 
         shooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-//        turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         turretMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         turretMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         turretMotor.setTargetPosition(0);
         turretMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         turretMotor.setVelocity(0);
+        originalPIDF = turretMotor.getPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION);
+//        turretPIDF = originalPIDF;
+        turretMotor.setPositionPIDFCoefficients(turretP);
+        turretMotor.setVelocityPIDFCoefficients(turVelPIDF.p, turVelPIDF.i, turVelPIDF.d, turVelPIDF.f);
 
         shooterMotor.setVelocity(0);
 
@@ -87,6 +91,11 @@ public class Shooter {
 
     public void setShooterPIDF(double p, double i, double d, double f) {
         shooterMotor.setVelocityPIDFCoefficients(p, i, d, f);
+    }
+
+    public void setTurretPIDF() {
+        turretMotor.setVelocityPIDFCoefficients(turVelPIDF.p, turVelPIDF.i, turVelPIDF.d, turVelPIDF.f);
+        turretMotor.setPositionPIDFCoefficients(turretP);
     }
 
     public double getRpm() {
@@ -166,7 +175,7 @@ public class Shooter {
         int targetTicks = currentTicks + deltaTicks;
 
         // command motor
-        turretMotor.setTargetPosition(targetTicks);
+        turretMotor.setTargetPosition((int) clamp(-967, targetTicks, 967));
         turretMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         turretMotor.setPower(0.8); // tune power
     }
