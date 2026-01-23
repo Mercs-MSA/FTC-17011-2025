@@ -53,7 +53,7 @@ public class Shooter {
     public static double D = 1;
     public static double F = 15;
     public PIDFCoefficients originalPIDF; // 10, 0, 0, 0
-    public static double turretP = 30;
+    public static double turretP = 30; /// The P value for when the turret is using setTargetPosition
     public static PIDFCoefficients turVelPIDF = new PIDFCoefficients(7, 0, 0, 0);
 
     //5.5:1 turret rev

@@ -4,6 +4,7 @@ import static org.firstinspires.ftc.teamcode.Constants.Constants.onBlueAlliance;
 
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -11,17 +12,22 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorImplEx;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.teamcode.mechanisms.Drivebase;
+
 @TeleOp
 public class TeleTest extends OpMode {
-    private Limelight3A limelight;
-    private LLResult llResults;
+//    private Limelight3A limelight;
+//    private LLResult llResults;
     private Servo transferGate;
     private DcMotorEx intakeMotor;
     private DcMotorEx transferMotor;
     private DcMotorEx turretMotor;
     private DcMotorEx shooterMotor;
+    private Drivebase drivebase;
 
     private double turretPower = 0;
+
+    private double shooterVelocityInitial = 0;
 
     @Override
     public void init() {
@@ -29,6 +35,10 @@ public class TeleTest extends OpMode {
         transferMotor = hardwareMap.get(DcMotorEx.class, "transferMotor");
         turretMotor = hardwareMap.get(DcMotorEx.class, "turretMotor");
         shooterMotor = hardwareMap.get(DcMotorEx.class, "shooterMotor");
+
+        drivebase = new Drivebase(hardwareMap);
+
+        drivebase.setPosition(new SparkFunOTOS.Pose2D(88, 8, Math.toRadians(90)));
 
         turretMotor.setPower(0);
 
@@ -40,9 +50,9 @@ public class TeleTest extends OpMode {
 
         transferGate = hardwareMap.get(Servo.class, "transferGate");
 
-        limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        limelight.start();
-        limelight.pipelineSwitch(1);
+//        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+//        limelight.start();
+//        limelight.pipelineSwitch(1);
 
         intakeMotor.setPower(0);
         transferMotor.setPower(0);
@@ -61,9 +71,9 @@ public class TeleTest extends OpMode {
         shooterMotor.setVelocity(0);
     }
 
-    public boolean getTargetSeen() {
-        return llResults != null && llResults.isValid();
-    }
+//    public boolean getTargetSeen() {
+//        return llResults != null && llResults.isValid();
+//    }
 
 
     @Override
@@ -89,11 +99,7 @@ public class TeleTest extends OpMode {
             transferGate.setPosition(0);
         }
 
-        if (gamepad1.dpad_up) {
-            shooterMotor.setVelocity(1200);
-        } else {
-            shooterMotor.setVelocity(0);
-        }
+        shooterMotor.setVelocity(shooterVelocityInitial);
 
         turretPower = gamepad1.right_trigger - gamepad1.left_trigger;
 
@@ -102,14 +108,21 @@ public class TeleTest extends OpMode {
             turretMotor.setTargetPosition(turretMotor.getCurrentPosition() + (int) (25 * (turretPower)));
         }
 
-        llResults = limelight.getLatestResult();
+//        llResults = limelight.getLatestResult();
 
-        if (getTargetSeen()) {
-            telemetry.addData("Limelight Area: ", llResults.getTa());
+//        if (getTargetSeen()) {
+//            telemetry.addData("Limelight Area: ", llResults.getTa());
+//        }
+        if (gamepad1.dpadDownWasPressed()) {
+            shooterVelocityInitial -= 20;
+        }
+        else if (gamepad1.dpadUpWasPressed()) {
+            shooterVelocityInitial += 20;
         }
 
-
         // Telemetry output
+        telemetry.addData("Distance to Target: ", drivebase.distanceToTarget());
+        telemetry.addData("Target Velocity: ", shooterVelocityInitial);
         telemetry.addData("Shooter velocity: ", shooterMotor.getVelocity());
         telemetry.addData("Turret Position: ", turretMotor.getCurrentPosition());
         telemetry.update();

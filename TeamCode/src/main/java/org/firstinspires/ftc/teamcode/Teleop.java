@@ -236,7 +236,7 @@ public class Teleop extends OpMode {
         double shooterVel = shooter.getVelocity();
         double turretFieldHeading = Math.toDegrees(drivebase.getLaserHeading()) + (double) shooter.getTurretPos() / 8.13333333333; //TODO: Figure out why this value is constantly getting closer to 0
         myTelem.addData("Laser Range, inches: ", drivebase.distanceToTarget());
-        myTelem.addData("Lime Range, inches: ", drivebase.limeDistance());
+//        myTelem.addData("Lime Range, inches: ", drivebase.limeDistance());
         myTelem.addData("X, Y: ", drivebase.getPosition().x + ", " + drivebase.getPosition().y);
         myTelem.addData("Heading:", Math.toDegrees(drivebase.getPosition().h));
         myTelem.addData("Intake Power:", intake.getPower());
@@ -259,6 +259,11 @@ public class Teleop extends OpMode {
     }
 
     private void setShooterDesiredVelocity() {
+        double range = drivebase.distanceToTarget();
+        shooterDesiredVelocity = (int) ((0.0586009 * Math.pow(range, 2)) + (-4.2766 * range) + 1498.02814);
+    }
+
+    private void OLDshooterDesiredVelocity() {
         double range = drivebase.distanceToTarget();
         shooterDesiredVelocity = (int) ((-0.0467391 * Math.pow(range, 2)) + (15.8207 * range) + 747.86042);
     }
@@ -312,7 +317,7 @@ public class Teleop extends OpMode {
 
         double targetFieldAngle = 0;
         if (onBlueAlliance) {
-            targetFieldAngle = Math.toDegrees(Math.atan2(drivebase.getPosition().y - blueGoal.y, drivebase.getPosition().x - blueGoal.x));
+            targetFieldAngle = Math.toDegrees(Math.atan2(blueGoal.y - drivebase.getPosition().y, blueGoal.x - drivebase.getPosition().x));
         } else {
             targetFieldAngle = Math.toDegrees(Math.atan2(redGoal.y - drivebase.getPosition().y, redGoal.x - drivebase.getPosition().x));
         }
