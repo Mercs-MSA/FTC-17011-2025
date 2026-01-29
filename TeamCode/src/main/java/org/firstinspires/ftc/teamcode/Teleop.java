@@ -260,7 +260,8 @@ public class Teleop extends OpMode {
 
     private void setShooterDesiredVelocity() {
         double range = drivebase.distanceToTarget();
-        shooterDesiredVelocity = (int) ((0.0586009 * Math.pow(range, 2)) + (-4.2766 * range) + 1498.02814);
+        int velocity = (int) ((0.0586009 * Math.pow(range, 2)) + (-4.2766 * range) + 1498.02814);
+        shooterDesiredVelocity = Math.min(velocity, 2000);
     }
 
     private void OLDshooterDesiredVelocity() {
