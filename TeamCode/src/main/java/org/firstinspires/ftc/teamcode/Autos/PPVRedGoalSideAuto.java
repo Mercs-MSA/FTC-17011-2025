@@ -93,7 +93,7 @@ public class PPVRedGoalSideAuto extends OpMode{
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
 
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(new Pose(88, 8, Math.toRadians(90)));
+        follower.setStartingPose(new Pose(123.13078470824951, 123.71026156941652, Math.toRadians(36)));
 
         paths = new Paths(follower);
 
