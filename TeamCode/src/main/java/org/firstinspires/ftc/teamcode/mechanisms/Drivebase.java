@@ -29,8 +29,8 @@ public class Drivebase {
     private double IMUheadingTracker = 0;
 
     // Limelight
-    private Limelight3A limelight;
-    private LLResult llResults;
+//    private Limelight3A limelight;
+//    private LLResult llResults;
 
     private double TX = 0;
 
@@ -70,9 +70,9 @@ public class Drivebase {
         otos.calibrateImu();
 
         // Limelight setup
-        limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        limelight.start();
-        limelight.pipelineSwitch(onBlueAlliance ? 0 : 1);
+//        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+//        limelight.start();
+//        limelight.pipelineSwitch(onBlueAlliance ? 0 : 1);
 
         //Odometry setup
 //        follower = Constants.createFollower(hardwareMap);
@@ -92,16 +92,16 @@ public class Drivebase {
         otos.setPosition(pose);
     }
 
-    public void updateLL() {
-        llResults = limelight.getLatestResult();
-
-        if (llResults != null && llResults.isValid()) {
-            double captureLatency = llResults.getCaptureLatency();
-            double targetingLatency = llResults.getTargetingLatency();
-            double parseLatency = llResults.getParseLatency();
-            // log if you want
-        }
-    }
+//    public void updateLL() {
+//        llResults = limelight.getLatestResult();
+//
+//        if (llResults != null && llResults.isValid()) {
+//            double captureLatency = llResults.getCaptureLatency();
+//            double targetingLatency = llResults.getTargetingLatency();
+//            double parseLatency = llResults.getParseLatency();
+//            // log if you want
+//        }
+//    }
 
     // Field-centric drive
     public void drive(double drive, double strafe, double turn) {
@@ -144,39 +144,22 @@ public class Drivebase {
         return IMUheadingTracker;
     }
 
-    public boolean getTXInRange() {
-        return llResults != null
-                && llResults.isValid()
-                && !llResults.getFiducialResults().isEmpty()
-                && llResults.getFiducialResults().get(0).getTargetXDegrees() <= 0.5
-                && llResults.getFiducialResults().get(0).getTargetXDegrees() >= -0.5;
-    }
-
 //    public double getArea() {
 //        return llResults.getTa();
 //    }
 
-    public boolean getTargetSeen() {
-        return llResults != null && llResults.isValid();
-    }
+//    public boolean getTargetSeen() {
+//        return llResults != null && llResults.isValid();
+//    }
 
     public double getOffset() {
         return offset;
     }
 
-    public LLResult getLLResult() {
-        return limelight.getLatestResult();
-    }
-
-    // Simple proportional turn to an approximate goal heading (67 deg)
-//    public void turnToGoal() {
-//        double heading = Math.toDegrees(otos.getPosition().h);
-//        if (heading > 62 && heading < 72) {
-//            drive(0, 0, 0);
-//        } else {
-//            drive(0, 0, -0.05 * (67 - heading));
-//        }
+//    public LLResult getLLResult() {
+//        return limelight.getLatestResult();
 //    }
+
 
 //    public Pose getPose() {
 //        return follower.getPose();

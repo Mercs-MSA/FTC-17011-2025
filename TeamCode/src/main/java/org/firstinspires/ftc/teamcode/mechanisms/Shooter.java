@@ -164,7 +164,7 @@ public class Shooter {
 //        if (errorDeg < -MAX_STEP_DEG) errorDeg = -MAX_STEP_DEG;
 
         // deadband: if already close, don't re-command (avoids hunting)
-        if (Math.abs(errorDeg) < 2) {
+        if (Math.abs(errorDeg) < .5) {
             // optionally stop motor / switch mode
             turretMotor.setPower(0.0);
             return;
@@ -172,7 +172,7 @@ public class Shooter {
 
         // compute tick delta for shortest path and make absolute target = current + delta
         int deltaTicks = (int) Math.round(errorDeg * 8.13333333);
-        int targetTicks = currentTicks + deltaTicks;
+        int targetTicks = (Math.abs(deltaTicks) <= 967) ? currentTicks + deltaTicks : currentTicks - deltaTicks;
 
         // command motor
         turretMotor.setTargetPosition((int) clamp(-967, targetTicks, 967));
