@@ -110,7 +110,7 @@ public class PPVRedFarAuto extends OpMode {
         dash = FtcDashboard.getInstance();
         myTelem = new MultipleTelemetry(dash.getTelemetry(), telemetry);
 
-        follower.setMaxPower(.75);
+        follower.setMaxPower(.5);
         autoState = AUTO_STATE.INIT;
         shootingState = SHOOTING_STATE.INACTIVE;
 //        panelsTelemetry.debug("Status", "Initialized");
@@ -169,6 +169,7 @@ public class PPVRedFarAuto extends OpMode {
                 break;
 
             case shootToIntakeLevel1:
+                follower.setMaxPower(1);
                 intake.setPower(1);
                 follower.followPath(paths.shootToIntakeLevel1);
                 P_NextState = AUTO_STATE.intakeLevel1ToShoot;
@@ -176,6 +177,7 @@ public class PPVRedFarAuto extends OpMode {
                 break;
 
             case intakeLevel1ToShoot:
+                follower.setMaxPower(.5);
                 follower.followPath(paths.intakeLevel1ToShoot);
                 P_NextState = AUTO_STATE.SHOOT;
                 S_NextState = AUTO_STATE.shootToIntakeHuman1;
@@ -183,18 +185,21 @@ public class PPVRedFarAuto extends OpMode {
                 break;
 
             case shootToIntakeHuman1:
+                follower.setMaxPower(.8);
                 follower.followPath(paths.shootToIntakeHuman1);
                 P_NextState = AUTO_STATE.intakeHuman1to2;
                 autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
                 break;
 
             case intakeHuman1to2:
+                follower.setMaxPower(.6);
                 follower.followPath(paths.intakeHuman1to2);
                 P_NextState = AUTO_STATE.intakeHumanToShoot;
                 autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
                 break;
 
             case intakeHumanToShoot:
+                follower.setMaxPower(.5);
                 follower.followPath(paths.intakeHumanToShoot);
                 P_NextState = AUTO_STATE.SHOOT;
 //                S_NextState = AUTO_STATE.END;
@@ -221,11 +226,11 @@ public class PPVRedFarAuto extends OpMode {
         else
             velocity = (int) ((0.0227675 * Math.pow(range, 2)) + (1.62765 * range) + 1344.59538);
 
-        shooterDesiredVelocity = Math.min(velocity, 2050);
+        shooterDesiredVelocity = Math.min(velocity, 1930);
     }
 
     private boolean desiredVelocityReached() {
-        return shooter.getVelocity() > shooterDesiredVelocity * 0.97;
+        return shooter.getVelocity() > shooterDesiredVelocity * .98;
     }
 
     private void updateShooterStateMachine() {
@@ -243,6 +248,9 @@ public class PPVRedFarAuto extends OpMode {
                 break;
 
             case IS_SHOOTER_READY:
+                transfer.closeTransferGate();
+                if (shooterTimer.time() > 2800)
+                    shootingState = SHOOTING_STATE.END;
                 if (desiredVelocityReached())
                     shootingState = SHOOTING_STATE.SHOOT_BALL;
                 break;
@@ -250,7 +258,7 @@ public class PPVRedFarAuto extends OpMode {
             case SHOOT_BALL:
                 transfer.openTransferGate();
                 transfer.setPower(0.87);
-                if (shooterTimer.time() > 3500)
+                if (shooterTimer.time() > 2800)
                     shootingState = SHOOTING_STATE.END;
                 if (!desiredVelocityReached())
                     shootingState = SHOOTING_STATE.IS_SHOOTER_READY;
@@ -401,9 +409,9 @@ public class PPVRedFarAuto extends OpMode {
                     .build();
 
             intakeHuman1to2 = follower.pathBuilder().addPath(
-                            new BezierLine(
+                            new BezierCurve(
                                     new Pose(136.757, 17.384),
-
+                                    new Pose(124.506, 16.236),
                                     new Pose(136.677, 8.878)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(-90), Math.toRadians(0))
