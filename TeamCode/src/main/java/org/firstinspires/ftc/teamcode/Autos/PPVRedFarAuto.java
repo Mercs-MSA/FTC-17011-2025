@@ -103,12 +103,9 @@ public class PPVRedFarAuto extends OpMode {
 
         paths = new Paths(follower);
 
-        drivebase = new Drivebase(hardwareMap);
         intake = new Intake(hardwareMap);
         transfer = new Transfer(hardwareMap);
         shooter = new Shooter(hardwareMap);
-
-        drivebase.setPosition(new SparkFunOTOS.Pose2D(88, 8, Math.toRadians(90)));
 
         autoTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
         shooterTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
@@ -223,8 +220,18 @@ public class PPVRedFarAuto extends OpMode {
         }
     }
 
+    public double distanceToTarget() {
+        double range = 0;
+        if (onBlueAlliance) {
+            range = Math.hypot(follower.getPose().getX() - blueGoal.x, follower.getPose().getY() - blueGoal.y);
+        } else {
+            range = Math.hypot(follower.getPose().getX() - redGoal.x, follower.getPose().getY() - redGoal.y);
+        }
+        return range;
+    }
+
     private void setShooterDesiredVelocity() {
-        double range = drivebase.distanceToTarget();
+        double range = distanceToTarget();
         int velocity = 0;
         if (range < 80)
             velocity = (int) ((0.0586009 * Math.pow(range, 2)) + (-4.2766 * range) + 1498.02814);
