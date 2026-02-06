@@ -10,6 +10,7 @@ import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
+import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -24,6 +25,9 @@ import org.firstinspires.ftc.teamcode.mechanisms.Transfer;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import static org.firstinspires.ftc.teamcode.Constants.Constants.blueGoal;
+import static org.firstinspires.ftc.teamcode.Constants.Constants.currentTheta;
+import static org.firstinspires.ftc.teamcode.Constants.Constants.currentX;
+import static org.firstinspires.ftc.teamcode.Constants.Constants.currentY;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.redGoal;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.onBlueAlliance;
 
@@ -104,6 +108,8 @@ public class PPVRedFarAuto extends OpMode {
         transfer = new Transfer(hardwareMap);
         shooter = new Shooter(hardwareMap);
 
+        drivebase.setPosition(new SparkFunOTOS.Pose2D(88, 8, Math.toRadians(90)));
+
         autoTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
         shooterTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
@@ -130,7 +136,6 @@ public class PPVRedFarAuto extends OpMode {
 //        panelsTelemetry.update(telemetry);
         myTelem.addData("Shooter Velocity: ", shooter.getVelocity());
         myTelem.addData("Shooter Target Velocity: ", shooterDesiredVelocity);
-        myTelem.addData("Turret Angle: ", shooter.getTurretPos() / 8.133333333);
         myTelem.addData("Auto State: ", autoState);
         myTelem.addData("Shooter State: ", shootingState);
         myTelem.update();
@@ -286,12 +291,15 @@ public class PPVRedFarAuto extends OpMode {
         double turretSetpointDeg = targetFieldAngle - robotHeadingDeg;
         double turretAngleDeg = shooter.getTurretPos() / 8.13333333333;
 
+        myTelem.addData("Turret Angle: ", turretAngleDeg);
+        myTelem.addData("Target Angle: ", turretSetpointDeg);
+
         double error = AngleUnit.normalizeDegrees(turretSetpointDeg - turretAngleDeg);
 
 //        boolean seesTarget = drivebase.getTargetSeen();
-        boolean withinAngleLimit =
-                Math.abs(turretAngleDeg) < 110 &&
-                        Math.abs(targetFieldAngle) < 110;
+        boolean withinAngleLimit = true;
+//                Math.abs(turretAngleDeg) < 112 &&
+//                        Math.abs(targetFieldAngle) < 112;
 
         switch (turretState) {
 

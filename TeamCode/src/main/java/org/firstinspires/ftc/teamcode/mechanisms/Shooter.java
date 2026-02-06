@@ -164,7 +164,7 @@ public class Shooter {
 //        if (errorDeg < -MAX_STEP_DEG) errorDeg = -MAX_STEP_DEG;
 
         // deadband: if already close, don't re-command (avoids hunting)
-        if (Math.abs(errorDeg) < .5) {
+        if (Math.abs(errorDeg) < .25) {
             // optionally stop motor / switch mode
             turretMotor.setPower(0.0);
             return;
