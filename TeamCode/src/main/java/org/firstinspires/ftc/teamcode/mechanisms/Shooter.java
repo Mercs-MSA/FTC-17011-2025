@@ -172,10 +172,10 @@ public class Shooter {
 
         // compute tick delta for shortest path and make absolute target = current + delta
         int deltaTicks = (int) Math.round(errorDeg * 8.13333333);
-        int targetTicks = (Math.abs(deltaTicks) <= 967) ? currentTicks + deltaTicks : currentTicks - deltaTicks;
+        int targetTicks = (Math.abs(currentTicks) <= 967) ? currentTicks + deltaTicks : currentTicks - deltaTicks;
 
         // command motor
-        turretMotor.setTargetPosition((int) clamp(-967, targetTicks, 967));
+        turretMotor.setTargetPosition((int) clamp(-900, targetTicks, 900));
         turretMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         turretMotor.setPower(0.8); // tune power
     }

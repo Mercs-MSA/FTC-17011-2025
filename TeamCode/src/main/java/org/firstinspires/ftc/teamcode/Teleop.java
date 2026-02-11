@@ -337,7 +337,7 @@ public class Teleop extends OpMode {
 //        myTelem.addData("Turret Setpoint Degrees: ", turretSetpointDeg);
 
         double turretAngleDeg = shooter.getTurretPos() / 8.13333333333;
-//        myTelem.addData("Turret Angle Degrees: ", turretAngleDeg);
+        myTelem.addData("Turret Angle Degrees: ", turretAngleDeg);
 
         double error = AngleUnit.normalizeDegrees(turretSetpointDeg - turretAngleDeg);
 //        myTelem.addData("Turret Error: ", error);
@@ -345,7 +345,7 @@ public class Teleop extends OpMode {
         double absError = Math.abs(error);
 
 //        boolean seesTarget = drivebase.getTargetSeen();
-        boolean withinAngleLimit = Math.abs(turretAngleDeg) < 110 && Math.abs(targetFieldAngle) < 110;
+        boolean withinAngleLimit = Math.abs(turretAngleDeg) < 112 && Math.abs(targetFieldAngle) < 112;
 
 //        double turretFieldHeading = AngleUnit.normalizeDegrees(headingDeg + turretDeg);
         switch (turretState) {
@@ -389,7 +389,7 @@ public class Teleop extends OpMode {
 //                    return;
 //                }
 
-                if (Math.abs(error) > 1) {
+                if (Math.abs(error) > .5) {
 //                    if (!withinAngleLimit)
 //                        shooter.setTurretVelocity(0, 0);
 //                    else

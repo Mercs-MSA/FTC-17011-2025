@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.Autos;
 
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.bylazar.configurables.annotations.Configurable;
@@ -10,12 +11,16 @@ import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
+import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.ColorRangeSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Teleop;
 import org.firstinspires.ftc.teamcode.mechanisms.Drivebase;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
@@ -23,30 +28,45 @@ import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
 import org.firstinspires.ftc.teamcode.mechanisms.Transfer;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
+
 import static org.firstinspires.ftc.teamcode.Constants.Constants.blueGoal;
+import static org.firstinspires.ftc.teamcode.Constants.Constants.currentTheta;
+import static org.firstinspires.ftc.teamcode.Constants.Constants.currentX;
+import static org.firstinspires.ftc.teamcode.Constants.Constants.currentY;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.redGoal;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.onBlueAlliance;
+
 
 @Autonomous(name = "PPV Red Far Auto", group = "Autonomous")
 @Configurable
 public class PPVRedFarAuto extends OpMode {
 
+
     private TelemetryManager panelsTelemetry;
     private FtcDashboard dash;
 
+
     private MultipleTelemetry myTelem;
 
+
     public Follower follower;
+
+
+    private ColorRangeSensor innerColor;
+
 
     private Drivebase drivebase;
     private Intake intake;
     private Transfer transfer;
     private Shooter shooter;
 
+
     private ElapsedTime autoTimer;
     private ElapsedTime shooterTimer;
 
+
     private double shooterDesiredVelocity = 0;
+
 
     private enum AUTO_STATE {
         startToShootFar,
@@ -62,6 +82,7 @@ public class PPVRedFarAuto extends OpMode {
         END
     }
 
+
     private enum SHOOTING_STATE {
         INACTIVE,
         START,
@@ -71,6 +92,7 @@ public class PPVRedFarAuto extends OpMode {
         END
     }
 
+
     private enum TURRET_STATE {
         GO_TO_ZERO,
         ZEROED,
@@ -79,36 +101,49 @@ public class PPVRedFarAuto extends OpMode {
         // AIMING_TO_TAG
     }
 
+
     private AUTO_STATE autoState = AUTO_STATE.INIT;
     private AUTO_STATE P_NextState;
     private AUTO_STATE S_NextState;
 
+
     public static SHOOTING_STATE shootingState = SHOOTING_STATE.INACTIVE;
+
 
     private TURRET_STATE turretState = TURRET_STATE.AIMING_NO_TAG;
     // private TURRET_STATE turretState = TURRET_STATE.AIMING_TO_TAG;
 
+
     private Paths paths;
+
 
     @Override
     public void init() {
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
 
+
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(new Pose(88, 8, Math.toRadians(90)));
 
+
         paths = new Paths(follower);
 
-        drivebase = new Drivebase(hardwareMap);
+
+        innerColor = hardwareMap.get(ColorRangeSensor.class, "innerColor");
+
+
         intake = new Intake(hardwareMap);
         transfer = new Transfer(hardwareMap);
         shooter = new Shooter(hardwareMap);
 
+
         autoTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
         shooterTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
+
         dash = FtcDashboard.getInstance();
         myTelem = new MultipleTelemetry(dash.getTelemetry(), telemetry);
+
 
         follower.setMaxPower(.5);
         autoState = AUTO_STATE.INIT;
@@ -119,6 +154,7 @@ public class PPVRedFarAuto extends OpMode {
         myTelem.update();
     }
 
+
     @Override
     public void loop() {
         follower.update();
@@ -127,22 +163,25 @@ public class PPVRedFarAuto extends OpMode {
         updateShooterStateMachine();
         updateTurretState();
 
+
 //        panelsTelemetry.update(telemetry);
         myTelem.addData("Shooter Velocity: ", shooter.getVelocity());
         myTelem.addData("Shooter Target Velocity: ", shooterDesiredVelocity);
-        myTelem.addData("Turret Angle: ", shooter.getTurretPos() / 8.133333333);
         myTelem.addData("Auto State: ", autoState);
         myTelem.addData("Shooter State: ", shootingState);
         myTelem.update();
     }
 
+
     private void updateAutoStateMachine() {
         switch (autoState) {
+
 
             case PATH_ACTIVE_WAIT:
                 if (!follower.isBusy())
                     autoState = P_NextState;
                 break;
+
 
             case SHOOT:
                 if (shootingState.equals(SHOOTING_STATE.INACTIVE)) {
@@ -154,19 +193,23 @@ public class PPVRedFarAuto extends OpMode {
                 }
                 break;
 
+
             case INIT:
                 autoState = AUTO_STATE.startToShootFar;
                 turretState = TURRET_STATE.AIMING_NO_TAG;
                 break;
 
+
             case startToShootFar:
                 shooter.setMotorVelocity(shooterDesiredVelocity);
+
 
                 follower.followPath(paths.startToShootFar);
                 P_NextState = AUTO_STATE.SHOOT;
                 S_NextState = AUTO_STATE.shootToIntakeLevel1;
                 autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
                 break;
+
 
             case shootToIntakeLevel1:
                 follower.setMaxPower(1);
@@ -176,6 +219,7 @@ public class PPVRedFarAuto extends OpMode {
                 autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
                 break;
 
+
             case intakeLevel1ToShoot:
                 follower.setMaxPower(.5);
                 follower.followPath(paths.intakeLevel1ToShoot);
@@ -184,6 +228,7 @@ public class PPVRedFarAuto extends OpMode {
                 autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
                 break;
 
+
             case shootToIntakeHuman1:
                 follower.setMaxPower(.8);
                 follower.followPath(paths.shootToIntakeHuman1);
@@ -191,12 +236,14 @@ public class PPVRedFarAuto extends OpMode {
                 autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
                 break;
 
+
             case intakeHuman1to2:
                 follower.setMaxPower(.6);
                 follower.followPath(paths.intakeHuman1to2);
                 P_NextState = AUTO_STATE.intakeHumanToShoot;
                 autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
                 break;
+
 
             case intakeHumanToShoot:
                 follower.setMaxPower(.5);
@@ -206,6 +253,7 @@ public class PPVRedFarAuto extends OpMode {
                 S_NextState = AUTO_STATE.leave;
                 autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
                 break;
+
 
             case leave:
                 follower.followPath(paths.leave);
@@ -218,6 +266,7 @@ public class PPVRedFarAuto extends OpMode {
         }
     }
 
+
     public double distanceToTarget() {
         double range = 0;
         if (onBlueAlliance) {
@@ -228,6 +277,7 @@ public class PPVRedFarAuto extends OpMode {
         return range;
     }
 
+
     private void setShooterDesiredVelocity() {
         double range = distanceToTarget();
         int velocity = 0;
@@ -236,48 +286,60 @@ public class PPVRedFarAuto extends OpMode {
         else
             velocity = (int) ((0.0227675 * Math.pow(range, 2)) + (1.62765 * range) + 1344.59538);
 
+
         shooterDesiredVelocity = Math.min(velocity, 1930);
     }
+
 
     private boolean desiredVelocityReached() {
         return shooter.getVelocity() > shooterDesiredVelocity * .98;
     }
 
+
     private void updateShooterStateMachine() {
         switch (shootingState) {
+
 
             case START:
                 shootingState = SHOOTING_STATE.START_SHOOTER;
                 break;
 
+
             case START_SHOOTER:
                 shooter.setMotorVelocity(shooterDesiredVelocity);
                 transfer.closeTransferGate();
-                shooterTimer.reset();
                 shootingState = SHOOTING_STATE.IS_SHOOTER_READY;
                 break;
 
+
             case IS_SHOOTER_READY:
                 transfer.closeTransferGate();
-                if (shooterTimer.time() > 2800)
-                    shootingState = SHOOTING_STATE.END;
-                if (desiredVelocityReached())
+//                if (shooterTimer.time() > 2800)
+//                    shootingState = SHOOTING_STATE.END;
+                if (desiredVelocityReached()) {
+                    shooterTimer.reset();
                     shootingState = SHOOTING_STATE.SHOOT_BALL;
+                }
                 break;
+
 
             case SHOOT_BALL:
                 transfer.openTransferGate();
                 transfer.setPower(0.87);
-                if (shooterTimer.time() > 2800)
+//                if (shooterTimer.time() > 2800)
+//                    shootingState = SHOOTING_STATE.END;
+                if (innerColor.getDistance(DistanceUnit.INCH) > 3 && shooterTimer.time() > 500)
                     shootingState = SHOOTING_STATE.END;
                 if (!desiredVelocityReached())
                     shootingState = SHOOTING_STATE.IS_SHOOTER_READY;
                 break;
 
+
             case END:
                 transfer.closeTransferGate();
                 transfer.setPower(0);
                 break;
+
 
             case INACTIVE:
                 transfer.closeTransferGate();
@@ -285,25 +347,36 @@ public class PPVRedFarAuto extends OpMode {
         }
     }
 
+
     private void updateTurretState() {
         Pose pose = follower.getPose();
+
 
         double targetFieldAngle = onBlueAlliance
                 ? Math.toDegrees(Math.atan2(blueGoal.y - pose.getY(), blueGoal.x - pose.getX()))
                 : Math.toDegrees(Math.atan2(redGoal.y - pose.getY(), redGoal.x - pose.getX()));
 
+
         double robotHeadingDeg = Math.toDegrees(pose.getHeading());
         double turretSetpointDeg = targetFieldAngle - robotHeadingDeg;
         double turretAngleDeg = shooter.getTurretPos() / 8.13333333333;
 
+
+        myTelem.addData("Turret Angle: ", turretAngleDeg);
+        myTelem.addData("Target Angle: ", turretSetpointDeg);
+
+
         double error = AngleUnit.normalizeDegrees(turretSetpointDeg - turretAngleDeg);
+
 
 //        boolean seesTarget = drivebase.getTargetSeen();
         boolean withinAngleLimit =
-                Math.abs(turretAngleDeg) < 110 &&
-                        Math.abs(targetFieldAngle) < 110;
+                Math.abs(turretAngleDeg) < 112 &&
+                        Math.abs(targetFieldAngle) < 112;
+
 
         switch (turretState) {
+
 
             case GO_TO_ZERO:
                 shooter.setTurretVelocity(200, 1);
@@ -312,6 +385,7 @@ public class PPVRedFarAuto extends OpMode {
                     turretState = TURRET_STATE.ZEROED;
                 break;
 
+
             case ZEROED:
                 shooter.setTurretVelocity(0, 0);
                 // if (seesTarget)
@@ -319,8 +393,10 @@ public class PPVRedFarAuto extends OpMode {
                 turretState = TURRET_STATE.AIMING_NO_TAG;
                 break;
 
+
             case AIMED:
                 shooter.setTurretVelocity(0, 0);
+
 
                 if (gamepad1.left_trigger > .3) {
                     turretState = TURRET_STATE.GO_TO_ZERO;
@@ -331,6 +407,7 @@ public class PPVRedFarAuto extends OpMode {
                 }
                 break;
 
+
             case AIMING_NO_TAG:
                 if (Math.abs(error) > .5)
                     shooter.setTurretTargetShortestPath(turretSetpointDeg);
@@ -338,30 +415,35 @@ public class PPVRedFarAuto extends OpMode {
                     turretState = TURRET_STATE.AIMED;
                 break;
 
-            /*
-            case AIMING_TO_TAG:
-                shooter.setTurretMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-                if (!seesTarget) {
-                    turretState = TURRET_STATE.AIMING_NO_TAG;
-                    return;
-                }
+           /*
+           case AIMING_TO_TAG:
+               shooter.setTurretMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-                double limeError =
-                        AngleUnit.normalizeDegrees(drivebase.getLLResult().getTx());
 
-                if (Math.abs(limeError) > 1.75) {
-                    if (!withinAngleLimit)
-                        shooter.setTurretVelocity(0, 0);
-                    else
-                        shooter.setTurretVelocity((int) (-limeError * 100 + 25), 1);
-                } else {
-                    turretState = TURRET_STATE.AIMED;
-                }
-                break;
-            */
+               if (!seesTarget) {
+                   turretState = TURRET_STATE.AIMING_NO_TAG;
+                   return;
+               }
+
+
+               double limeError =
+                       AngleUnit.normalizeDegrees(drivebase.getLLResult().getTx());
+
+
+               if (Math.abs(limeError) > 1.75) {
+                   if (!withinAngleLimit)
+                       shooter.setTurretVelocity(0, 0);
+                   else
+                       shooter.setTurretVelocity((int) (-limeError * 100 + 25), 1);
+               } else {
+                   turretState = TURRET_STATE.AIMED;
+               }
+               break;
+           */
         }
     }
+
 
     public static class Paths {
         public PathChain startToShootFar;
@@ -376,6 +458,7 @@ public class PPVRedFarAuto extends OpMode {
         public PathChain gateToShoot2;
         public PathChain leave;
 
+
         public Paths(Follower follower) {
             startToShootFar = follower.pathBuilder().addPath(
                             new BezierCurve(
@@ -385,7 +468,9 @@ public class PPVRedFarAuto extends OpMode {
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(0))
 
+
                     .build();
+
 
             shootToIntakeLevel1 = follower.pathBuilder().addPath(
                             new BezierCurve(
@@ -396,17 +481,22 @@ public class PPVRedFarAuto extends OpMode {
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
 
+
                     .build();
+
 
             intakeLevel1ToShoot = follower.pathBuilder().addPath(
                             new BezierLine(
                                     new Pose(125.455, 35.302),
 
+
                                     new Pose(84.261, 21.723)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
 
+
                     .build();
+
 
             shootToIntakeHuman1 = follower.pathBuilder().addPath(
                             new BezierCurve(
@@ -416,7 +506,9 @@ public class PPVRedFarAuto extends OpMode {
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(-90))
 
+
                     .build();
+
 
             intakeHuman1to2 = follower.pathBuilder().addPath(
                             new BezierCurve(
@@ -426,7 +518,9 @@ public class PPVRedFarAuto extends OpMode {
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(-90), Math.toRadians(0))
 
+
                     .build();
+
 
             intakeHumanToShoot = follower.pathBuilder().addPath(
                             new BezierCurve(
@@ -436,58 +530,75 @@ public class PPVRedFarAuto extends OpMode {
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
 
+
                     .build();
+
 
             shootToGate1 = follower.pathBuilder().addPath(
                             new BezierLine(
                                     new Pose(84.261, 21.723),
 
+
                                     new Pose(132.684, 32.526)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(90))
 
+
                     .build();
+
 
             gateToShoot1 = follower.pathBuilder().addPath(
                             new BezierLine(
                                     new Pose(132.684, 32.526),
 
+
                                     new Pose(84.261, 21.723)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(0))
 
+
                     .build();
+
 
             shootToGate2 = follower.pathBuilder().addPath(
                             new BezierLine(
                                     new Pose(84.261, 21.723),
 
+
                                     new Pose(132.700, 9.272)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(-30))
 
+
                     .build();
+
 
             gateToShoot2 = follower.pathBuilder().addPath(
                             new BezierLine(
                                     new Pose(132.700, 9.272),
 
+
                                     new Pose(84.211, 21.895)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(-30), Math.toRadians(0))
 
+
                     .build();
+
 
             leave = follower.pathBuilder().addPath(
                             new BezierLine(
 //                                    new Pose(84.211, 21.895),
                                     new Pose(84.261, 21.723),
 
+
                                     new Pose(90.053, 26.737)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(90))
+
 
                     .build();
         }
     }
 }
+
