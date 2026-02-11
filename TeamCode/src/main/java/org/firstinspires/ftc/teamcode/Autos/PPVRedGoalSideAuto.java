@@ -93,11 +93,10 @@ public class PPVRedGoalSideAuto extends OpMode{
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
 
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(new Pose(88, 8, Math.toRadians(90)));
+        follower.setStartingPose(new Pose(123.131, 123.710, Math.toRadians(36)));
 
         paths = new Paths(follower);
 
-        drivebase = new Drivebase(hardwareMap);
         intake = new Intake(hardwareMap);
         transfer = new Transfer(hardwareMap);
         shooter = new Shooter(hardwareMap);
@@ -117,6 +116,7 @@ public class PPVRedGoalSideAuto extends OpMode{
     @Override
     public void loop() {
         follower.update();
+        setShooterDesiredVelocity();
         updateAutoStateMachine();
         updateShooterStateMachine();
         updateTurretState();
@@ -161,6 +161,7 @@ public class PPVRedGoalSideAuto extends OpMode{
                 break;
 
             case shootToIntake:
+                follower.setMaxPower(.45);
                 intake.setPower(1);
                 follower.followPath(paths.shootToIntake);
                 P_NextState = AUTO_STATE.intake1ToGate;
@@ -168,12 +169,14 @@ public class PPVRedGoalSideAuto extends OpMode{
                 break;
 
             case intake1ToGate:
+                follower.setMaxPower(.7);
                 follower.followPath(paths.intake1ToGate);
                 P_NextState = AUTO_STATE.gateToShoot;
                 autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
                 break;
 
             case gateToShoot:
+                follower.setMaxPower(1);
                 follower.followPath(paths.gateToShoot);
                 P_NextState = AUTO_STATE.SHOOT;
                 S_NextState = AUTO_STATE.shootToIntake2;
@@ -205,19 +208,29 @@ public class PPVRedGoalSideAuto extends OpMode{
         }
     }
 
+    public double distanceToTarget() {
+        double range = 0;
+        if (onBlueAlliance) {
+            range = Math.hypot(follower.getPose().getX() - blueGoal.x, follower.getPose().getY() - blueGoal.y);
+        } else {
+            range = Math.hypot(follower.getPose().getX() - redGoal.x, follower.getPose().getY() - redGoal.y);
+        }
+        return range;
+    }
+
     private void setShooterDesiredVelocity() {
-        double range = drivebase.distanceToTarget();
+        double range = distanceToTarget();
         int velocity = 0;
         if (range < 80)
             velocity = (int) ((0.0586009 * Math.pow(range, 2)) + (-4.2766 * range) + 1498.02814);
         else
             velocity = (int) ((0.0227675 * Math.pow(range, 2)) + (1.62765 * range) + 1344.59538);
 
-        shooterDesiredVelocity = Math.min(velocity, 2050);
+        shooterDesiredVelocity = Math.min(velocity, 1930);
     }
 
     private boolean desiredVelocityReached() {
-        return shooter.getVelocity() > shooterDesiredVelocity * 0.97;
+        return shooter.getVelocity() > shooterDesiredVelocity * 0.98;
     }
 
     private void updateShooterStateMachine() {
@@ -337,6 +350,7 @@ public class PPVRedGoalSideAuto extends OpMode{
             */
         }
     }
+
     public static class Paths {
         public PathChain startToShoot;
         public PathChain shootToIntake;
@@ -361,7 +375,7 @@ public class PPVRedGoalSideAuto extends OpMode{
                             new BezierLine(
                                     new Pose(85.553, 84.676),
 
-                                    new Pose(129.183, 83.936)
+                                    new Pose(126.446, 83.515)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
 
@@ -369,9 +383,9 @@ public class PPVRedGoalSideAuto extends OpMode{
 
             intake1ToGate = follower.pathBuilder().addPath(
                             new BezierCurve(
-                                    new Pose(129.183, 83.936),
-                                    new Pose(123.625, 75.554),
-                                    new Pose(129.918, 71.696)
+                                    new Pose(126.446, 83.515),
+                                    new Pose(109.098, 85.449),
+                                    new Pose(128.654, 73.801)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(90))
 
@@ -379,7 +393,7 @@ public class PPVRedGoalSideAuto extends OpMode{
 
             gateToShoot = follower.pathBuilder().addPath(
                             new BezierLine(
-                                    new Pose(129.918, 71.696),
+                                    new Pose(128.654, 73.801),
 
                                     new Pose(85.125, 85.133)
                             )
@@ -398,9 +412,9 @@ public class PPVRedGoalSideAuto extends OpMode{
                     .build();
 
             intake2ToShoot = follower.pathBuilder().addPath(
-                            new BezierLine(
+                            new BezierCurve(
                                     new Pose(130.382, 59.107),
-
+                                    new Pose(98.154, 59.664),
                                     new Pose(85.294, 83.801)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
@@ -418,5 +432,6 @@ public class PPVRedGoalSideAuto extends OpMode{
                     .build();
         }
     }
+
 
 }
