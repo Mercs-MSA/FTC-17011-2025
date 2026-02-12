@@ -11,7 +11,6 @@ import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
-import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.ColorRangeSensor;
@@ -21,7 +20,6 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.teamcode.Teleop;
 import org.firstinspires.ftc.teamcode.mechanisms.Drivebase;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
@@ -29,6 +27,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.Transfer;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.blueGoal;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.currentTheta;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.currentX;
@@ -37,19 +36,15 @@ import static org.firstinspires.ftc.teamcode.Constants.Constants.redGoal;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.onBlueAlliance;
 
 
-@Autonomous(name = "Red Far 9", group = "Red")
+@Autonomous(name = "Red Close 12 Gate", group = "Red")
 @Configurable
-public class PPVRedFarAuto extends OpMode {
-
-
+public class PPVRedGoalSideTwelveAuto extends OpMode{
     private TelemetryManager panelsTelemetry;
+    public Follower follower;
     private FtcDashboard dash;
 
 
     private MultipleTelemetry myTelem;
-
-
-    public Follower follower;
 
 
     private ColorRangeSensor innerColor;
@@ -66,15 +61,18 @@ public class PPVRedFarAuto extends OpMode {
 
 
     private double shooterDesiredVelocity = 0;
+    public int gateTimeMilliseconds = 1000;
 
 
     private enum AUTO_STATE {
-        startToShootFar,
-        shootToIntakeLevel1,
-        intakeLevel1ToShoot,
-        shootToIntakeHuman1,
-        intakeHuman1to2,
-        intakeHumanToShoot,
+        startToShoot,
+        shootToIntake1,
+        intake1ToShoot,
+        shootToGate,
+        gateToIntake2,
+        intake2ToShoot,
+        shootToIntake3,
+        intake3ToShoot,
         leave,
         INIT,
         PATH_ACTIVE_WAIT,
@@ -123,32 +121,27 @@ public class PPVRedFarAuto extends OpMode {
 
 
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(new Pose(88, 8, Math.toRadians(90)));
+        follower.setStartingPose(new Pose(126.177, 119.039, Math.toRadians(36)));
 
 
         paths = new Paths(follower);
 
 
         innerColor = hardwareMap.get(ColorRangeSensor.class, "innerColor");
-
-
         intake = new Intake(hardwareMap);
         transfer = new Transfer(hardwareMap);
         shooter = new Shooter(hardwareMap);
 
 
-        autoTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
-        shooterTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
-
-
         dash = FtcDashboard.getInstance();
         myTelem = new MultipleTelemetry(dash.getTelemetry(), telemetry);
 
+
+        autoTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+        shooterTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+
         onBlueAlliance = false;
 
-        follower.setMaxPower(.5);
-        autoState = AUTO_STATE.INIT;
-        shootingState = SHOOTING_STATE.INACTIVE;
 //        panelsTelemetry.debug("Status", "Initialized");
 //        panelsTelemetry.update(telemetry);
         myTelem.addLine("Status Initialized");
@@ -166,30 +159,30 @@ public class PPVRedFarAuto extends OpMode {
         updateAutoStateMachine();
         updateShooterStateMachine();
         updateTurretState();
-
-
 //        panelsTelemetry.update(telemetry);
         myTelem.addData("Shooter Velocity: ", shooter.getVelocity());
         myTelem.addData("Shooter Target Velocity: ", shooterDesiredVelocity);
+        myTelem.addData("Shoot Timer: ", shooterTimer.time());
+        myTelem.addData("Turret Angle: ", shooter.getTurretPos() / 8.133333333);
         myTelem.addData("Auto State: ", autoState);
         myTelem.addData("Shooter State: ", shootingState);
         myTelem.update();
     }
-
-
     private void updateAutoStateMachine() {
         switch (autoState) {
 
 
             case PATH_ACTIVE_WAIT:
-                if (!follower.isBusy())
+                if (!follower.isBusy()) {
+                    autoTimer.reset();
                     autoState = P_NextState;
+                }
                 break;
 
 
             case SHOOT:
                 if (shootingState.equals(SHOOTING_STATE.INACTIVE)) {
-                    autoTimer.reset();
+                    intake.setPower(0);
                     shootingState = SHOOTING_STATE.START;
                 } else if (shootingState.equals(SHOOTING_STATE.END)) {
                     shootingState = SHOOTING_STATE.INACTIVE;
@@ -199,61 +192,79 @@ public class PPVRedFarAuto extends OpMode {
 
 
             case INIT:
-                autoState = AUTO_STATE.startToShootFar;
+                autoState = AUTO_STATE.startToShoot;
                 turretState = TURRET_STATE.AIMING_NO_TAG;
                 break;
 
 
-            case startToShootFar:
+            case startToShoot:
                 shooter.setMotorVelocity(shooterDesiredVelocity);
+                follower.setMaxPower(.85);
 
-
-                follower.followPath(paths.startToShootFar);
+                follower.followPath(paths.startToShoot);
                 P_NextState = AUTO_STATE.SHOOT;
-                S_NextState = AUTO_STATE.shootToIntakeLevel1;
+                S_NextState = AUTO_STATE.shootToIntake1;
                 autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
                 break;
 
 
-            case shootToIntakeLevel1:
-                follower.setMaxPower(.8);
+            case shootToIntake1:
+                follower.setMaxPower(.76);
                 intake.setPower(1);
-                follower.followPath(paths.shootToIntakeLevel1);
-                P_NextState = AUTO_STATE.intakeLevel1ToShoot;
+                follower.followPath(paths.shootToIntake1);
+                P_NextState = AUTO_STATE.intake1ToShoot;
                 autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
                 break;
 
 
-            case intakeLevel1ToShoot:
-                follower.setMaxPower(.5);
-                follower.followPath(paths.intakeLevel1ToShoot);
+            case intake1ToShoot:
+                follower.setMaxPower(1);
+                follower.followPath(paths.intake1ToShoot);
                 P_NextState = AUTO_STATE.SHOOT;
-                S_NextState = AUTO_STATE.shootToIntakeHuman1;
+                S_NextState = AUTO_STATE.shootToGate;
                 autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
                 break;
 
 
-            case shootToIntakeHuman1:
+            case shootToGate:
+                follower.setMaxPower(.67);
+                follower.followPath(paths.shootToGate);
+                P_NextState = AUTO_STATE.gateToIntake2;
+                autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+                break;
+
+
+            case gateToIntake2:
                 follower.setMaxPower(.8);
-                follower.followPath(paths.shootToIntakeHuman1);
-                P_NextState = AUTO_STATE.intakeHuman1to2;
+                follower.followPath(paths.intake2ToShoot);
+                P_NextState = AUTO_STATE.intake2ToShoot;
                 autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
                 break;
 
 
-            case intakeHuman1to2:
-                follower.setMaxPower(.6);
-                follower.followPath(paths.intakeHuman1to2);
-                P_NextState = AUTO_STATE.intakeHumanToShoot;
+            case intake2ToShoot:
+                intake.setPower(1);
+                follower.setMaxPower(1);
+                if (autoTimer.time() > gateTimeMilliseconds) {
+                    follower.followPath(paths.intake2ToShoot);
+                    P_NextState = AUTO_STATE.SHOOT;
+                    S_NextState = AUTO_STATE.shootToIntake3;
+                    autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+                }
+                break;
+
+
+            case shootToIntake3:
+                intake.setPower(1);
+                follower.followPath(paths.shootToIntake3);
+                P_NextState = AUTO_STATE.intake3ToShoot;
                 autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
                 break;
 
 
-            case intakeHumanToShoot:
-                follower.setMaxPower(.5);
-                follower.followPath(paths.intakeHumanToShoot);
+            case intake3ToShoot:
+                follower.followPath(paths.intake3ToShoot);
                 P_NextState = AUTO_STATE.SHOOT;
-//                S_NextState = AUTO_STATE.END;
                 S_NextState = AUTO_STATE.leave;
                 autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
                 break;
@@ -263,9 +274,12 @@ public class PPVRedFarAuto extends OpMode {
                 follower.followPath(paths.leave);
                 P_NextState = AUTO_STATE.END;
                 autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+
+
             case END:
                 shooter.setMotorVelocity(0);
                 intake.setPower(0);
+                stop();
                 break;
         }
     }
@@ -296,7 +310,7 @@ public class PPVRedFarAuto extends OpMode {
 
 
     private boolean desiredVelocityReached() {
-        return shooter.getVelocity() > shooterDesiredVelocity * .98;
+        return shooter.getVelocity() > shooterDesiredVelocity * 0.98;
     }
 
 
@@ -312,18 +326,16 @@ public class PPVRedFarAuto extends OpMode {
             case START_SHOOTER:
                 shooter.setMotorVelocity(shooterDesiredVelocity);
                 transfer.closeTransferGate();
+//                shooterTimer.reset();
                 shootingState = SHOOTING_STATE.IS_SHOOTER_READY;
                 break;
 
 
             case IS_SHOOTER_READY:
                 transfer.closeTransferGate();
-//                if (shooterTimer.time() > 2800)
-//                    shootingState = SHOOTING_STATE.END;
-                if (desiredVelocityReached()) {
-                    shooterTimer.reset();
+                shooterTimer.reset();
+                if (desiredVelocityReached())
                     shootingState = SHOOTING_STATE.SHOOT_BALL;
-                }
                 break;
 
 
@@ -364,10 +376,6 @@ public class PPVRedFarAuto extends OpMode {
         double robotHeadingDeg = Math.toDegrees(pose.getHeading());
         double turretSetpointDeg = targetFieldAngle - robotHeadingDeg;
         double turretAngleDeg = shooter.getTurretPos() / 8.13333333333;
-
-
-        myTelem.addData("Turret Angle: ", turretAngleDeg);
-        myTelem.addData("Target Angle: ", turretSetpointDeg);
 
 
         double error = AngleUnit.normalizeDegrees(turretSetpointDeg - turretAngleDeg);
@@ -449,128 +457,106 @@ public class PPVRedFarAuto extends OpMode {
     }
 
 
+
     public static class Paths {
-        public PathChain startToShootFar;
-        public PathChain shootToIntakeLevel1;
-        public PathChain intakeLevel1ToShoot;
-        public PathChain shootToIntakeHuman1;
-        public PathChain intakeHuman1to2;
-        public PathChain intakeHumanToShoot;
-        public PathChain shootToGate1;
-        public PathChain gateToShoot1;
-        public PathChain shootToGate2;
-        public PathChain gateToShoot2;
+        public PathChain startToShoot;
+        public PathChain shootToIntake1;
+        public PathChain intake1ToShoot;
+        public PathChain shootToGate;
+        public PathChain gateToIntake2;
+        public PathChain intake2ToShoot;
+        public PathChain shootToIntake3;
+        public PathChain intake3ToShoot;
         public PathChain leave;
 
         public Paths(Follower follower) {
-            startToShootFar = follower.pathBuilder().addPath(
-                            new BezierCurve(
-                                    new Pose(88.000, 8.000),
-                                    new Pose(88.210, 17.938),
-                                    new Pose(84.261, 21.723)
-                            )
-                    ).setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(0))
-
-                    .build();
-
-            shootToIntakeLevel1 = follower.pathBuilder().addPath(
-                            new BezierCurve(
-                                    new Pose(84.261, 21.723),
-                                    new Pose(89.477, 38.680),
-                                    new Pose(101.474, 28.000),
-                                    new Pose(125.455, 35.302)
-                            )
-                    ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
-
-                    .build();
-
-            intakeLevel1ToShoot = follower.pathBuilder().addPath(
+            startToShoot = follower.pathBuilder().addPath(
                             new BezierLine(
-                                    new Pose(125.455, 35.302),
+                                    new Pose(126.177, 119.039),
 
-                                    new Pose(84.261, 21.723)
+                                    new Pose(85.553, 84.676)
+                            )
+                    ).setLinearHeadingInterpolation(Math.toRadians(36), Math.toRadians(0))
+
+                    .build();
+
+            shootToIntake1 = follower.pathBuilder().addPath(
+                            new BezierCurve(
+                                    new Pose(85.553, 84.676),
+                                    new Pose(87.274, 56.945),
+                                    new Pose(124.400, 59.191)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
 
                     .build();
 
-            shootToIntakeHuman1 = follower.pathBuilder().addPath(
+            intake1ToShoot = follower.pathBuilder().addPath(
                             new BezierCurve(
-                                    new Pose(84.261, 21.723),
-                                    new Pose(132.581, 29.561),
-                                    new Pose(136.000, 17.384)
-                            )
-                    ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(-90))
-
-                    .build();
-
-            intakeHuman1to2 = follower.pathBuilder().addPath(
-                            new BezierCurve(
-                                    new Pose(136.000, 17.384),
-                                    new Pose(124.506, 16.236),
-                                    new Pose(136.000, 8.878)
-                            )
-                    ).setLinearHeadingInterpolation(Math.toRadians(-90), Math.toRadians(0))
-
-                    .build();
-
-            intakeHumanToShoot = follower.pathBuilder().addPath(
-                            new BezierCurve(
-                                    new Pose(136.000, 8.878),
-                                    new Pose(116.872, 22.769),
-                                    new Pose(84.261, 21.723)
+                                    new Pose(124.400, 59.191),
+                                    new Pose(97.097, 56.618),
+                                    new Pose(85.647, 84.597)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
 
                     .build();
 
-            shootToGate1 = follower.pathBuilder().addPath(
-                            new BezierLine(
-                                    new Pose(84.261, 21.723),
-
-                                    new Pose(132.684, 32.526)
+            shootToGate = follower.pathBuilder().addPath(
+                            new BezierCurve(
+                                    new Pose(85.647, 84.597),
+                                    new Pose(102.494, 65.087),
+                                    new Pose(129.339, 65.206)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(90))
 
                     .build();
 
-            gateToShoot1 = follower.pathBuilder().addPath(
-                            new BezierLine(
-                                    new Pose(132.684, 32.526),
-
-                                    new Pose(84.261, 21.723)
+            gateToIntake2 = follower.pathBuilder().addPath(
+                            new BezierCurve(
+                                    new Pose(129.339, 65.206),
+                                    new Pose(119.013, 67.717),
+                                    new Pose(131.818, 57.228)
                             )
-                    ).setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(0))
+                    ).setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(60))
 
                     .build();
 
-            shootToGate2 = follower.pathBuilder().addPath(
-                            new BezierLine(
-                                    new Pose(84.261, 21.723),
-
-                                    new Pose(132.700, 9.272)
+            intake2ToShoot = follower.pathBuilder().addPath(
+                            new BezierCurve(
+                                    new Pose(131.818, 57.228),
+                                    new Pose(102.477, 66.738),
+                                    new Pose(85.666, 84.685)
                             )
-                    ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(-30))
+                    ).setLinearHeadingInterpolation(Math.toRadians(60), Math.toRadians(0))
 
                     .build();
 
-            gateToShoot2 = follower.pathBuilder().addPath(
+            shootToIntake3 = follower.pathBuilder().addPath(
                             new BezierLine(
-                                    new Pose(132.700, 9.272),
+                                    new Pose(85.666, 84.685),
 
-                                    new Pose(84.211, 21.895)
+                                    new Pose(126.165, 83.512)
                             )
-                    ).setLinearHeadingInterpolation(Math.toRadians(-30), Math.toRadians(0))
+                    ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
+
+                    .build();
+
+            intake3ToShoot = follower.pathBuilder().addPath(
+                            new BezierLine(
+                                    new Pose(126.165, 83.512),
+
+                                    new Pose(85.667, 84.594)
+                            )
+                    ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(45))
 
                     .build();
 
             leave = follower.pathBuilder().addPath(
                             new BezierLine(
-                                    new Pose(84.261, 21.723),
+                                    new Pose(85.667, 84.594),
 
-                                    new Pose(90.053, 26.737)
+                                    new Pose(85.891, 62.997)
                             )
-                    ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(90))
+                    ).setLinearHeadingInterpolation(Math.toRadians(45), Math.toRadians(90))
 
                     .build();
         }

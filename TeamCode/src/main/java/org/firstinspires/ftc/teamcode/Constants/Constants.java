@@ -22,8 +22,8 @@ public class Constants {
     public static double currentTheta = 0;
     public static int FAR_SHOT_VELOCITY = 1967;
     public static int CLOSE_SHOT_VELOCITY = 1629;
-    public static SparkFunOTOS.Pose2D blueGoal = new SparkFunOTOS.Pose2D(11, 136, Math.toRadians(48.62));
-    public static SparkFunOTOS.Pose2D redGoal = new SparkFunOTOS.Pose2D(133, 136, Math.toRadians(-53.762));
+    public static SparkFunOTOS.Pose2D blueGoal = new SparkFunOTOS.Pose2D(7.5, 136, Math.toRadians(48.62));
+    public static SparkFunOTOS.Pose2D redGoal = new SparkFunOTOS.Pose2D(135.5, 136, Math.toRadians(-53.762));
 
 
 

@@ -29,11 +29,14 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.blueGoal;
+import static org.firstinspires.ftc.teamcode.Constants.Constants.currentTheta;
+import static org.firstinspires.ftc.teamcode.Constants.Constants.currentX;
+import static org.firstinspires.ftc.teamcode.Constants.Constants.currentY;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.redGoal;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.onBlueAlliance;
 
 
-@Autonomous(name = "PPV Red Close Auto", group = "Autonomous")
+@Autonomous(name = "Red Close 9 Gate", group = "Red")
 @Configurable
 public class PPVRedGoalSideAuto extends OpMode{
     private TelemetryManager panelsTelemetry;
@@ -66,6 +69,7 @@ public class PPVRedGoalSideAuto extends OpMode{
         intake1ToGate,
         gateToShoot,
         shootToIntake2,
+        intake2Finish,
         intake2ToShoot,
         leave,
         INIT,
@@ -113,10 +117,8 @@ public class PPVRedGoalSideAuto extends OpMode{
     public void init() {
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
 
-
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(new Pose(123.131, 123.710, Math.toRadians(36)));
-
+        follower.setStartingPose(new Pose(126.177, 119.039, Math.toRadians(36)));
 
         paths = new Paths(follower);
 
@@ -134,6 +136,7 @@ public class PPVRedGoalSideAuto extends OpMode{
         autoTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
         shooterTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
+        onBlueAlliance = false;
 
 //        panelsTelemetry.debug("Status", "Initialized");
 //        panelsTelemetry.update(telemetry);
@@ -145,6 +148,9 @@ public class PPVRedGoalSideAuto extends OpMode{
     @Override
     public void loop() {
         follower.update();
+        currentX = follower.getPose().getX();
+        currentY = follower.getPose().getY();
+        currentTheta = follower.getPose().getHeading();
         setShooterDesiredVelocity();
         updateAutoStateMachine();
         updateShooterStateMachine();
@@ -186,7 +192,7 @@ public class PPVRedGoalSideAuto extends OpMode{
 
             case startToShoot:
                 shooter.setMotorVelocity(shooterDesiredVelocity);
-
+                follower.setMaxPower(.8);
 
                 follower.followPath(paths.startToShoot);
                 P_NextState = AUTO_STATE.SHOOT;
@@ -213,7 +219,7 @@ public class PPVRedGoalSideAuto extends OpMode{
 
 
             case gateToShoot:
-                follower.setMaxPower(1);
+                follower.setMaxPower(.8);
                 follower.followPath(paths.gateToShoot);
                 P_NextState = AUTO_STATE.SHOOT;
                 S_NextState = AUTO_STATE.shootToIntake2;
@@ -222,16 +228,26 @@ public class PPVRedGoalSideAuto extends OpMode{
 
 
             case shootToIntake2:
+                follower.setMaxPower(.75);
+                intake.setPower(1);
                 follower.followPath(paths.shootToIntake2);
+                P_NextState = AUTO_STATE.intake2Finish;
+                autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+                break;
+
+
+            case intake2Finish:
+                follower.setMaxPower(.67);
+                follower.followPath(paths.intake2Finish);
                 P_NextState = AUTO_STATE.intake2ToShoot;
                 autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
                 break;
 
 
             case intake2ToShoot:
+                follower.setMaxPower(.8);
                 follower.followPath(paths.intake2ToShoot);
                 P_NextState = AUTO_STATE.SHOOT;
-//                S_NextState = AUTO_STATE.END;
                 S_NextState = AUTO_STATE.leave;
                 autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
                 break;
@@ -241,6 +257,8 @@ public class PPVRedGoalSideAuto extends OpMode{
                 follower.followPath(paths.leave);
                 P_NextState = AUTO_STATE.END;
                 autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+
+
             case END:
                 shooter.setMotorVelocity(0);
                 intake.setPower(0);
@@ -421,108 +439,99 @@ public class PPVRedGoalSideAuto extends OpMode{
     }
 
 
+
+
     public static class Paths {
         public PathChain startToShoot;
         public PathChain shootToIntake;
         public PathChain intake1ToGate;
         public PathChain gateToShoot;
         public PathChain shootToIntake2;
+        public PathChain intake2Finish;
         public PathChain intake2ToShoot;
         public PathChain leave;
-
 
         public Paths(Follower follower) {
             startToShoot = follower.pathBuilder().addPath(
                             new BezierLine(
-                                    new Pose(123.131, 123.710),
-
+                                    new Pose(126.177, 119.039),
 
                                     new Pose(85.553, 84.676)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(36), Math.toRadians(0))
 
-
                     .build();
-
 
             shootToIntake = follower.pathBuilder().addPath(
                             new BezierLine(
                                     new Pose(85.553, 84.676),
 
-
-                                    new Pose(126.446, 83.515)
+                                    new Pose(125.228, 83.515)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
 
-
                     .build();
-
 
             intake1ToGate = follower.pathBuilder().addPath(
                             new BezierCurve(
-                                    new Pose(126.446, 83.515),
-                                    new Pose(109.098, 85.449),
-                                    new Pose(128.654, 73.801)
+                                    new Pose(125.228, 83.515),
+                                    new Pose(116.256, 81.239),
+                                    new Pose(128.233, 73.644)
                             )
-                    ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(90))
-
+                    ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(180))
 
                     .build();
-
 
             gateToShoot = follower.pathBuilder().addPath(
                             new BezierLine(
-                                    new Pose(128.654, 73.801),
-
+                                    new Pose(128.233, 73.644),
 
                                     new Pose(85.125, 85.133)
                             )
-                    ).setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(0))
-
+                    ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(90))
 
                     .build();
-
 
             shootToIntake2 = follower.pathBuilder().addPath(
                             new BezierCurve(
                                     new Pose(85.125, 85.133),
-                                    new Pose(93.701, 55.465),
-                                    new Pose(130.382, 59.107)
+                                    new Pose(91.385, 63.254),
+                                    new Pose(101.751, 59.738)
                             )
-                    ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
-
+                    ).setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(0))
 
                     .build();
 
+            intake2Finish = follower.pathBuilder().addPath(
+                            new BezierLine(
+                                    new Pose(101.751, 59.738),
+
+                                    new Pose(125.733, 58.085)
+                            )
+                    ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
+
+                    .build();
 
             intake2ToShoot = follower.pathBuilder().addPath(
                             new BezierCurve(
-                                    new Pose(130.382, 59.107),
+                                    new Pose(125.733, 58.085),
                                     new Pose(98.154, 59.664),
                                     new Pose(85.294, 83.801)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
 
-
                     .build();
-
 
             leave = follower.pathBuilder().addPath(
                             new BezierLine(
                                     new Pose(85.294, 83.801),
 
-
                                     new Pose(85.885, 61.002)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(90))
 
-
                     .build();
         }
     }
-
-
-
-
 }
 

@@ -131,10 +131,10 @@ public class Teleop extends OpMode {
 
         if (onBlueAlliance) {
             telemetry.addLine("Blue alliance selected. Press gamepad 1 left bumper to switch.");
-            drivebase.offsetYaw(90);
+            drivebase.offsetYaw(-90);
         } else {
             telemetry.addLine("Red alliance selected. Press gamepad 1 right bumper to switch.");
-            drivebase.offsetYaw(-90);
+            drivebase.offsetYaw(90);
         }
     }
 
