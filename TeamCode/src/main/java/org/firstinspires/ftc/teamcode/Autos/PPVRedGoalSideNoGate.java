@@ -126,7 +126,7 @@ public class PPVRedGoalSideNoGate extends OpMode{
         innerColor = hardwareMap.get(ColorRangeSensor.class, "innerColor");
         intake = new Intake(hardwareMap);
         transfer = new Transfer(hardwareMap);
-        shooter = new Shooter(hardwareMap);
+        shooter = new Shooter(hardwareMap, 0);
 
 
         dash = FtcDashboard.getInstance();

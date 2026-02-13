@@ -55,7 +55,7 @@ public class MotorPIDTuner extends OpMode {
 
         timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
-        shooter = new Shooter(hardwareMap);
+        shooter = new Shooter(hardwareMap, 0);
         transfer = new Transfer(hardwareMap);
 
         myTelem.addLine("Initalized");

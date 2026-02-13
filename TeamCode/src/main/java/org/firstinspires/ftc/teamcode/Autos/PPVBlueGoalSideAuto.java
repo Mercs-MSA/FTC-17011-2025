@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.Autos;
 
-
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.bylazar.configurables.annotations.Configurable;
@@ -16,8 +15,6 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.ColorRangeSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
-
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.mechanisms.Drivebase;
@@ -25,13 +22,12 @@ import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
 import org.firstinspires.ftc.teamcode.mechanisms.Transfer;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
-
-
 import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.blueGoal;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.currentTheta;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.currentX;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.currentY;
+import static org.firstinspires.ftc.teamcode.Constants.Constants.ranAuto;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.redGoal;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.onBlueAlliance;
 
@@ -42,7 +38,6 @@ public class PPVBlueGoalSideAuto extends OpMode{
     private TelemetryManager panelsTelemetry;
     public Follower follower;
     private FtcDashboard dash;
-
 
     private MultipleTelemetry myTelem;
 
@@ -59,7 +54,6 @@ public class PPVBlueGoalSideAuto extends OpMode{
     private ElapsedTime autoTimer;
     private ElapsedTime shooterTimer;
 
-
     private double shooterDesiredVelocity = 0;
 
 
@@ -69,6 +63,7 @@ public class PPVBlueGoalSideAuto extends OpMode{
         intake1ToGate,
         gateToShoot,
         shootToIntake2,
+        intake2Finish,
         intake2ToShoot,
         leave,
         INIT,
@@ -76,7 +71,6 @@ public class PPVBlueGoalSideAuto extends OpMode{
         SHOOT,
         END
     }
-
 
     private enum SHOOTING_STATE {
         INACTIVE,
@@ -87,7 +81,6 @@ public class PPVBlueGoalSideAuto extends OpMode{
         END
     }
 
-
     private enum TURRET_STATE {
         GO_TO_ZERO,
         ZEROED,
@@ -96,14 +89,11 @@ public class PPVBlueGoalSideAuto extends OpMode{
         // AIMING_TO_TAG
     }
 
-
     private AUTO_STATE autoState = AUTO_STATE.INIT;
     private AUTO_STATE P_NextState;
     private AUTO_STATE S_NextState;
 
-
     public static SHOOTING_STATE shootingState = SHOOTING_STATE.INACTIVE;
-
 
     private TURRET_STATE turretState = TURRET_STATE.AIMING_NO_TAG;
     // private TURRET_STATE turretState = TURRET_STATE.AIMING_TO_TAG;
@@ -125,7 +115,7 @@ public class PPVBlueGoalSideAuto extends OpMode{
         innerColor = hardwareMap.get(ColorRangeSensor.class, "innerColor");
         intake = new Intake(hardwareMap);
         transfer = new Transfer(hardwareMap);
-        shooter = new Shooter(hardwareMap);
+        shooter = new Shooter(hardwareMap, 0);
 
 
         dash = FtcDashboard.getInstance();
@@ -135,6 +125,7 @@ public class PPVBlueGoalSideAuto extends OpMode{
         autoTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
         shooterTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
+        ranAuto = true;
         onBlueAlliance = true;
 
 //        panelsTelemetry.debug("Status", "Initialized");
@@ -142,6 +133,7 @@ public class PPVBlueGoalSideAuto extends OpMode{
         myTelem.addLine("Status Initialized");
         myTelem.update();
     }
+
 
 
     @Override
@@ -153,8 +145,11 @@ public class PPVBlueGoalSideAuto extends OpMode{
         setShooterDesiredVelocity();
         updateAutoStateMachine();
         updateShooterStateMachine();
-        updateTurretState();
+        if (!autoState.equals(AUTO_STATE.leave) ^ autoState.equals(AUTO_STATE.END))
+            updateTurretState();
 //        panelsTelemetry.update(telemetry);
+
+        myTelem.addData("Pose: ", follower.getPose());
         myTelem.addData("Shooter Velocity: ", shooter.getVelocity());
         myTelem.addData("Shooter Target Velocity: ", shooterDesiredVelocity);
         myTelem.addData("Turret Angle: ", shooter.getTurretPos() / 8.133333333);
@@ -164,8 +159,6 @@ public class PPVBlueGoalSideAuto extends OpMode{
     }
     private void updateAutoStateMachine() {
         switch (autoState) {
-
-
             case PATH_ACTIVE_WAIT:
                 if (!follower.isBusy())
                     autoState = P_NextState;
@@ -193,6 +186,7 @@ public class PPVBlueGoalSideAuto extends OpMode{
                 shooter.setMotorVelocity(shooterDesiredVelocity);
                 follower.setMaxPower(.8);
 
+
                 follower.followPath(paths.startToShoot);
                 P_NextState = AUTO_STATE.SHOOT;
                 S_NextState = AUTO_STATE.shootToIntake;
@@ -201,7 +195,7 @@ public class PPVBlueGoalSideAuto extends OpMode{
 
 
             case shootToIntake:
-                follower.setMaxPower(.45);
+                follower.setMaxPower(.7);
                 intake.setPower(1);
                 follower.followPath(paths.shootToIntake1);
                 P_NextState = AUTO_STATE.intake1ToGate;
@@ -210,7 +204,7 @@ public class PPVBlueGoalSideAuto extends OpMode{
 
 
             case intake1ToGate:
-                follower.setMaxPower(.7);
+                follower.setMaxPower(.67);
                 follower.followPath(paths.intake1ToGate);
                 P_NextState = AUTO_STATE.gateToShoot;
                 autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
@@ -218,18 +212,28 @@ public class PPVBlueGoalSideAuto extends OpMode{
 
 
             case gateToShoot:
-                follower.setMaxPower(.8);
-                follower.followPath(paths.gateToShoot);
-                P_NextState = AUTO_STATE.SHOOT;
-                S_NextState = AUTO_STATE.shootToIntake2;
-                autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+                if (autoTimer.time() > 500) {
+                    follower.setMaxPower(.9);
+                    follower.followPath(paths.gateToShoot);
+                    P_NextState = AUTO_STATE.SHOOT;
+                    S_NextState = AUTO_STATE.shootToIntake2;
+                    autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+                }
                 break;
 
 
             case shootToIntake2:
-                follower.setMaxPower(.63);
+                follower.setMaxPower(.8);
                 intake.setPower(1);
                 follower.followPath(paths.shootToIntake2);
+                P_NextState = AUTO_STATE.intake2Finish;
+                autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+                break;
+
+
+            case intake2Finish:
+                follower.setMaxPower(.6);
+                follower.followPath(paths.intake2Finish);
                 P_NextState = AUTO_STATE.intake2ToShoot;
                 autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
                 break;
@@ -239,7 +243,6 @@ public class PPVBlueGoalSideAuto extends OpMode{
                 follower.setMaxPower(.8);
                 follower.followPath(paths.intake2ToShoot);
                 P_NextState = AUTO_STATE.SHOOT;
-//                S_NextState = AUTO_STATE.END;
                 S_NextState = AUTO_STATE.leave;
                 autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
                 break;
@@ -247,6 +250,7 @@ public class PPVBlueGoalSideAuto extends OpMode{
 
             case leave:
                 follower.followPath(paths.leave);
+                shooter.setTurretTarget(0);
                 P_NextState = AUTO_STATE.END;
                 autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
             case END:
@@ -255,6 +259,8 @@ public class PPVBlueGoalSideAuto extends OpMode{
                 break;
         }
     }
+
+
 
 
     public double distanceToTarget() {
@@ -271,11 +277,10 @@ public class PPVBlueGoalSideAuto extends OpMode{
     private void setShooterDesiredVelocity() {
         double range = distanceToTarget();
         int velocity = 0;
-        if (range < 80)
-            velocity = (int) ((0.0586009 * Math.pow(range, 2)) + (-4.2766 * range) + 1498.02814);
+        if (range < 95)
+            velocity = (int) ((0.0586009 * Math.pow(range, 2)) + (-4.2766 * range) + 1498.02814 + 10);
         else
-            velocity = (int) ((0.0227675 * Math.pow(range, 2)) + (1.62765 * range) + 1344.59538);
-
+            velocity = (int) ((0.0227675 * Math.pow(range, 2)) + (1.62765 * range) + 1344.59538 + 10);
 
         shooterDesiredVelocity = Math.min(velocity, 1930);
     }
@@ -288,8 +293,6 @@ public class PPVBlueGoalSideAuto extends OpMode{
 
     private void updateShooterStateMachine() {
         switch (shootingState) {
-
-
             case START:
                 shootingState = SHOOTING_STATE.START_SHOOTER;
                 break;
@@ -298,36 +301,36 @@ public class PPVBlueGoalSideAuto extends OpMode{
             case START_SHOOTER:
                 shooter.setMotorVelocity(shooterDesiredVelocity);
                 transfer.closeTransferGate();
-//                shooterTimer.reset();
+                shooterTimer.reset();
                 shootingState = SHOOTING_STATE.IS_SHOOTER_READY;
                 break;
 
-
             case IS_SHOOTER_READY:
                 transfer.closeTransferGate();
-                shooterTimer.reset();
+//                shooterTimer.reset();
+//                if (innerColor.getDistance(DistanceUnit.INCH) > 6)
+//                    shootingState = SHOOTING_STATE.END;
+                if (shooterTimer.time() > 2000)
+                    shootingState = SHOOTING_STATE.END;
                 if (desiredVelocityReached())
                     shootingState = SHOOTING_STATE.SHOOT_BALL;
                 break;
 
-
             case SHOOT_BALL:
                 transfer.openTransferGate();
                 transfer.setPower(0.87);
-//                if (shooterTimer.time() > 2800)
-//                    shootingState = SHOOTING_STATE.END;
-                if (innerColor.getDistance(DistanceUnit.INCH) > 3 && shooterTimer.time() > 500)
+                if (shooterTimer.time() > 2000)
                     shootingState = SHOOTING_STATE.END;
+//                if (innerColor.getDistance(DistanceUnit.INCH) > 2.5 && shooterTimer.time() > 500)
+//                    shootingState = SHOOTING_STATE.END;
                 if (!desiredVelocityReached())
                     shootingState = SHOOTING_STATE.IS_SHOOTER_READY;
                 break;
-
 
             case END:
                 transfer.closeTransferGate();
                 transfer.setPower(0);
                 break;
-
 
             case INACTIVE:
                 transfer.closeTransferGate();
@@ -335,10 +338,8 @@ public class PPVBlueGoalSideAuto extends OpMode{
         }
     }
 
-
     private void updateTurretState() {
         Pose pose = follower.getPose();
-
 
         double targetFieldAngle = onBlueAlliance
                 ? Math.toDegrees(Math.atan2(blueGoal.y - pose.getY(), blueGoal.x - pose.getX()))
@@ -354,21 +355,17 @@ public class PPVBlueGoalSideAuto extends OpMode{
 
 
 //        boolean seesTarget = drivebase.getTargetSeen();
-        boolean withinAngleLimit =
-                Math.abs(turretAngleDeg) < 112 &&
-                        Math.abs(targetFieldAngle) < 112;
-
+        boolean withinAngleLimit = true;
+//                Math.abs(turretAngleDeg) < 112 &&
+//                        Math.abs(targetFieldAngle) < 112;
 
         switch (turretState) {
-
-
             case GO_TO_ZERO:
                 shooter.setTurretVelocity(200, 1);
                 shooter.setTurretTarget(0);
                 if (Math.abs(shooter.getTurretPos()) < 10)
                     turretState = TURRET_STATE.ZEROED;
                 break;
-
 
             case ZEROED:
                 shooter.setTurretVelocity(0, 0);
@@ -377,20 +374,17 @@ public class PPVBlueGoalSideAuto extends OpMode{
                 turretState = TURRET_STATE.AIMING_NO_TAG;
                 break;
 
-
             case AIMED:
                 shooter.setTurretVelocity(0, 0);
-
 
                 if (gamepad1.left_trigger > .3) {
                     turretState = TURRET_STATE.GO_TO_ZERO;
 //                } else if (seesTarget && Math.abs(drivebase.getLLResult().getTx()) > 1) {
 //                    turretState = TURRET_STATE.AIMING_TO_TAG;
-                } else if (withinAngleLimit && Math.abs(error) > .5) {
+                } else if (withinAngleLimit && Math.abs(error) > .75) {
                     turretState = TURRET_STATE.AIMING_NO_TAG;
                 }
                 break;
-
 
             case AIMING_NO_TAG:
                 if (Math.abs(error) > .5)
@@ -398,36 +392,8 @@ public class PPVBlueGoalSideAuto extends OpMode{
                 else
                     turretState = TURRET_STATE.AIMED;
                 break;
-
-
-           /*
-           case AIMING_TO_TAG:
-               shooter.setTurretMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-
-               if (!seesTarget) {
-                   turretState = TURRET_STATE.AIMING_NO_TAG;
-                   return;
-               }
-
-
-               double limeError =
-                       AngleUnit.normalizeDegrees(drivebase.getLLResult().getTx());
-
-
-               if (Math.abs(limeError) > 1.75) {
-                   if (!withinAngleLimit)
-                       shooter.setTurretVelocity(0, 0);
-                   else
-                       shooter.setTurretVelocity((int) (-limeError * 100 + 25), 1);
-               } else {
-                   turretState = TURRET_STATE.AIMED;
-               }
-               break;
-           */
         }
     }
-
 
 
 
@@ -465,20 +431,20 @@ public class PPVBlueGoalSideAuto extends OpMode{
             intake1ToGate = follower.pathBuilder().addPath(
                             new BezierCurve(
                                     new Pose(18.937, 84.171),
-                                    new Pose(27.740, 81.239),
-                                    new Pose(15.770, 74.644)
+                                    new Pose(32.161, 75.554),
+                                    new Pose(15.770, 72.644)
                             )
-                    ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(0))
+                    ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
 
                     .build();
 
             gateToShoot = follower.pathBuilder().addPath(
                             new BezierLine(
-                                    new Pose(15.770, 74.644),
+                                    new Pose(15.770, 72.644),
 
                                     new Pose(58.676, 84.575)
                             )
-                    ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(90))
+                    ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
 
                     .build();
 
@@ -488,7 +454,7 @@ public class PPVBlueGoalSideAuto extends OpMode{
                                     new Pose(55.774, 60.096),
                                     new Pose(40.906, 59.738)
                             )
-                    ).setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(180))
+                    ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
 
                     .build();
 
@@ -524,4 +490,8 @@ public class PPVBlueGoalSideAuto extends OpMode{
         }
     }
 }
+
+
+
+
 

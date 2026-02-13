@@ -26,16 +26,8 @@ import org.firstinspires.ftc.teamcode.Constants.GeneralConstants;
 public class Shooter {
     private DcMotorEx shooterMotor;
     private DcMotorEx turretMotor;
-//    private Limelight3A limelight;
-
-    private static int goalAngle = 0;
-    private static int currentAngle = 0;
-    private static int pipeline = 0;
 
     private static double goalRange = 4;
-
-    public static double rightMaxPosition = 500;
-    public static double leftMaxPosition = 500;
 
 
 
@@ -53,12 +45,13 @@ public class Shooter {
     public static double D = 1;
     public static double F = 15;
     public PIDFCoefficients originalPIDF; // 10, 0, 0, 0
+    int offsetTurret = 0;
     public static double turretP = 30; /// The P value for when the turret is using setTargetPosition
     public static PIDFCoefficients turVelPIDF = new PIDFCoefficients(7, 0, 0, 0);
 
     //5.5:1 turret rev
 
-    public Shooter(HardwareMap hardwareMap) {
+    public Shooter(HardwareMap hardwareMap, int startPos) {
         shooterMotor = hardwareMap.get(DcMotorEx.class, "shooterMotor");
         turretMotor = hardwareMap.get(DcMotorEx.class, "turretMotor");
 //        limelight = hardwareMap.get(Limelight3A.class, "limelight");
@@ -85,6 +78,7 @@ public class Shooter {
 
         shooterMotor.setVelocity(0);
 
+        offsetTurret = startPos;
 //        limelight.start();
 //        limelight.pipelineSwitch(0); //Pipeline 0 = Blue Tag (ID 20), Pipeline 1 = Red Tag (ID 24)
     }
@@ -175,7 +169,7 @@ public class Shooter {
         int targetTicks = (Math.abs(currentTicks) <= 967) ? currentTicks + deltaTicks : currentTicks - deltaTicks;
 
         // command motor
-        turretMotor.setTargetPosition((int) clamp(-900, targetTicks, 900));
+        turretMotor.setTargetPosition((int) clamp(-900, (targetTicks + offsetTurret), 900));
         turretMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         turretMotor.setPower(0.8); // tune power
     }

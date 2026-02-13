@@ -32,8 +32,10 @@ import static org.firstinspires.ftc.teamcode.Constants.Constants.blueGoal;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.currentTheta;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.currentX;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.currentY;
+import static org.firstinspires.ftc.teamcode.Constants.Constants.ranAuto;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.redGoal;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.onBlueAlliance;
+import static org.firstinspires.ftc.teamcode.Constants.Constants.turretLastAutoPos;
 
 
 @Autonomous(name = "Red Close 9 Gate", group = "Red")
@@ -126,7 +128,7 @@ public class PPVRedGoalSideAuto extends OpMode{
         innerColor = hardwareMap.get(ColorRangeSensor.class, "innerColor");
         intake = new Intake(hardwareMap);
         transfer = new Transfer(hardwareMap);
-        shooter = new Shooter(hardwareMap);
+        shooter = new Shooter(hardwareMap, 0);
 
 
         dash = FtcDashboard.getInstance();
@@ -136,6 +138,7 @@ public class PPVRedGoalSideAuto extends OpMode{
         autoTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
         shooterTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
+        ranAuto = true;
         onBlueAlliance = false;
 
 //        panelsTelemetry.debug("Status", "Initialized");
@@ -154,8 +157,14 @@ public class PPVRedGoalSideAuto extends OpMode{
         setShooterDesiredVelocity();
         updateAutoStateMachine();
         updateShooterStateMachine();
-        updateTurretState();
+        if (!autoState.equals(AUTO_STATE.leave) ^ autoState.equals(AUTO_STATE.END))
+            updateTurretState();
 //        panelsTelemetry.update(telemetry);
+
+        myTelem.addData("Current X", currentX);
+        myTelem.addData("Current Y", currentY);
+        myTelem.addData("Current Theta", currentTheta);
+
         myTelem.addData("Shooter Velocity: ", shooter.getVelocity());
         myTelem.addData("Shooter Target Velocity: ", shooterDesiredVelocity);
         myTelem.addData("Turret Angle: ", shooter.getTurretPos() / 8.133333333);
@@ -168,8 +177,10 @@ public class PPVRedGoalSideAuto extends OpMode{
 
 
             case PATH_ACTIVE_WAIT:
-                if (!follower.isBusy())
+                if (!follower.isBusy()) {
+                    autoTimer.reset();
                     autoState = P_NextState;
+                }
                 break;
 
 
@@ -192,7 +203,7 @@ public class PPVRedGoalSideAuto extends OpMode{
 
             case startToShoot:
                 shooter.setMotorVelocity(shooterDesiredVelocity);
-                follower.setMaxPower(.8);
+                follower.setMaxPower(.86);
 
                 follower.followPath(paths.startToShoot);
                 P_NextState = AUTO_STATE.SHOOT;
@@ -202,7 +213,7 @@ public class PPVRedGoalSideAuto extends OpMode{
 
 
             case shootToIntake:
-                follower.setMaxPower(.45);
+                follower.setMaxPower(.7);
                 intake.setPower(1);
                 follower.followPath(paths.shootToIntake);
                 P_NextState = AUTO_STATE.intake1ToGate;
@@ -211,7 +222,7 @@ public class PPVRedGoalSideAuto extends OpMode{
 
 
             case intake1ToGate:
-                follower.setMaxPower(.7);
+                follower.setMaxPower(.67);
                 follower.followPath(paths.intake1ToGate);
                 P_NextState = AUTO_STATE.gateToShoot;
                 autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
@@ -219,16 +230,18 @@ public class PPVRedGoalSideAuto extends OpMode{
 
 
             case gateToShoot:
-                follower.setMaxPower(.8);
-                follower.followPath(paths.gateToShoot);
-                P_NextState = AUTO_STATE.SHOOT;
-                S_NextState = AUTO_STATE.shootToIntake2;
-                autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+                if (autoTimer.time() > 500) {
+                    follower.setMaxPower(.9);
+                    follower.followPath(paths.gateToShoot);
+                    P_NextState = AUTO_STATE.SHOOT;
+                    S_NextState = AUTO_STATE.shootToIntake2;
+                    autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+                }
                 break;
 
 
             case shootToIntake2:
-                follower.setMaxPower(.75);
+                follower.setMaxPower(.8);
                 intake.setPower(1);
                 follower.followPath(paths.shootToIntake2);
                 P_NextState = AUTO_STATE.intake2Finish;
@@ -237,7 +250,7 @@ public class PPVRedGoalSideAuto extends OpMode{
 
 
             case intake2Finish:
-                follower.setMaxPower(.67);
+                follower.setMaxPower(.6);
                 follower.followPath(paths.intake2Finish);
                 P_NextState = AUTO_STATE.intake2ToShoot;
                 autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
@@ -255,6 +268,7 @@ public class PPVRedGoalSideAuto extends OpMode{
 
             case leave:
                 follower.followPath(paths.leave);
+                shooter.setTurretTarget(0);
                 P_NextState = AUTO_STATE.END;
                 autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
 
@@ -281,10 +295,10 @@ public class PPVRedGoalSideAuto extends OpMode{
     private void setShooterDesiredVelocity() {
         double range = distanceToTarget();
         int velocity = 0;
-        if (range < 80)
-            velocity = (int) ((0.0586009 * Math.pow(range, 2)) + (-4.2766 * range) + 1498.02814);
+        if (range < 95)
+            velocity = (int) ((0.0586009 * Math.pow(range, 2)) + (-4.2766 * range) + 1498.02814 + 30);
         else
-            velocity = (int) ((0.0227675 * Math.pow(range, 2)) + (1.62765 * range) + 1344.59538);
+            velocity = (int) ((0.0227675 * Math.pow(range, 2)) + (1.62765 * range) + 1344.59538 + 30);
 
 
         shooterDesiredVelocity = Math.min(velocity, 1930);
@@ -292,7 +306,7 @@ public class PPVRedGoalSideAuto extends OpMode{
 
 
     private boolean desiredVelocityReached() {
-        return shooter.getVelocity() > shooterDesiredVelocity * 0.98;
+        return shooter.getVelocity() > shooterDesiredVelocity * .97;
     }
 
 
@@ -308,14 +322,17 @@ public class PPVRedGoalSideAuto extends OpMode{
             case START_SHOOTER:
                 shooter.setMotorVelocity(shooterDesiredVelocity);
                 transfer.closeTransferGate();
-//                shooterTimer.reset();
+                shooterTimer.reset();
                 shootingState = SHOOTING_STATE.IS_SHOOTER_READY;
                 break;
 
 
             case IS_SHOOTER_READY:
                 transfer.closeTransferGate();
-                shooterTimer.reset();
+//                if (innerColor.getDistance(DistanceUnit.INCH) > 4.25)
+//                    shootingState = SHOOTING_STATE.END;
+                if (shooterTimer.time() > 2000)
+                    shootingState = SHOOTING_STATE.END;
                 if (desiredVelocityReached())
                     shootingState = SHOOTING_STATE.SHOOT_BALL;
                 break;
@@ -324,10 +341,10 @@ public class PPVRedGoalSideAuto extends OpMode{
             case SHOOT_BALL:
                 transfer.openTransferGate();
                 transfer.setPower(0.87);
-//                if (shooterTimer.time() > 2800)
-//                    shootingState = SHOOTING_STATE.END;
-                if (innerColor.getDistance(DistanceUnit.INCH) > 3 && shooterTimer.time() > 500)
+                if (shooterTimer.time() > 2000)
                     shootingState = SHOOTING_STATE.END;
+//                if (innerColor.getDistance(DistanceUnit.INCH) > 3 && shooterTimer.time() > 500)
+//                    shootingState = SHOOTING_STATE.END;
                 if (!desiredVelocityReached())
                     shootingState = SHOOTING_STATE.IS_SHOOTER_READY;
                 break;
@@ -357,6 +374,7 @@ public class PPVRedGoalSideAuto extends OpMode{
 
         double robotHeadingDeg = Math.toDegrees(pose.getHeading());
         double turretSetpointDeg = targetFieldAngle - robotHeadingDeg;
+        turretLastAutoPos = shooter.getTurretPos();
         double turretAngleDeg = shooter.getTurretPos() / 8.13333333333;
 
 
@@ -441,6 +459,7 @@ public class PPVRedGoalSideAuto extends OpMode{
 
 
 
+
     public static class Paths {
         public PathChain startToShoot;
         public PathChain shootToIntake;
@@ -475,20 +494,20 @@ public class PPVRedGoalSideAuto extends OpMode{
             intake1ToGate = follower.pathBuilder().addPath(
                             new BezierCurve(
                                     new Pose(125.228, 83.515),
-                                    new Pose(116.256, 81.239),
-                                    new Pose(128.233, 73.644)
+                                    new Pose(106.362, 72.081),
+                                    new Pose(128.233, 72.828)
                             )
-                    ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(180))
+                    ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
 
                     .build();
 
             gateToShoot = follower.pathBuilder().addPath(
                             new BezierLine(
-                                    new Pose(128.233, 73.644),
+                                    new Pose(128.233, 72.828),
 
                                     new Pose(85.125, 85.133)
                             )
-                    ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(90))
+                    ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
 
                     .build();
 
@@ -498,7 +517,7 @@ public class PPVRedGoalSideAuto extends OpMode{
                                     new Pose(91.385, 63.254),
                                     new Pose(101.751, 59.738)
                             )
-                    ).setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(0))
+                    ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
 
                     .build();
 

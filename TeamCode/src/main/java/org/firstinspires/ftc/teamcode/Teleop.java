@@ -9,6 +9,7 @@ import static org.firstinspires.ftc.teamcode.Constants.Constants.currentY;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.onBlueAlliance;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.ranAuto;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.redGoal;
+import static org.firstinspires.ftc.teamcode.Constants.Constants.turretLastAutoPos;
 import static org.firstinspires.ftc.teamcode.mechanisms.Shooter.turVelPIDF;
 import static org.firstinspires.ftc.teamcode.mechanisms.Shooter.turretP;
 
@@ -100,7 +101,7 @@ public class Teleop extends OpMode {
         drivebase = new Drivebase(hardwareMap);
         intake = new Intake(hardwareMap);
         transfer = new Transfer(hardwareMap);
-        shooter = new Shooter(hardwareMap);
+        shooter = new Shooter(hardwareMap, 0);
 
         shootingState = SHOOTING_STATE.INACTIVE;
         turretState = TURRET_STATE.ZEROED;
@@ -131,10 +132,16 @@ public class Teleop extends OpMode {
 
         if (onBlueAlliance) {
             telemetry.addLine("Blue alliance selected. Press gamepad 1 left bumper to switch.");
-            drivebase.offsetYaw(-90);
+            if (ranAuto)
+                drivebase.offsetYaw(-90 + Math.toDegrees(currentTheta));
+            else
+                drivebase.offsetYaw(-90);
         } else {
             telemetry.addLine("Red alliance selected. Press gamepad 1 right bumper to switch.");
-            drivebase.offsetYaw(90);
+            if (ranAuto)
+                drivebase.offsetYaw(90 + Math.toDegrees(currentTheta));
+            else
+                drivebase.offsetYaw(90);
         }
     }
 
@@ -200,19 +207,6 @@ public class Teleop extends OpMode {
         if (gamepad1.right_trigger > 0.3 && shootingState.equals(SHOOTING_STATE.INACTIVE)) {
             shootingState = SHOOTING_STATE.START;
         }
-//            transfer.openTransferGate();
-//            intake.setPower(1);
-//            transfer.setPower(1);
-//        } else if (!gamepad1.left_bumper && !gamepad1.right_bumper) { /// FOR TESTING
-//            intake.setPower(0);
-//            transfer.setPower(0);
-//        }
-
-//        if (gamepad1.left_trigger > 0.3) {
-//            turretState = TURRET_STATE.AIMING_TO_TAG;
-//        } else {
-//            turretState = TURRET_STATE.ZEROED;
-//        }
 
         if (gamepad1.right_bumper && !gamepad1.left_bumper) {
             intake.setPower(1);
@@ -261,12 +255,12 @@ public class Teleop extends OpMode {
     private void setShooterDesiredVelocity() {
         double range = drivebase.distanceToTarget();
         int velocity = 0;
-        if (range < 80)
-            velocity = (int) ((0.0586009 * Math.pow(range, 2)) + (-4.2766 * range) + 1498.02814);
+        if (range < 95)
+            velocity = (int) ((0.0586009 * Math.pow(range, 2)) + (-4.2766 * range) + 1498.02814 + 10);
         else
-            velocity = (int) ((0.0227675 * Math.pow(range, 2)) + (1.62765 * range) + 1344.59538);
+            velocity = (int) ((0.0227675 * Math.pow(range, 2)) + (1.62765 * range) + 1344.59538 + 10);
 
-        shooterDesiredVelocity = Math.min(velocity, 2000);
+        shooterDesiredVelocity = Math.min(velocity, 1950);
     }
 
     private void OLDshooterDesiredVelocity() {
@@ -369,10 +363,10 @@ public class Teleop extends OpMode {
                 shooter.setTurretVelocity(0, 0);
 
                 if (gamepad1.left_trigger > .3) {
-                    turretState = TURRET_STATE.GO_TO_ZERO;
+                    turretState = TURRET_STATE.AIMING_NO_TAG;
 //                } else if (seesTarget && Math.abs(drivebase.getLLResult().getTx()) > 1) {
 //                    turretState = TURRET_STATE.AIMING_TO_TAG;
-                } else if (withinAngleLimit && Math.abs(error) > 1) {
+                } else if (withinAngleLimit && Math.abs(error) > .5) {
                     turretState = TURRET_STATE.AIMING_NO_TAG;
                 } 
 

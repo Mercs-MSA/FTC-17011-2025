@@ -17,6 +17,7 @@ public class Constants {
     public static boolean onBlueAlliance = false;
     public static boolean ranAuto       = false;
 
+    public static int turretLastAutoPos = 0;
     public static double currentX = 0;
     public static double currentY = 0;
     public static double currentTheta = 0;

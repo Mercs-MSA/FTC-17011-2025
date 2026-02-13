@@ -33,6 +33,7 @@ import static org.firstinspires.ftc.teamcode.Constants.Constants.blueGoal;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.currentTheta;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.currentX;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.currentY;
+import static org.firstinspires.ftc.teamcode.Constants.Constants.ranAuto;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.redGoal;
 import static org.firstinspires.ftc.teamcode.Constants.Constants.onBlueAlliance;
 
@@ -131,19 +132,17 @@ public class PPVBlueFarAuto extends OpMode {
 
         innerColor = hardwareMap.get(ColorRangeSensor.class, "innerColor");
 
-
         intake = new Intake(hardwareMap);
         transfer = new Transfer(hardwareMap);
-        shooter = new Shooter(hardwareMap);
-
+        shooter = new Shooter(hardwareMap, 0);
 
         autoTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
         shooterTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
-
         dash = FtcDashboard.getInstance();
         myTelem = new MultipleTelemetry(dash.getTelemetry(), telemetry);
 
+        ranAuto = true;
         onBlueAlliance = true;
 
 
@@ -166,7 +165,8 @@ public class PPVBlueFarAuto extends OpMode {
         setShooterDesiredVelocity();
         updateAutoStateMachine();
         updateShooterStateMachine();
-        updateTurretState();
+        if (!autoState.equals(AUTO_STATE.leave) ^ autoState.equals(AUTO_STATE.END))
+            updateTurretState();
 
 
 //        panelsTelemetry.update(telemetry);
@@ -180,8 +180,6 @@ public class PPVBlueFarAuto extends OpMode {
 
     private void updateAutoStateMachine() {
         switch (autoState) {
-
-
             case PATH_ACTIVE_WAIT:
                 if (!follower.isBusy())
                     autoState = P_NextState;
@@ -226,7 +224,7 @@ public class PPVBlueFarAuto extends OpMode {
 
 
             case intakeLevel1ToShoot:
-                follower.setMaxPower(.5);
+                follower.setMaxPower(.6);
                 follower.followPath(paths.intakeLevel1ToShoot);
                 P_NextState = AUTO_STATE.SHOOT;
                 S_NextState = AUTO_STATE.shootToIntakeHuman1;
@@ -291,7 +289,6 @@ public class PPVBlueFarAuto extends OpMode {
         else
             velocity = (int) ((0.0227675 * Math.pow(range, 2)) + (1.62765 * range) + 1344.59538);
 
-
         shooterDesiredVelocity = Math.min(velocity, 1930);
     }
 
@@ -313,16 +310,17 @@ public class PPVBlueFarAuto extends OpMode {
             case START_SHOOTER:
                 shooter.setMotorVelocity(shooterDesiredVelocity);
                 transfer.closeTransferGate();
+                shooterTimer.reset();
                 shootingState = SHOOTING_STATE.IS_SHOOTER_READY;
                 break;
 
 
             case IS_SHOOTER_READY:
                 transfer.closeTransferGate();
-//                if (shooterTimer.time() > 2800)
-//                    shootingState = SHOOTING_STATE.END;
+                if (shooterTimer.time() > 2800)
+                    shootingState = SHOOTING_STATE.END;
                 if (desiredVelocityReached()) {
-                    shooterTimer.reset();
+//                    shooterTimer.reset();
                     shootingState = SHOOTING_STATE.SHOOT_BALL;
                 }
                 break;
@@ -331,10 +329,10 @@ public class PPVBlueFarAuto extends OpMode {
             case SHOOT_BALL:
                 transfer.openTransferGate();
                 transfer.setPower(0.87);
-//                if (shooterTimer.time() > 2800)
-//                    shootingState = SHOOTING_STATE.END;
-                if (innerColor.getDistance(DistanceUnit.INCH) > 3 && shooterTimer.time() > 500)
+                if (shooterTimer.time() > 2800)
                     shootingState = SHOOTING_STATE.END;
+//                if (innerColor.getDistance(DistanceUnit.INCH) > 3 && shooterTimer.time() > 500)
+//                    shootingState = SHOOTING_STATE.END;
                 if (!desiredVelocityReached())
                     shootingState = SHOOTING_STATE.IS_SHOOTER_READY;
                 break;
