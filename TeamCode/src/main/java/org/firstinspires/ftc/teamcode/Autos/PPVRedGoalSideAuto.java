@@ -271,12 +271,21 @@ public class PPVRedGoalSideAuto extends OpMode{
                 shooter.setTurretTarget(0);
                 P_NextState = AUTO_STATE.END;
                 autoState = AUTO_STATE.PATH_ACTIVE_WAIT;
+                break;
 
 
             case END:
                 shooter.setMotorVelocity(0);
                 intake.setPower(0);
+
+                // Move turret to real forward (0 degrees)
+                shooter.setTurretTarget(-30);
+
+                // Once it's near forward, reset encoder
+
+
                 break;
+
         }
     }
 
@@ -495,7 +504,7 @@ public class PPVRedGoalSideAuto extends OpMode{
                             new BezierCurve(
                                     new Pose(125.228, 83.515),
                                     new Pose(106.362, 72.081),
-                                    new Pose(128.233, 72.828)
+                                    new Pose(128.233, 65.828)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
 
@@ -503,7 +512,7 @@ public class PPVRedGoalSideAuto extends OpMode{
 
             gateToShoot = follower.pathBuilder().addPath(
                             new BezierLine(
-                                    new Pose(128.233, 72.828),
+                                    new Pose(128.233, 65.828),
 
                                     new Pose(85.125, 85.133)
                             )

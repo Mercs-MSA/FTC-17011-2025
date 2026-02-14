@@ -348,6 +348,7 @@ public class Teleop extends OpMode {
                 shooter.setTurretTarget(0);
                 if (shooter.getTurretPos() > -10 && shooter.getTurretPos() < 10)
                     turretState = TURRET_STATE.ZEROED;
+                break;
 
             case ZEROED:
                 shooter.setTurretVelocity(0, 0);
