@@ -25,7 +25,7 @@ import org.firstinspires.ftc.teamcode.Constants.GeneralConstants;
 @Config
 public class Shooter {
     private DcMotorEx shooterMotor;
-    private DcMotorEx turretMotor;
+//    private DcMotorEx turretMotor;
 
     private static double goalRange = 4;
 
@@ -53,28 +53,28 @@ public class Shooter {
 
     public Shooter(HardwareMap hardwareMap, int startPos) {
         shooterMotor = hardwareMap.get(DcMotorEx.class, "shooterMotor");
-        turretMotor = hardwareMap.get(DcMotorEx.class, "turretMotor");
+//        turretMotor = hardwareMap.get(DcMotorEx.class, "turretMotor");
 //        limelight = hardwareMap.get(Limelight3A.class, "limelight");
 
         // Configure initial settings
         shooterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+//        turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         shooterMotor.setDirection(DcMotor.Direction.FORWARD);
 
         shooterMotor.setVelocityPIDFCoefficients(P, I, D, F);
 
         shooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        turretMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
-        turretMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-        turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        turretMotor.setTargetPosition(0);
-        turretMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        turretMotor.setVelocity(0);
-        originalPIDF = turretMotor.getPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION);
-//        turretPIDF = originalPIDF;
-        turretMotor.setPositionPIDFCoefficients(turretP);
-        turretMotor.setVelocityPIDFCoefficients(turVelPIDF.p, turVelPIDF.i, turVelPIDF.d, turVelPIDF.f);
+//        turretMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+//        turretMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+//        turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        turretMotor.setTargetPosition(0);
+//        turretMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//        turretMotor.setVelocity(0);
+//        originalPIDF = turretMotor.getPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION);
+////        turretPIDF = originalPIDF;
+//        turretMotor.setPositionPIDFCoefficients(turretP);
+//        turretMotor.setVelocityPIDFCoefficients(turVelPIDF.p, turVelPIDF.i, turVelPIDF.d, turVelPIDF.f);
 
         shooterMotor.setVelocity(0);
 
@@ -87,10 +87,10 @@ public class Shooter {
         shooterMotor.setVelocityPIDFCoefficients(p, i, d, f);
     }
 
-    public void setTurretPIDF() {
-        turretMotor.setVelocityPIDFCoefficients(turVelPIDF.p, turVelPIDF.i, turVelPIDF.d, turVelPIDF.f);
-        turretMotor.setPositionPIDFCoefficients(turretP);
-    }
+//    public void setTurretPIDF() {
+//        turretMotor.setVelocityPIDFCoefficients(turVelPIDF.p, turVelPIDF.i, turVelPIDF.d, turVelPIDF.f);
+//        turretMotor.setPositionPIDFCoefficients(turretP);
+//    }
 
     public double getRpm() {
         // getVelocity() returns ticks/second; convert to RPM
@@ -101,9 +101,9 @@ public class Shooter {
         return (shooterMotor.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER));
     }
 
-    public PIDFCoefficients getTurretPositionalPID() {
-        return turretMotor.getPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION);
-    }
+//    public PIDFCoefficients getTurretPositionalPID() {
+//        return turretMotor.getPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION);
+//    }
 
 
 
@@ -133,77 +133,77 @@ public class Shooter {
 
 //
 
-    public void setTurretTarget(double angle) { //Positive is counter-clockwise
-        //Angle to tick conversion factor: 122/15 or 8.13333333
-        turretMotor.setTargetPosition((int)(angle * 8.13333333333));
-        turretMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        turretMotor.setPower(0.8);
-    }
-
-    public void setTurretTargetShortestPath(double desiredAngleDeg) {
-        // normalize desired angle to -180..180 (tolerant: user can pass normalized or raw)
-        double desired = AngleUnit.normalizeDegrees(desiredAngleDeg);
-
-        // read current encoder & convert to physical angle (may be >360 or <0 depending on your encoder origin)
-        int currentTicks = turretMotor.getCurrentPosition();
-        double currentAngleDeg = currentTicks / 8.13333333; // this gives a continuous angle
-        // but we only need the physical angle modulo 360 for the shortest-path calculation:
-        double currentPhysicalAngle = AngleUnit.normalizeDegrees(currentAngleDeg);
-
-        // shortest-path error (−180..+180)
-        double errorDeg = AngleUnit.normalizeDegrees(desired - currentPhysicalAngle);
-
-        // optional: clamp huge jumps (safety), e.g. protect against sensor glitches
-//        if (errorDeg > MAX_STEP_DEG) errorDeg = MAX_STEP_DEG;
-//        if (errorDeg < -MAX_STEP_DEG) errorDeg = -MAX_STEP_DEG;
-
-        // deadband: if already close, don't re-command (avoids hunting)
-        if (Math.abs(errorDeg) < .25) {
-            // optionally stop motor / switch mode
-            turretMotor.setPower(0.0);
-            return;
-        }
-
-        // compute tick delta for shortest path and make absolute target = current + delta
-        int deltaTicks = (int) Math.round(errorDeg * 8.13333333);
-        int targetTicks = (Math.abs(currentTicks) <= 967) ? currentTicks + deltaTicks : currentTicks - deltaTicks;
-
-        // command motor
-        turretMotor.setTargetPosition((int) clamp(-900, (targetTicks + offsetTurret), 900));
-        turretMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        turretMotor.setPower(0.8); // tune power
-    }
-
-    public void setTurretMode(DcMotor.RunMode mode) {
-        turretMotor.setMode(mode);
-    }
-
-    public void setTurretVelocity(int vel, double power) {
-        turretMotor.setVelocity(vel);
-        turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//    public void setTurretTarget(double angle) { //Positive is counter-clockwise
+//        //Angle to tick conversion factor: 122/15 or 8.13333333
+//        turretMotor.setTargetPosition((int)(angle * 8.13333333333));
+//        turretMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//        turretMotor.setPower(0.8);
+//    }
+//
+//    public void setTurretTargetShortestPath(double desiredAngleDeg) {
+//        // normalize desired angle to -180..180 (tolerant: user can pass normalized or raw)
+//        double desired = AngleUnit.normalizeDegrees(desiredAngleDeg);
+//
+//        // read current encoder & convert to physical angle (may be >360 or <0 depending on your encoder origin)
+//        int currentTicks = turretMotor.getCurrentPosition();
+//        double currentAngleDeg = currentTicks / 8.13333333; // this gives a continuous angle
+//        // but we only need the physical angle modulo 360 for the shortest-path calculation:
+//        double currentPhysicalAngle = AngleUnit.normalizeDegrees(currentAngleDeg);
+//
+//        // shortest-path error (−180..+180)
+//        double errorDeg = AngleUnit.normalizeDegrees(desired - currentPhysicalAngle);
+//
+//        // optional: clamp huge jumps (safety), e.g. protect against sensor glitches
+////        if (errorDeg > MAX_STEP_DEG) errorDeg = MAX_STEP_DEG;
+////        if (errorDeg < -MAX_STEP_DEG) errorDeg = -MAX_STEP_DEG;
+//
+//        // deadband: if already close, don't re-command (avoids hunting)
+//        if (Math.abs(errorDeg) < .25) {
+//            // optionally stop motor / switch mode
+//            turretMotor.setPower(0.0);
+//            return;
+//        }
+//
+//        // compute tick delta for shortest path and make absolute target = current + delta
+//        int deltaTicks = (int) Math.round(errorDeg * 8.13333333);
+//        int targetTicks = currentTicks + deltaTicks; //(Math.abs(currentTicks) <= 950) ? currentTicks + deltaTicks : currentTicks - deltaTicks;
+//
+//        // command motor
+//        turretMotor.setTargetPosition((int) clamp(-967, (targetTicks + offsetTurret), 967));
+//        turretMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//        turretMotor.setPower(0.8); // tune power
+//    }
+//
+//    public void setTurretMode(DcMotor.RunMode mode) {
+//        turretMotor.setMode(mode);
+//    }
+//
+//    public void setTurretVelocity(int vel, double power) {
+//        turretMotor.setVelocity(vel);
+//        turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+////        turretMotor.setPower(power);
+//    }
+//
+//    public void setTurretPower(double power) {
 //        turretMotor.setPower(power);
-    }
-
-    public void setTurretPower(double power) {
-        turretMotor.setPower(power);
-    }
-
-    public int getTurretPos() {
-        return turretMotor.getCurrentPosition();
-    }
-
-    public int getTurretTargetPos() {
-        return turretMotor.getTargetPosition();
-    }
-
-    public DcMotor.RunMode getTurretMode() {
-        return turretMotor.getMode();
-    }
-
-    public double getTurretVelocity() {
-        return turretMotor.getVelocity();
-    }
-
+//    }
+//
+//    public int getTurretPos() {
+//        return turretMotor.getCurrentPosition();
+//    }
+//
+//    public int getTurretTargetPos() {
+//        return turretMotor.getTargetPosition();
+//    }
+//
+//    public DcMotor.RunMode getTurretMode() {
+//        return turretMotor.getMode();
+//    }
+//
+//    public double getTurretVelocity() {
+//        return turretMotor.getVelocity();
+//    }
+//
 
 
 //    public void lockOn() {
