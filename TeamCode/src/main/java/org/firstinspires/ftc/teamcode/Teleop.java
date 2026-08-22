@@ -16,7 +16,6 @@ import static org.firstinspires.ftc.teamcode.mechanisms.Shooter.turretP;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
-import com.bylazar.ftcontrol.panels.integration.TelemetryManager;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -38,8 +37,6 @@ public class Teleop extends OpMode {
     private FtcDashboard dash;
     private SoftElectronics softElectronics;
     private static Telemetry myTelem;
-    private static TelemetryManager myPanels;
-
     // Mechanisms
     private Drivebase drivebase;
     private Intake intake;
@@ -96,7 +93,6 @@ public class Teleop extends OpMode {
         softElectronics = new SoftElectronics(hardwareMap, this.telemetry);
         dash = FtcDashboard.getInstance();
         myTelem = new MultipleTelemetry(dash.getTelemetry(), softElectronics.getTelemetry());
-        myPanels = softElectronics.getPanelsTelemetry();
 
         drivebase = new Drivebase(hardwareMap);
         intake = new Intake(hardwareMap);

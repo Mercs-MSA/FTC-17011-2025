@@ -8,8 +8,6 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import com.bylazar.ftcontrol.panels.Panels;
-import com.bylazar.ftcontrol.panels.integration.TelemetryManager;
 import com.qualcomm.robotcore.hardware.ImuOrientationOnRobot;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -22,7 +20,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 public class SoftElectronics {
     private static FtcDashboard dash;
     private static Telemetry telemetryA;
-    private static TelemetryManager panelsTelemetry;
     private static IMU imu;
 
     private RevHubOrientationOnRobot.UsbFacingDirection  usbDirection;
@@ -30,15 +27,11 @@ public class SoftElectronics {
     private RevHubOrientationOnRobot orientationOnRobot;
 
     public SoftElectronics(HardwareMap hardwareMap, Telemetry opModeTelemetry) {
-        panelsTelemetry = Panels.getTelemetry();
 
         dash = FtcDashboard.getInstance();
 
         telemetryA = new MultipleTelemetry(opModeTelemetry, dash.getTelemetry());
         telemetryA.update();
-
-        panelsTelemetry.debug("TestLine", "TestLine", "Version: ${currentRobotConstants.logoDirection}");
-        panelsTelemetry.update();
 
 
         logoDirection = currentRobotConstants.logoDirection;
@@ -66,9 +59,6 @@ public class SoftElectronics {
         return telemetryA;
     }
 
-    public static TelemetryManager getPanelsTelemetry() {
-        return panelsTelemetry;
-    }
 
     public static FtcDashboard getDashboard() {
         return dash;
